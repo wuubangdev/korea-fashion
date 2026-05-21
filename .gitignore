@@ -1,0 +1,44 @@
+# ====================================================================
+# NEXT.JS & NODE.JS (kf_fe)
+# ====================================================================
+**/node_modules/
+**/.next/
+**/out/
+**/build/
+**/.pnpm-debug.log*
+**/.npm/
+**/yarn-error.log*
+**/yarn.lock
+**/package-lock.json
+
+# ====================================================================
+# SPRING BOOT - MAVEN / GRADLE (kf_be)
+# ====================================================================
+**/target/
+**/.gradle/
+**/build/
+**/*.jar
+**/*.war
+**/*.factory
+**/.mvn/wrapper/maven-wrapper.properties
+
+# ====================================================================
+# SECURITY & ENVIRONMENTS (TUYỆT ĐỐI KHÔNG PUSH)
+# ====================================================================
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+**/application.properties
+**/application.yml
+**/local.properties
+
+# ====================================================================
+# IDE & SYSTEM GARBAGE
+# ====================================================================
+.DS_Store
+Thumbs.db
+**/.idea/
+**/.vscode/
+**/*.iml
