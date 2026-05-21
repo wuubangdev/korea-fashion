@@ -8,8 +8,6 @@
 **/.pnpm-debug.log*
 **/.npm/
 **/yarn-error.log*
-**/yarn.lock
-**/package-lock.json
 
 # ====================================================================
 # SPRING BOOT - MAVEN / GRADLE (kf_be)
@@ -20,7 +18,6 @@
 **/*.jar
 **/*.war
 **/*.factory
-**/.mvn/wrapper/maven-wrapper.properties
 
 # ====================================================================
 # SECURITY & ENVIRONMENTS (TUYỆT ĐỐI KHÔNG PUSH)
@@ -31,6 +28,7 @@
 **/.env.test.local
 **/.env.production.local
 **/application.properties
+!apps/kf_be/src/main/resources/application.properties
 **/application.yml
 **/local.properties
 

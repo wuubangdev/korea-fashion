@@ -1,0 +1,51 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: kf_db
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-kf}
+      MYSQL_USER: ${MYSQL_USER:-kf}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-kf_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/kf_be/Dockerfile
+    image: kor-fashion-backend:local
+    container_name: kf_backend
+    environment:
+      SPRING_APPLICATION_NAME: kf
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-kf}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-kf}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-kf_password}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/kf_fe/Dockerfile
+    image: kor-fashion-frontend:local
+    container_name: kf_frontend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

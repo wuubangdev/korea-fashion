@@ -1,0 +1,17 @@
+.git
+.github
+.DS_Store
+
+**/node_modules
+**/.next
+**/out
+**/coverage
+**/dist
+**/build
+**/target
+
+**/.env
+**/.env.*
+!**/.env.example
+
+README.md
