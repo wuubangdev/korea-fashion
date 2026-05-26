@@ -5,7 +5,7 @@ Monorepo for the Korea Fashion application.
 - `apps/kf_be`: Spring Boot backend, Java 21, Maven
 - `apps/kf_fe`: Next.js frontend, React, Yarn
 - `docker-compose.yml`: local stack with MySQL, backend, and frontend
-- `.github/workflows`: CI/CD workflows split by changed paths
+- `.github/workflows`: CI validation workflows split by changed paths
 
 ## Requirements
 
@@ -143,14 +143,13 @@ docker build -f apps/kf_fe/Dockerfile -t kor-fashion-frontend:local .
 GitHub Actions are configured in:
 
 - `.github/workflows/ci.yml`
-- `.github/workflows/cd.yml`
 - `docker-compose.prod.yml`
 
-CI validates backend/frontend changes and Docker Compose configuration. CD is intentionally simple: on every push to `main`, GitHub connects to the VPS over SSH and runs:
+CI validates backend/frontend changes and Docker Compose configuration. Production deployment is manual on the VPS:
 
 ```bash
-git fetch origin main
-git reset --hard origin/main
+cd /home/study/korea-fashion
+git pull origin main
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build --remove-orphans
 ```
 
@@ -195,32 +194,6 @@ docker compose --env-file .env.production -f docker-compose.prod.yml up -d --bui
 docker compose --env-file .env.production -f docker-compose.prod.yml ps
 ```
 
-### GitHub Deploy Access
-
-Create an SSH key for GitHub Actions, then install its public key for the VPS deployment user:
-
-```bash
-ssh-keygen -t ed25519 -C "github-actions-korea-fashion" -f ~/.ssh/korea_fashion_deploy -N ""
-ssh-copy-id -i ~/.ssh/korea_fashion_deploy.pub <vps-user>@103.173.66.91
-ssh-keyscan -H 103.173.66.91
-```
-
-In GitHub, create an Environment named `production`, then add these Environment secrets:
-
-| Secret | Value |
-| --- | --- |
-| `DEPLOY_HOST` | `103.173.66.91` |
-| `DEPLOY_USER` | VPS deployment user |
-| `DEPLOY_SSH_KEY` | Content of `~/.ssh/korea_fashion_deploy` |
-| `DEPLOY_KNOWN_HOSTS` | Output of `ssh-keyscan -H 103.173.66.91` |
-
-Add these optional Environment variables when the VPS uses another SSH port or folder:
-
-| Variable | Default |
-| --- | --- |
-| `DEPLOY_PORT` | `22` |
-| `DEPLOY_PATH` | `/home/study/korea-fashion` |
-
 Allow application ports in the VPS firewall when required:
 
 ```bash
@@ -228,7 +201,7 @@ sudo ufw allow 3397/tcp
 sudo ufw allow 3398/tcp
 ```
 
-After a push to `main`, open `http://103.173.66.91:3397` for the frontend and `http://103.173.66.91:3398` for the backend. Inspect containers on the VPS with:
+After pulling new code and rebuilding on the VPS, open `http://103.173.66.91:3397` for the frontend and `http://103.173.66.91:3398` for the backend. Inspect containers on the VPS with:
 
 ```bash
 cd /home/study/korea-fashion
