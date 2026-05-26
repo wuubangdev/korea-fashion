@@ -17,6 +17,7 @@ export default function ProductDetailPage() {
   const product = useApiResource<Product>({
     path: `/api/products/${params.id}`,
   });
+  const currentProduct = product.data;
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
@@ -28,13 +29,13 @@ export default function ProductDetailPage() {
           </div>
         ) : null}
 
-        {product.data ? (
+        {currentProduct ? (
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
             <div
               className="min-h-[560px] rounded-lg border border-slate-200 bg-slate-100"
               style={{
-                backgroundImage: product.data.imageUrl
-                  ? `url('${product.data.imageUrl}')`
+                backgroundImage: currentProduct.imageUrl
+                  ? `url('${currentProduct.imageUrl}')`
                   : undefined,
                 backgroundPosition: "center",
                 backgroundSize: "cover",
@@ -45,19 +46,19 @@ export default function ProductDetailPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium uppercase text-slate-500">
-                      {product.data.brand || "Korea Fashion"}
+                      {currentProduct.brand || "Korea Fashion"}
                     </p>
                     <h1 className="mt-2 text-3xl font-semibold tracking-normal">
-                      {product.data.name}
+                      {currentProduct.name}
                     </h1>
                   </div>
-                  {product.data.origin ? <Badge>{product.data.origin}</Badge> : null}
+                  {currentProduct.origin ? <Badge>{currentProduct.origin}</Badge> : null}
                 </div>
                 <div className="mt-6 text-2xl font-semibold">
-                  {formatMoney(product.data.price)}
+                  {formatMoney(currentProduct.price)}
                 </div>
                 <p className="mt-5 text-sm leading-7 text-slate-600">
-                  {product.data.description ||
+                  {currentProduct.description ||
                     "San pham phong cach Han Quoc, de phoi trong nhieu outfit hang ngay."}
                 </p>
                 <div className="mt-6 grid gap-3 text-sm text-slate-600">
@@ -68,7 +69,7 @@ export default function ProductDetailPage() {
                     Ho tro doi size neu san pham con tag.
                   </div>
                 </div>
-                <Button className="mt-6 w-full" size="lg" onClick={() => cart.add(product.data)}>
+                <Button className="mt-6 w-full" size="lg" onClick={() => cart.add(currentProduct)}>
                   <ShoppingBag className="h-4 w-4" />
                   Them vao gio
                 </Button>
