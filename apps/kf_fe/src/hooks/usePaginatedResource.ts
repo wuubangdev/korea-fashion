@@ -69,8 +69,12 @@ export function usePaginatedResource<T>({
   useEffect(() => {
     const controller = new AbortController();
 
-    setIsLoading(true);
-    setError(null);
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) {
+        setIsLoading(true);
+        setError(null);
+      }
+    });
 
     getPage<T>(path, query, { signal: controller.signal })
       .then(setData)

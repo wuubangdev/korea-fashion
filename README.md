@@ -144,19 +144,97 @@ GitHub Actions are configured in:
 
 - `.github/workflows/ci.yml`
 - `.github/workflows/cd.yml`
+- `docker-compose.prod.yml`
 
-The workflows use path filters so one side does not rebuild everything when only the other side changes:
+CI validates backend/frontend changes and Docker Compose configuration. CD is intentionally simple: on every push to `main`, GitHub connects to the VPS over SSH and runs:
 
-- Changes in `apps/kf_be/**` run backend jobs.
-- Changes in `apps/kf_fe/**` run frontend jobs.
-- Changes in Docker or workflow files run the relevant Docker validation/build jobs.
+```bash
+git fetch origin main
+git reset --hard origin/main
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build --remove-orphans
+```
 
-Docker image builds use GitHub Actions cache with separate scopes:
+### Production Setup
 
-- `backend`
-- `frontend`
+On an Ubuntu VPS, install Git and Docker:
 
-This keeps backend and frontend image cache independent.
+```bash
+sudo apt update
+sudo apt install -y git docker.io docker-compose-v2
+sudo systemctl enable --now docker
+sudo usermod -aG docker "$USER"
+```
+
+Log out and SSH in again after adding the Docker group. Clone this repository on the VPS:
+
+```bash
+mkdir -p /home/study/korea-fashion
+git clone https://github.com/wuubangdev/korea-fashion.git /home/study/korea-fashion
+cd /home/study/korea-fashion
+```
+
+Create `/home/study/korea-fashion/.env.production` directly on the VPS. Do not commit this file:
+
+```env
+SPRING_DATASOURCE_URL=jdbc:mysql://103.173.66.91:3399/korea_fashion?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+SPRING_DATASOURCE_USERNAME=root
+SPRING_DATASOURCE_PASSWORD=<database-password>
+APP_JWT_SECRET=<long-random-jwt-secret>
+
+BACKEND_PORT=3398
+FRONTEND_PORT=3397
+NEXT_PUBLIC_API_URL=http://103.173.66.91:3398
+```
+
+Generate a JWT secret on the VPS with `openssl rand -base64 48`. Production Compose exposes frontend port `3397`, backend port `3398`, and connects to the existing external MySQL service on port `3399`.
+
+Run the first deploy manually on the VPS:
+
+```bash
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+docker compose --env-file .env.production -f docker-compose.prod.yml ps
+```
+
+### GitHub Deploy Access
+
+Create an SSH key for GitHub Actions, then install its public key for the VPS deployment user:
+
+```bash
+ssh-keygen -t ed25519 -C "github-actions-korea-fashion" -f ~/.ssh/korea_fashion_deploy -N ""
+ssh-copy-id -i ~/.ssh/korea_fashion_deploy.pub <vps-user>@103.173.66.91
+ssh-keyscan -H 103.173.66.91
+```
+
+In GitHub, create an Environment named `production`, then add these Environment secrets:
+
+| Secret | Value |
+| --- | --- |
+| `DEPLOY_HOST` | `103.173.66.91` |
+| `DEPLOY_USER` | VPS deployment user |
+| `DEPLOY_SSH_KEY` | Content of `~/.ssh/korea_fashion_deploy` |
+| `DEPLOY_KNOWN_HOSTS` | Output of `ssh-keyscan -H 103.173.66.91` |
+
+Add these optional Environment variables when the VPS uses another SSH port or folder:
+
+| Variable | Default |
+| --- | --- |
+| `DEPLOY_PORT` | `22` |
+| `DEPLOY_PATH` | `/home/study/korea-fashion` |
+
+Allow application ports in the VPS firewall when required:
+
+```bash
+sudo ufw allow 3397/tcp
+sudo ufw allow 3398/tcp
+```
+
+After a push to `main`, open `http://103.173.66.91:3397` for the frontend and `http://103.173.66.91:3398` for the backend. Inspect containers on the VPS with:
+
+```bash
+cd /home/study/korea-fashion
+docker compose --env-file .env.production -f docker-compose.prod.yml ps
+docker compose --env-file .env.production -f docker-compose.prod.yml logs -f
+```
 
 ## Repository Notes
 

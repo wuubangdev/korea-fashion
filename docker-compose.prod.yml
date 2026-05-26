@@ -1,0 +1,30 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: apps/kf_be/Dockerfile
+    image: kor-fashion-backend:prod
+    container_name: kf_backend
+    restart: unless-stopped
+    environment:
+      SPRING_APPLICATION_NAME: kf
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:?SPRING_DATASOURCE_URL is required}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:?SPRING_DATASOURCE_USERNAME is required}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:?SPRING_DATASOURCE_PASSWORD is required}
+      APP_JWT_SECRET: ${APP_JWT_SECRET:?APP_JWT_SECRET is required}
+    ports:
+      - "${BACKEND_PORT:-3398}:8080"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/kf_fe/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL is required}
+    image: kor-fashion-frontend:prod
+    container_name: kf_frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3397}:3000"
+    depends_on:
+      - backend
