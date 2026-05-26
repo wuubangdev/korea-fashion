@@ -30,7 +30,6 @@
 **/.env.test.local
 **/.env.production.local
 **/application.properties
-!apps/kf_be/src/main/resources/application.properties
 !**/application.properties.example
 **/application-local.properties
 **/application-*.local.properties
