@@ -26,6 +26,15 @@ export type Product = {
   origin?: string;
 };
 
+export type ProductPayload = {
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  price: number;
+  brand?: string;
+  origin?: string;
+};
+
 export type Category = {
   id: number;
   code?: string;
@@ -38,6 +47,17 @@ export type User = {
   username: string;
   email?: string;
   roles?: string[];
+};
+
+export type AuthRequest = {
+  username: string;
+  password: string;
+  email?: string;
+};
+
+export type AuthResponse = {
+  username: string;
+  token: string;
 };
 
 export type OrderItem = {
@@ -59,4 +79,15 @@ export type Order = {
   deliveryAddress?: string;
   note?: string;
   items?: OrderItem[];
+};
+
+export type CreateOrderPayload = {
+  deliveryAddress: string;
+  note?: string;
+  items: Array<{
+    productId: number;
+    variantId?: number;
+    quantity: number;
+    unitPrice: number;
+  }>;
 };

@@ -8,11 +8,9 @@ import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.CategoryUseCase;
 import com.shope.kf.domain.model.Category;
 import com.shope.kf.infrastructure.api.mapper.CategoryApiMapper;
-import com.shope.kf.infrastructure.security.RequireAuth;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@RequireAuth
 @RestController
 @RequestMapping("/api/categories")
 public class CategoryController {
@@ -23,6 +21,7 @@ public class CategoryController {
         this.categoryUseCase = categoryUseCase;
     }
 
+    @com.shope.kf.infrastructure.security.RequireAuth
     @PostMapping
     public ResponseEntity<CategoryResponse> create(@jakarta.validation.Valid @RequestBody CreateCategoryRequest req) {
         Category c = CategoryApiMapper.toDomain(req);
@@ -46,6 +45,7 @@ public class CategoryController {
         return ResponseEntity.ok(CategoryApiMapper.toResponse(c));
     }
 
+    @com.shope.kf.infrastructure.security.RequireAuth
     @PutMapping("/{id}")
     public ResponseEntity<CategoryResponse> update(@PathVariable Long id, @jakarta.validation.Valid @RequestBody UpdateCategoryRequest req) {
         Category c = CategoryApiMapper.toDomain(req);
@@ -53,6 +53,7 @@ public class CategoryController {
         return ResponseEntity.ok(CategoryApiMapper.toResponse(updated));
     }
 
+    @com.shope.kf.infrastructure.security.RequireAuth
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         categoryUseCase.delete(id);

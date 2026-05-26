@@ -37,11 +37,11 @@ services:
       context: .
       dockerfile: apps/kf_fe/Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://103.173.66.91:3398}
     image: kor-fashion-frontend:local
     container_name: kf_frontend
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://103.173.66.91:3398}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:

@@ -10,9 +10,7 @@ import com.shope.kf.domain.model.Product;
 import com.shope.kf.infrastructure.api.mapper.ProductApiMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.shope.kf.infrastructure.security.RequireAuth;
 
-@RequireAuth
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
@@ -23,6 +21,7 @@ public class ProductController {
         this.productUseCase = productUseCase;
     }
 
+    @com.shope.kf.infrastructure.security.RequireAuth
     @PostMapping
     public ResponseEntity<ProductResponse> create(@jakarta.validation.Valid @RequestBody CreateProductRequest req) {
         Product p = ProductApiMapper.toDomain(req);
@@ -46,6 +45,7 @@ public class ProductController {
         return ResponseEntity.ok(ProductApiMapper.toResponse(p));
     }
 
+    @com.shope.kf.infrastructure.security.RequireAuth
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> update(@PathVariable Long id, @jakarta.validation.Valid @RequestBody UpdateProductRequest req) {
         Product p = ProductApiMapper.toDomain(req);
@@ -53,6 +53,7 @@ public class ProductController {
         return ResponseEntity.ok(ProductApiMapper.toResponse(updated));
     }
 
+    @com.shope.kf.infrastructure.security.RequireAuth
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         productUseCase.delete(id);
