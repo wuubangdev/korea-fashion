@@ -1,8 +1,9 @@
 package com.shope.kf.infrastructure.api;
 
-import com.shope.kf.application.dto.request.AuthRequest;
-import com.shope.kf.application.dto.response.AuthResponse;
 import com.shope.kf.application.port.in.AuthUseCase;
+import com.shope.kf.infrastructure.api.dto.request.AuthRequest;
+import com.shope.kf.infrastructure.api.dto.response.AuthResponse;
+import com.shope.kf.infrastructure.api.mapper.AuthApiMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,13 +24,11 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
-        AuthResponse response = authUseCase.login(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(AuthApiMapper.toResponse(authUseCase.login(AuthApiMapper.toCommand(request))));
     }
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody AuthRequest request) {
-        AuthResponse response = authUseCase.register(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(AuthApiMapper.toResponse(authUseCase.register(AuthApiMapper.toCommand(request))));
     }
 }

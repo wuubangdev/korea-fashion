@@ -1,5 +1,6 @@
 package com.shope.kf.infrastructure.aop;
 
+import com.shope.kf.infrastructure.exception.ForbiddenException;
 import com.shope.kf.infrastructure.exception.UnauthorizedException;
 import com.shope.kf.infrastructure.security.JwtUtil;
 import com.shope.kf.infrastructure.security.RequireAuth;
@@ -7,10 +8,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Set;
 
 @Aspect
 @Component
@@ -22,8 +29,9 @@ public class AuthAspect {
         this.jwtUtil = jwtUtil;
     }
 
-    @Around("@within(requireAuth) || @annotation(requireAuth)")
-    public Object around(ProceedingJoinPoint pjp, RequireAuth requireAuth) throws Throwable {
+    @Around("@within(com.shope.kf.infrastructure.security.RequireAuth) || @annotation(com.shope.kf.infrastructure.security.RequireAuth)")
+    public Object around(ProceedingJoinPoint pjp) throws Throwable {
+        RequireAuth requireAuth = resolveRequireAuth(pjp);
         RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
         if (!(attrs instanceof ServletRequestAttributes)) {
             throw new UnauthorizedException("No request context");
@@ -37,7 +45,44 @@ public class AuthAspect {
         if (!jwtUtil.validateToken(token)) {
             throw new UnauthorizedException("Invalid or expired token");
         }
-        // Optionally: extract username or roles
+        if (requireAuth != null && requireAuth.roles().length > 0) {
+            assertHasRole(token, requireAuth.roles());
+        }
         return pjp.proceed();
+    }
+
+    private RequireAuth resolveRequireAuth(ProceedingJoinPoint pjp) {
+        Method method = ((MethodSignature) pjp.getSignature()).getMethod();
+        RequireAuth methodAnnotation = AnnotatedElementUtils.findMergedAnnotation(method, RequireAuth.class);
+        if (methodAnnotation != null) {
+            return methodAnnotation;
+        }
+        return AnnotatedElementUtils.findMergedAnnotation(pjp.getTarget().getClass(), RequireAuth.class);
+    }
+
+    private void assertHasRole(String token, String[] requiredRoles) {
+        Set<String> userRoles = jwtUtil.extractRoles(token);
+        boolean allowed = Arrays.stream(requiredRoles)
+                .anyMatch(requiredRole -> userRoles.stream().anyMatch(userRole -> sameRole(userRole, requiredRole)));
+        if (!allowed) {
+            throw new ForbiddenException("Insufficient role");
+        }
+    }
+
+    private boolean sameRole(String userRole, String requiredRole) {
+        if (userRole == null || requiredRole == null) {
+            return false;
+        }
+        String normalizedUserRole = normalizeRole(userRole);
+        String normalizedRequiredRole = normalizeRole(requiredRole);
+        return normalizedUserRole.equals(normalizedRequiredRole);
+    }
+
+    private String normalizeRole(String role) {
+        String trimmed = role.trim().toUpperCase(java.util.Locale.ROOT);
+        if (trimmed.startsWith("ROLE_")) {
+            return trimmed.substring("ROLE_".length());
+        }
+        return trimmed;
     }
 }

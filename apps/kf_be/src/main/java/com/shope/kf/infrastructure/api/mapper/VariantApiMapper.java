@@ -1,8 +1,8 @@
 package com.shope.kf.infrastructure.api.mapper;
 
-import com.shope.kf.application.dto.request.CreateVariantRequest;
-import com.shope.kf.application.dto.request.UpdateVariantRequest;
-import com.shope.kf.application.dto.response.VariantResponse;
+import com.shope.kf.infrastructure.api.dto.request.CreateVariantRequest;
+import com.shope.kf.infrastructure.api.dto.request.UpdateVariantRequest;
+import com.shope.kf.infrastructure.api.dto.response.VariantResponse;
 import com.shope.kf.domain.model.Variant;
 
 public final class VariantApiMapper {

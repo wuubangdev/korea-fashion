@@ -1,12 +1,14 @@
 package com.shope.kf.infrastructure.persistence.adapter;
 
+import com.shope.kf.application.common.PageQuery;
+import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.out.VariantPersistencePort;
 import com.shope.kf.domain.model.Variant;
 import com.shope.kf.infrastructure.persistence.jpa.VariantJpaEntity;
+import com.shope.kf.infrastructure.persistence.jpa.mapper.PageMapper;
 import com.shope.kf.infrastructure.persistence.jpa.mapper.VariantMapper;
 import com.shope.kf.infrastructure.persistence.repository.VariantJpaRepository;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -38,13 +40,14 @@ public class VariantPersistenceAdapter implements VariantPersistencePort {
     }
 
     @Override
-    public Page<Variant> findAll(String search, Pageable pageable) {
+    public PageResult<Variant> findAll(String search, PageQuery pageQuery) {
+        var pageable = PageMapper.toPageable(pageQuery);
         Page<VariantJpaEntity> page = (search == null || search.isBlank()) ? repo.findAll(pageable) : repo.findBySkuContainingIgnoreCase(search, pageable);
-        return page.map(VariantMapper::toDomain);
+        return PageMapper.toResult(page, VariantMapper::toDomain);
     }
 
     @Override
-    public Page<Variant> findByProduct(Long productId, Pageable pageable) {
-        return repo.findByProductId(productId, pageable).map(VariantMapper::toDomain);
+    public PageResult<Variant> findByProduct(Long productId, PageQuery pageQuery) {
+        return PageMapper.toResult(repo.findByProductId(productId, PageMapper.toPageable(pageQuery)), VariantMapper::toDomain);
     }
 }

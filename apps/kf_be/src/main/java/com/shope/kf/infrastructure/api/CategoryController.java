@@ -1,22 +1,16 @@
 package com.shope.kf.infrastructure.api;
 
-import com.shope.kf.application.dto.request.CreateCategoryRequest;
-import com.shope.kf.application.dto.request.UpdateCategoryRequest;
-import com.shope.kf.application.dto.response.CategoryResponse;
+import com.shope.kf.infrastructure.api.dto.request.CreateCategoryRequest;
+import com.shope.kf.infrastructure.api.dto.request.UpdateCategoryRequest;
+import com.shope.kf.infrastructure.api.dto.response.CategoryResponse;
+import com.shope.kf.application.common.PageQuery;
+import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.CategoryUseCase;
 import com.shope.kf.domain.model.Category;
 import com.shope.kf.infrastructure.api.mapper.CategoryApiMapper;
 import com.shope.kf.infrastructure.security.RequireAuth;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RequireAuth
 @RestController
@@ -37,19 +31,13 @@ public class CategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<CategoryResponse>> list(
+    public ResponseEntity<PageResult<CategoryResponse>> list(
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id,desc") String sort
     ) {
-        String[] sortParts = sort.split(",");
-        Sort.Direction dir = Sort.Direction.fromString(sortParts.length > 1 ? sortParts[1] : "desc");
-        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, sortParts[0]));
-        Page<Category> p = categoryUseCase.list(search, pageable);
-        List<CategoryResponse> items = p.stream().map(CategoryApiMapper::toResponse).collect(Collectors.toList());
-        Page<CategoryResponse> resp = new PageImpl<>(items, pageable, p.getTotalElements());
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(categoryUseCase.list(search, PageQuery.of(page, size, sort)).map(CategoryApiMapper::toResponse));
     }
 
     @GetMapping("/{id}")

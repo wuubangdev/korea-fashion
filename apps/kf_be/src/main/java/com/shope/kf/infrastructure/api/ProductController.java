@@ -1,22 +1,16 @@
 package com.shope.kf.infrastructure.api;
 
-import com.shope.kf.application.dto.request.CreateProductRequest;
-import com.shope.kf.application.dto.request.UpdateProductRequest;
-import com.shope.kf.application.dto.response.ProductResponse;
+import com.shope.kf.infrastructure.api.dto.request.CreateProductRequest;
+import com.shope.kf.infrastructure.api.dto.request.UpdateProductRequest;
+import com.shope.kf.infrastructure.api.dto.response.ProductResponse;
+import com.shope.kf.application.common.PageQuery;
+import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.ProductUseCase;
 import com.shope.kf.domain.model.Product;
 import com.shope.kf.infrastructure.api.mapper.ProductApiMapper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.shope.kf.infrastructure.security.RequireAuth;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RequireAuth
 @RestController
@@ -37,19 +31,13 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ProductResponse>> list(
+    public ResponseEntity<PageResult<ProductResponse>> list(
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id,desc") String sort
     ) {
-        String[] sortParts = sort.split(",");
-        Sort.Direction dir = Sort.Direction.fromString(sortParts.length > 1 ? sortParts[1] : "desc");
-        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, sortParts[0]));
-        Page<Product> p = productUseCase.list(search, pageable);
-        List<ProductResponse> items = p.stream().map(ProductApiMapper::toResponse).collect(Collectors.toList());
-        Page<ProductResponse> resp = new PageImpl<>(items, pageable, p.getTotalElements());
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(productUseCase.list(search, PageQuery.of(page, size, sort)).map(ProductApiMapper::toResponse));
     }
 
     @GetMapping("/{id}")

@@ -1,8 +1,8 @@
 package com.shope.kf.infrastructure.api.mapper;
 
-import com.shope.kf.application.dto.request.CreateCategoryRequest;
-import com.shope.kf.application.dto.request.UpdateCategoryRequest;
-import com.shope.kf.application.dto.response.CategoryResponse;
+import com.shope.kf.infrastructure.api.dto.request.CreateCategoryRequest;
+import com.shope.kf.infrastructure.api.dto.request.UpdateCategoryRequest;
+import com.shope.kf.infrastructure.api.dto.response.CategoryResponse;
 import com.shope.kf.domain.model.Category;
 
 public final class CategoryApiMapper {

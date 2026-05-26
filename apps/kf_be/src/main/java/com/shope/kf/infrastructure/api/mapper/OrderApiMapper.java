@@ -1,7 +1,7 @@
 package com.shope.kf.infrastructure.api.mapper;
 
-import com.shope.kf.application.dto.request.CreateOrderRequest;
-import com.shope.kf.application.dto.response.OrderResponse;
+import com.shope.kf.infrastructure.api.dto.request.CreateOrderRequest;
+import com.shope.kf.infrastructure.api.dto.response.OrderResponse;
 import com.shope.kf.domain.model.Order;
 import com.shope.kf.domain.model.OrderItem;
 

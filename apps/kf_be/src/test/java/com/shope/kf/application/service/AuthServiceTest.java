@@ -1,68 +1,71 @@
 package com.shope.kf.application.service;
 
-import com.shope.kf.application.dto.request.AuthRequest;
-import com.shope.kf.application.dto.response.AuthResponse;
+import com.shope.kf.application.command.AuthCommand;
+import com.shope.kf.application.port.out.PasswordHasher;
+import com.shope.kf.application.port.out.TokenProvider;
 import com.shope.kf.application.port.out.UserPersistencePort;
+import com.shope.kf.application.result.AuthResult;
 import com.shope.kf.domain.model.User;
-import com.shope.kf.infrastructure.security.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.when;
 
 class AuthServiceTest {
 
     private UserPersistencePort userPort;
-    private PasswordEncoder passwordEncoder;
-    private JwtUtil jwtUtil;
+    private PasswordHasher passwordHasher;
+    private TokenProvider tokenProvider;
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
         userPort = Mockito.mock(UserPersistencePort.class);
-        passwordEncoder = new BCryptPasswordEncoder();
-        jwtUtil = Mockito.mock(JwtUtil.class);
-        when(jwtUtil.generateToken(any())).thenReturn("dummytoken");
+        passwordHasher = Mockito.mock(PasswordHasher.class);
+        tokenProvider = Mockito.mock(TokenProvider.class);
+        when(tokenProvider.generateToken(any(), anySet())).thenReturn("dummytoken");
 
-        authService = new AuthService(userPort, passwordEncoder, jwtUtil);
+        authService = new AuthService(userPort, passwordHasher, tokenProvider);
     }
 
     @Test
     void register_newUser_returnsAuthResponse() {
-        AuthRequest req = new AuthRequest();
-        req.setUsername("newuser");
-        req.setPassword("pass");
+        AuthCommand command = new AuthCommand("newuser", "pass", null);
 
         when(userPort.findByUsername("newuser")).thenReturn(Optional.empty());
+        when(passwordHasher.hash("pass")).thenReturn("hashed-pass");
         when(userPort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        AuthResponse resp = authService.register(req);
+        AuthResult resp = authService.register(command);
 
         assertNotNull(resp);
-        assertEquals("newuser", resp.getUsername());
-        assertEquals("dummytoken", resp.getToken());
+        assertEquals("newuser", resp.username());
+        assertEquals("dummytoken", resp.token());
     }
 
     @Test
     void login_validCredentials_returnsToken() {
-        AuthRequest req = new AuthRequest();
-        req.setUsername("exist");
-        req.setPassword("secret");
+        AuthCommand command = new AuthCommand("exist", "secret", null);
 
-        User u = User.builder().username("exist").password(passwordEncoder.encode("secret")).build();
+        User u = User.builder()
+                .username("exist")
+                .password("hashed-secret")
+                .roles(Set.of())
+                .build();
         when(userPort.findByUsername("exist")).thenReturn(Optional.of(u));
+        when(passwordHasher.matches("secret", "hashed-secret")).thenReturn(true);
 
-        AuthResponse resp = authService.login(req);
+        AuthResult resp = authService.login(command);
 
         assertNotNull(resp);
-        assertEquals("exist", resp.getUsername());
-        assertEquals("dummytoken", resp.getToken());
+        assertEquals("exist", resp.username());
+        assertEquals("dummytoken", resp.token());
     }
 }

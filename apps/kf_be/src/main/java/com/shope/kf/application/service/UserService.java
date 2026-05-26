@@ -1,21 +1,19 @@
 package com.shope.kf.application.service;
 
+import com.shope.kf.application.common.PageQuery;
+import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.UserUseCase;
+import com.shope.kf.application.port.out.PasswordHasher;
 import com.shope.kf.application.port.out.UserPersistencePort;
 import com.shope.kf.domain.model.User;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
-@Service
 public class UserService implements UserUseCase {
     private final UserPersistencePort port;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordHasher passwordHasher;
 
-    public UserService(UserPersistencePort port, PasswordEncoder passwordEncoder) {
+    public UserService(UserPersistencePort port, PasswordHasher passwordHasher) {
         this.port = port;
-        this.passwordEncoder = passwordEncoder;
+        this.passwordHasher = passwordHasher;
     }
 
     @Override
@@ -23,7 +21,7 @@ public class UserService implements UserUseCase {
         if (port.findByUsername(user.getUsername()).isPresent()) {
             throw new RuntimeException("Username already exists");
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setPassword(passwordHasher.hash(user.getPassword()));
         return port.save(user);
     }
 
@@ -34,7 +32,7 @@ public class UserService implements UserUseCase {
         existing.setEmail(user.getEmail() == null ? existing.getEmail() : user.getEmail());
         existing.setRoles(user.getRoles() == null ? existing.getRoles() : user.getRoles());
         if (user.getPassword() != null && !user.getPassword().isBlank()) {
-            existing.setPassword(passwordEncoder.encode(user.getPassword()));
+            existing.setPassword(passwordHasher.hash(user.getPassword()));
         }
         return port.save(existing);
     }
@@ -50,7 +48,7 @@ public class UserService implements UserUseCase {
     }
 
     @Override
-    public Page<User> list(String search, Pageable pageable) {
-        return port.findAll(search, pageable);
+    public PageResult<User> list(String search, PageQuery pageQuery) {
+        return port.findAll(search, pageQuery);
     }
 }

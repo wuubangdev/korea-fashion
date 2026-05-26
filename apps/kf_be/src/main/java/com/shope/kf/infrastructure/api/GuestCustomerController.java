@@ -1,17 +1,18 @@
 package com.shope.kf.infrastructure.api;
 
 import com.shope.kf.infrastructure.persistence.jpa.GuestCustomerJpaEntity;
-import com.shope.kf.infrastructure.persistence.repository.GuestCustomerJpaRepository;
+import com.shope.kf.application.port.in.GenericCrudUseCase;
 import com.shope.kf.infrastructure.security.RequireAuth;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequireAuth
 @RestController
 @RequestMapping("/api/guest-customers")
-public class GuestCustomerController extends CrudController<GuestCustomerJpaEntity, String, GuestCustomerJpaRepository> {
-    public GuestCustomerController(GuestCustomerJpaRepository repository) {
-        super(repository);
+public class GuestCustomerController extends CrudController<GuestCustomerJpaEntity, String> {
+    public GuestCustomerController(@Qualifier("guestCustomerCrudUseCase") GenericCrudUseCase<GuestCustomerJpaEntity, String> useCase) {
+        super(useCase);
     }
 
     @Override

@@ -1,17 +1,15 @@
 package com.shope.kf.application.service;
 
+import com.shope.kf.application.common.PageQuery;
+import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.OrderUseCase;
 import com.shope.kf.application.port.out.OrderPersistencePort;
 import com.shope.kf.application.port.out.ShipperPersistencePort;
 import com.shope.kf.domain.model.Order;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 import java.util.Set;
 
-@Service
 public class OrderService implements OrderUseCase {
     private static final Set<String> SHIPPING_STATUSES = Set.of("PENDING", "ASSIGNED", "SHIPPING", "DELIVERED", "FAILED", "CANCELLED");
 
@@ -82,15 +80,15 @@ public class OrderService implements OrderUseCase {
     }
 
     @Override
-    public Page<Order> list(String search, Pageable pageable) {
-        return port.findAll(search, pageable);
+    public PageResult<Order> list(String search, PageQuery pageQuery) {
+        return port.findAll(search, pageQuery);
     }
 
     @Override
-    public Page<Order> listByShipper(String shipperId, Pageable pageable) {
+    public PageResult<Order> listByShipper(String shipperId, PageQuery pageQuery) {
         if (!shipperPort.existsById(shipperId)) {
             throw new RuntimeException("Shipper not found");
         }
-        return port.findByShipperId(shipperId, pageable);
+        return port.findByShipperId(shipperId, pageQuery);
     }
 }

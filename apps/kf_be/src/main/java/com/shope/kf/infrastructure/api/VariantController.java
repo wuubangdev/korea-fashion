@@ -1,22 +1,16 @@
 package com.shope.kf.infrastructure.api;
 
-import com.shope.kf.application.dto.request.CreateVariantRequest;
-import com.shope.kf.application.dto.request.UpdateVariantRequest;
-import com.shope.kf.application.dto.response.VariantResponse;
+import com.shope.kf.infrastructure.api.dto.request.CreateVariantRequest;
+import com.shope.kf.infrastructure.api.dto.request.UpdateVariantRequest;
+import com.shope.kf.infrastructure.api.dto.response.VariantResponse;
+import com.shope.kf.application.common.PageQuery;
+import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.VariantUseCase;
 import com.shope.kf.domain.model.Variant;
 import com.shope.kf.infrastructure.api.mapper.VariantApiMapper;
 import com.shope.kf.infrastructure.security.RequireAuth;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RequireAuth
 @RestController
@@ -37,28 +31,21 @@ public class VariantController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<VariantResponse>> list(
+    public ResponseEntity<PageResult<VariantResponse>> list(
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id,desc") String sort
     ) {
-        String[] sortParts = sort.split(",");
-        Sort.Direction dir = Sort.Direction.fromString(sortParts.length > 1 ? sortParts[1] : "desc");
-        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, sortParts[0]));
-        Page<Variant> p = variantUseCase.list(search, pageable);
-        List<VariantResponse> items = p.stream().map(VariantApiMapper::toResponse).collect(Collectors.toList());
-        Page<VariantResponse> resp = new PageImpl<>(items, pageable, p.getTotalElements());
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(variantUseCase.list(search, PageQuery.of(page, size, sort)).map(VariantApiMapper::toResponse));
     }
 
     @GetMapping("/product/{productId}")
-    public ResponseEntity<Page<VariantResponse>> listByProduct(@PathVariable Long productId,
-                                                                @RequestParam(defaultValue = "0") int page,
-                                                                @RequestParam(defaultValue = "10") int size) {
-        Page<Variant> p = variantUseCase.listByProduct(productId, PageRequest.of(page, size));
-        List<VariantResponse> items = p.stream().map(VariantApiMapper::toResponse).collect(Collectors.toList());
-        return ResponseEntity.ok(new PageImpl<>(items, PageRequest.of(page, size), p.getTotalElements()));
+    public ResponseEntity<PageResult<VariantResponse>> listByProduct(@PathVariable Long productId,
+                                                                     @RequestParam(defaultValue = "0") int page,
+                                                                     @RequestParam(defaultValue = "10") int size,
+                                                                     @RequestParam(defaultValue = "id,desc") String sort) {
+        return ResponseEntity.ok(variantUseCase.listByProduct(productId, PageQuery.of(page, size, sort)).map(VariantApiMapper::toResponse));
     }
 
     @GetMapping("/{id}")

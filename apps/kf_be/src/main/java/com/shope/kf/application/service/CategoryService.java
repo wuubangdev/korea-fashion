@@ -1,13 +1,11 @@
 package com.shope.kf.application.service;
 
+import com.shope.kf.application.common.PageQuery;
+import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.CategoryUseCase;
 import com.shope.kf.application.port.out.CategoryPersistencePort;
 import com.shope.kf.domain.model.Category;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 
-@Service
 public class CategoryService implements CategoryUseCase {
 
     private final CategoryPersistencePort port;
@@ -38,7 +36,7 @@ public class CategoryService implements CategoryUseCase {
     }
 
     @Override
-    public Page<Category> list(String search, Pageable pageable) {
-        return port.findAll(search, pageable);
+    public PageResult<Category> list(String search, PageQuery pageQuery) {
+        return port.findAll(search, pageQuery);
     }
 }

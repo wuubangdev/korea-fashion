@@ -1,9 +1,9 @@
 package com.shope.kf.application.port.in;
 
-import com.shope.kf.application.dto.request.AuthRequest;
-import com.shope.kf.application.dto.response.AuthResponse;
+import com.shope.kf.application.command.AuthCommand;
+import com.shope.kf.application.result.AuthResult;
 
 public interface AuthUseCase {
-    AuthResponse login(AuthRequest request);
-    AuthResponse register(AuthRequest request);
+    AuthResult login(AuthCommand command);
+    AuthResult register(AuthCommand command);
 }

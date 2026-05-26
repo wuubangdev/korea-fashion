@@ -1,23 +1,17 @@
 package com.shope.kf.infrastructure.api;
 
-import com.shope.kf.application.dto.request.CreateUserRequest;
-import com.shope.kf.application.dto.request.UpdateUserRequest;
-import com.shope.kf.application.dto.response.UserResponse;
+import com.shope.kf.infrastructure.api.dto.request.CreateUserRequest;
+import com.shope.kf.infrastructure.api.dto.request.UpdateUserRequest;
+import com.shope.kf.infrastructure.api.dto.response.UserResponse;
+import com.shope.kf.application.common.PageQuery;
+import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.UserUseCase;
 import com.shope.kf.domain.model.User;
 import com.shope.kf.infrastructure.api.mapper.UserApiMapper;
 import com.shope.kf.infrastructure.security.RequireAuth;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RequireAuth
 @RestController
@@ -36,18 +30,13 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<UserResponse>> list(
+    public ResponseEntity<PageResult<UserResponse>> list(
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id,desc") String sort
     ) {
-        String[] sortParts = sort.split(",");
-        Sort.Direction dir = Sort.Direction.fromString(sortParts.length > 1 ? sortParts[1] : "desc");
-        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, sortParts[0]));
-        Page<User> users = userUseCase.list(search, pageable);
-        List<UserResponse> items = users.stream().map(UserApiMapper::toResponse).collect(Collectors.toList());
-        return ResponseEntity.ok(new PageImpl<>(items, pageable, users.getTotalElements()));
+        return ResponseEntity.ok(userUseCase.list(search, PageQuery.of(page, size, sort)).map(UserApiMapper::toResponse));
     }
 
     @GetMapping("/{id}")

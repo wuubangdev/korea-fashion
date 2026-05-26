@@ -1,12 +1,14 @@
 package com.shope.kf.infrastructure.persistence.adapter;
 
+import com.shope.kf.application.common.PageQuery;
+import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.out.CategoryPersistencePort;
 import com.shope.kf.domain.model.Category;
 import com.shope.kf.infrastructure.persistence.jpa.CategoryJpaEntity;
 import com.shope.kf.infrastructure.persistence.jpa.mapper.CategoryMapper;
+import com.shope.kf.infrastructure.persistence.jpa.mapper.PageMapper;
 import com.shope.kf.infrastructure.persistence.repository.CategoryJpaRepository;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -38,8 +40,9 @@ public class CategoryPersistenceAdapter implements CategoryPersistencePort {
     }
 
     @Override
-    public Page<Category> findAll(String search, Pageable pageable) {
+    public PageResult<Category> findAll(String search, PageQuery pageQuery) {
+        var pageable = PageMapper.toPageable(pageQuery);
         Page<CategoryJpaEntity> page = (search == null || search.isBlank()) ? repo.findAll(pageable) : repo.findByNameContainingIgnoreCase(search, pageable);
-        return page.map(CategoryMapper::toDomain);
+        return PageMapper.toResult(page, CategoryMapper::toDomain);
     }
 }

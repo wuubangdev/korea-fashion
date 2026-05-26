@@ -1,8 +1,8 @@
 package com.shope.kf.infrastructure.api.mapper;
 
-import com.shope.kf.application.dto.request.CreateProductRequest;
-import com.shope.kf.application.dto.request.UpdateProductRequest;
-import com.shope.kf.application.dto.response.ProductResponse;
+import com.shope.kf.infrastructure.api.dto.request.CreateProductRequest;
+import com.shope.kf.infrastructure.api.dto.request.UpdateProductRequest;
+import com.shope.kf.infrastructure.api.dto.response.ProductResponse;
 import com.shope.kf.domain.model.Product;
 
 public final class ProductApiMapper {

@@ -1,13 +1,15 @@
 package com.shope.kf.infrastructure.persistence.adapter;
 
+import com.shope.kf.application.common.PageQuery;
+import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.out.UserPersistencePort;
 import com.shope.kf.domain.model.User;
 import com.shope.kf.infrastructure.persistence.jpa.UserJpaEntity;
+import com.shope.kf.infrastructure.persistence.jpa.mapper.PageMapper;
 import com.shope.kf.infrastructure.persistence.jpa.mapper.UserMapper;
 import com.shope.kf.infrastructure.persistence.repository.RoleJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.UserJpaRepository;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -47,10 +49,11 @@ public class UserPersistenceAdapter implements UserPersistencePort {
 	}
 
 	@Override
-	public Page<User> findAll(String search, Pageable pageable) {
+	public PageResult<User> findAll(String search, PageQuery pageQuery) {
+		var pageable = PageMapper.toPageable(pageQuery);
 		Page<UserJpaEntity> page = (search == null || search.isBlank())
 				? userJpaRepository.findAll(pageable)
 				: userJpaRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(search, search, pageable);
-		return page.map(UserMapper::toDomain);
+		return PageMapper.toResult(page, UserMapper::toDomain);
 	}
 }

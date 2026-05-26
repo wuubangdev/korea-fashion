@@ -1,8 +1,8 @@
 package com.shope.kf.infrastructure.api.mapper;
 
-import com.shope.kf.application.dto.request.CreateUserRequest;
-import com.shope.kf.application.dto.request.UpdateUserRequest;
-import com.shope.kf.application.dto.response.UserResponse;
+import com.shope.kf.infrastructure.api.dto.request.CreateUserRequest;
+import com.shope.kf.infrastructure.api.dto.request.UpdateUserRequest;
+import com.shope.kf.infrastructure.api.dto.response.UserResponse;
 import com.shope.kf.domain.model.Role;
 import com.shope.kf.domain.model.User;
 

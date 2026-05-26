@@ -1,13 +1,11 @@
 package com.shope.kf.application.service;
 
+import com.shope.kf.application.common.PageQuery;
+import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.VariantUseCase;
 import com.shope.kf.application.port.out.VariantPersistencePort;
 import com.shope.kf.domain.model.Variant;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 
-@Service
 public class VariantService implements VariantUseCase {
 
     private final VariantPersistencePort port;
@@ -38,12 +36,12 @@ public class VariantService implements VariantUseCase {
     }
 
     @Override
-    public Page<Variant> list(String search, Pageable pageable) {
-        return port.findAll(search, pageable);
+    public PageResult<Variant> list(String search, PageQuery pageQuery) {
+        return port.findAll(search, pageQuery);
     }
 
     @Override
-    public Page<Variant> listByProduct(Long productId, Pageable pageable) {
-        return port.findByProduct(productId, pageable);
+    public PageResult<Variant> listByProduct(Long productId, PageQuery pageQuery) {
+        return port.findByProduct(productId, pageQuery);
     }
 }

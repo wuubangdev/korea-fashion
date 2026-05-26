@@ -1,23 +1,17 @@
 package com.shope.kf.infrastructure.api;
 
-import com.shope.kf.application.dto.request.CreateOrderRequest;
-import com.shope.kf.application.dto.request.AssignShipperRequest;
-import com.shope.kf.application.dto.request.UpdateShippingStatusRequest;
-import com.shope.kf.application.dto.response.OrderResponse;
+import com.shope.kf.infrastructure.api.dto.request.CreateOrderRequest;
+import com.shope.kf.infrastructure.api.dto.request.AssignShipperRequest;
+import com.shope.kf.infrastructure.api.dto.request.UpdateShippingStatusRequest;
+import com.shope.kf.infrastructure.api.dto.response.OrderResponse;
+import com.shope.kf.application.common.PageQuery;
+import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.OrderUseCase;
 import com.shope.kf.domain.model.Order;
 import com.shope.kf.infrastructure.api.mapper.OrderApiMapper;
 import com.shope.kf.infrastructure.security.RequireAuth;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RequireAuth
 @RestController
@@ -37,19 +31,13 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<OrderResponse>> list(
+    public ResponseEntity<PageResult<OrderResponse>> list(
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id,desc") String sort
     ) {
-        String[] sortParts = sort.split(",");
-        Sort.Direction dir = Sort.Direction.fromString(sortParts.length > 1 ? sortParts[1] : "desc");
-        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, sortParts[0]));
-        Page<Order> p = orderUseCase.list(search, pageable);
-        List<OrderResponse> items = p.stream().map(OrderApiMapper::toResponse).collect(Collectors.toList());
-        Page<OrderResponse> resp = new PageImpl<>(items, pageable, p.getTotalElements());
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(orderUseCase.list(search, PageQuery.of(page, size, sort)).map(OrderApiMapper::toResponse));
     }
 
     @GetMapping("/{id}")
@@ -59,18 +47,13 @@ public class OrderController {
     }
 
     @GetMapping("/shipper/{shipperId}")
-    public ResponseEntity<Page<OrderResponse>> listByShipper(
+    public ResponseEntity<PageResult<OrderResponse>> listByShipper(
             @PathVariable String shipperId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id,desc") String sort
     ) {
-        String[] sortParts = sort.split(",");
-        Sort.Direction dir = Sort.Direction.fromString(sortParts.length > 1 ? sortParts[1] : "desc");
-        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, sortParts[0]));
-        Page<Order> orders = orderUseCase.listByShipper(shipperId, pageable);
-        List<OrderResponse> items = orders.stream().map(OrderApiMapper::toResponse).collect(Collectors.toList());
-        return ResponseEntity.ok(new PageImpl<>(items, pageable, orders.getTotalElements()));
+        return ResponseEntity.ok(orderUseCase.listByShipper(shipperId, PageQuery.of(page, size, sort)).map(OrderApiMapper::toResponse));
     }
 
     @PutMapping("/{id}/status")

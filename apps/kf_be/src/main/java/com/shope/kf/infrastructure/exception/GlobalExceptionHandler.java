@@ -36,4 +36,10 @@ public class GlobalExceptionHandler {
         Map<String, String> m = Map.of("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(m);
     }
+
+    @ExceptionHandler({com.shope.kf.infrastructure.exception.ForbiddenException.class})
+    public ResponseEntity<Object> handleForbidden(RuntimeException ex) {
+        Map<String, String> m = Map.of("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(m);
+    }
 }

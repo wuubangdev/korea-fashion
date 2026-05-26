@@ -1,12 +1,14 @@
 package com.shope.kf.infrastructure.persistence.adapter;
 
+import com.shope.kf.application.common.PageQuery;
+import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.out.ProductPersistencePort;
 import com.shope.kf.domain.model.Product;
 import com.shope.kf.infrastructure.persistence.jpa.ProductJpaEntity;
+import com.shope.kf.infrastructure.persistence.jpa.mapper.PageMapper;
 import com.shope.kf.infrastructure.persistence.jpa.mapper.ProductMapper;
 import com.shope.kf.infrastructure.persistence.repository.ProductJpaRepository;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -38,8 +40,9 @@ public class ProductPersistenceAdapter implements ProductPersistencePort {
     }
 
     @Override
-    public Page<Product> findAll(String search, Pageable pageable) {
+    public PageResult<Product> findAll(String search, PageQuery pageQuery) {
+        var pageable = PageMapper.toPageable(pageQuery);
         Page<ProductJpaEntity> page = (search == null || search.isBlank()) ? repo.findAll(pageable) : repo.findByNameContainingIgnoreCase(search, pageable);
-        return page.map(ProductMapper::toDomain);
+        return PageMapper.toResult(page, ProductMapper::toDomain);
     }
 }
