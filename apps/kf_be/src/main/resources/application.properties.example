@@ -1,9 +1,9 @@
 spring.application.name=kf
 
 # MySQL settings
-spring.datasource.url=${SPRING_DATASOURCE_URL}
-spring.datasource.username=${SPRING_DATASOURCE_USERNAME}
-spring.datasource.password=${SPRING_DATASOURCE_PASSWORD}
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/korea_fashion?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:your_username}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:your_password}
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
 # Automatically update database schema from JPA entities during development.
@@ -13,5 +13,5 @@ spring.jpa.show-sql=${SPRING_JPA_SHOW_SQL:true}
 spring.jpa.properties.hibernate.format_sql=${SPRING_JPA_FORMAT_SQL:true}
 
 # JWT settings
-app.jwt.secret=${APP_JWT_SECRET}
+app.jwt.secret=${APP_JWT_SECRET:replace-with-long-random-secret}
 app.jwt.expiration-ms=86400000

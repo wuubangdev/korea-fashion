@@ -24,10 +24,20 @@ cp .env.example .env
 Default values:
 
 ```env
-MYSQL_DATABASE=kf
-MYSQL_USER=kf
-MYSQL_PASSWORD=kf_password
-MYSQL_ROOT_PASSWORD=root_password
+MYSQL_DATABASE=korea_fashion
+MYSQL_USER=your_mysql_user
+MYSQL_PASSWORD=your_mysql_password
+SPRING_DATASOURCE_URL=jdbc:mysql://your-db-host:3399/korea_fashion?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+SPRING_DATASOURCE_USERNAME=your_mysql_user
+SPRING_DATASOURCE_PASSWORD=your_mysql_password
+APP_JWT_SECRET=replace-with-long-random-secret
+
+LOCAL_MYSQL_DATABASE=kf
+LOCAL_MYSQL_USER=kf
+LOCAL_MYSQL_PASSWORD=kf_password
+LOCAL_MYSQL_ROOT_PASSWORD=root_password
+LOCAL_MYSQL_PORT=3306
+
 BACKEND_PORT=8080
 FRONTEND_PORT=3000
 MYSQL_PORT=3306
@@ -66,7 +76,8 @@ Service URLs:
 
 - Frontend: http://localhost:3000
 - Backend: http://localhost:8080
-- MySQL: `localhost:3306`
+- MySQL mac dinh cua backend: gia tri trong `.env`
+- MySQL container local neu can dung rieng: `localhost:3306`
 
 ## Backend
 

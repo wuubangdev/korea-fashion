@@ -54,7 +54,7 @@ Mac dinh app dung cau hinh trong `src/main/resources/application.properties`:
 
 ```properties
 spring.application.name=kf
-app.jwt.secret=verysecretkeychangemeplease0123456789
+app.jwt.secret=${APP_JWT_SECRET:replace-with-long-random-secret}
 app.jwt.expiration-ms=86400000
 ```
 

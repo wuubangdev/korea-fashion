@@ -3,12 +3,12 @@ services:
     image: mysql:8.4
     container_name: kf_db
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-kf}
-      MYSQL_USER: ${MYSQL_USER:-kf}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-kf_password}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${LOCAL_MYSQL_DATABASE:-kf}
+      MYSQL_USER: ${LOCAL_MYSQL_USER:-kf}
+      MYSQL_PASSWORD: ${LOCAL_MYSQL_PASSWORD:-kf_password}
+      MYSQL_ROOT_PASSWORD: ${LOCAL_MYSQL_ROOT_PASSWORD:-root_password}
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "${LOCAL_MYSQL_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -25,14 +25,12 @@ services:
     container_name: kf_backend
     environment:
       SPRING_APPLICATION_NAME: kf
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-kf}
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-kf}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-kf_password}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      APP_JWT_SECRET: ${APP_JWT_SECRET}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
-    depends_on:
-      db:
-        condition: service_healthy
 
   frontend:
     build:

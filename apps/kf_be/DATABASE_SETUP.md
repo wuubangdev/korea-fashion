@@ -1,6 +1,6 @@
 # Database Setup
 
-Backend co san dependency cho H2 va MySQL. Cau hinh hien tai chi co app name va JWT, nen khi chay voi database that can bo sung datasource properties.
+Backend co san dependency cho H2 va MySQL. Cau hinh mac dinh hien dang ket noi MySQL that, co the override bang bien moi truong khi can doi moi truong.
 
 ## Cau Hinh Hien Tai
 
@@ -14,7 +14,15 @@ Noi dung hien tai:
 
 ```properties
 spring.application.name=kf
-app.jwt.secret=verysecretkeychangemeplease0123456789
+spring.datasource.url=${SPRING_DATASOURCE_URL}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD}
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.jpa.generate-ddl=true
+spring.jpa.hibernate.ddl-auto=${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+spring.jpa.show-sql=${SPRING_JPA_SHOW_SQL:true}
+spring.jpa.properties.hibernate.format_sql=${SPRING_JPA_FORMAT_SQL:true}
+app.jwt.secret=${APP_JWT_SECRET}
 app.jwt.expiration-ms=86400000
 ```
 
@@ -57,11 +65,12 @@ CREATE DATABASE korea_fashion CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 Cau hinh mau:
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/korea_fashion?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-spring.datasource.username=root
+spring.datasource.url=jdbc:mysql://your-db-host:3306/korea_fashion?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+spring.datasource.username=your_username
 spring.datasource.password=your_password
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
+spring.jpa.generate-ddl=true
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
@@ -141,5 +150,5 @@ $env:APP_JWT_SECRET="replace-with-long-random-secret"
 Sau do map trong properties:
 
 ```properties
-app.jwt.secret=${APP_JWT_SECRET:verysecretkeychangemeplease0123456789}
+app.jwt.secret=${APP_JWT_SECRET:replace-with-long-random-secret}
 ```

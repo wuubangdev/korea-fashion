@@ -23,13 +23,20 @@
 # SECURITY & ENVIRONMENTS (TUYỆT ĐỐI KHÔNG PUSH)
 # ====================================================================
 **/.env
+**/.env.*
+!**/.env.example
 **/.env.local
 **/.env.development.local
 **/.env.test.local
 **/.env.production.local
 **/application.properties
 !apps/kf_be/src/main/resources/application.properties
+!**/application.properties.example
+**/application-local.properties
+**/application-*.local.properties
 **/application.yml
+**/application-local.yml
+**/application-*.local.yml
 **/local.properties
 
 # ====================================================================
