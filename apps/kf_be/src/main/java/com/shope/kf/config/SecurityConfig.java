@@ -23,8 +23,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // Delegate authorization to AOP; allow all requests through Spring Security
-        http.csrf().disable()
-                .authorizeHttpRequests().anyRequest().permitAll();
+        http.csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         return http.build();
     }
 
