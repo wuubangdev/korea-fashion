@@ -12,6 +12,7 @@ import com.shope.kf.infrastructure.persistence.repository.OrderJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.ProductJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.UserJpaRepository;
 import com.shope.kf.infrastructure.security.RequireAuth;
+import com.shope.kf.infrastructure.security.RoleConstants;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.math.BigDecimal;
 
 @RestController
-@RequireAuth
+@RequireAuth(roles = {RoleConstants.ADMIN, RoleConstants.STAFF})
 @RequestMapping("/api/admin/dashboard")
 public class AdminDashboardController {
     private final ProductJpaRepository productRepo;

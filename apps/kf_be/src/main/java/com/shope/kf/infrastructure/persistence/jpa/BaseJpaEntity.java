@@ -3,6 +3,7 @@ package com.shope.kf.infrastructure.persistence.jpa;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.SQLRestriction;
@@ -20,6 +21,9 @@ import java.time.Instant;
 @EntityListeners(AuditingEntityListener.class)
 @SQLRestriction("deleted_at is null")
 public abstract class BaseJpaEntity {
+    @Version
+    private Long version;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

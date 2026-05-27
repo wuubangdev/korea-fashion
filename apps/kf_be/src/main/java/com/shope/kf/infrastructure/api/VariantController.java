@@ -10,6 +10,7 @@ import com.shope.kf.domain.model.Variant;
 import com.shope.kf.infrastructure.api.dto.response.ApiResponse;
 import com.shope.kf.infrastructure.api.mapper.VariantApiMapper;
 import com.shope.kf.infrastructure.security.RequireAuth;
+import com.shope.kf.infrastructure.security.RoleConstants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -68,6 +69,7 @@ public class VariantController {
         return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
     }
 
+    @RequireAuth(roles = {RoleConstants.ADMIN})
     @DeleteMapping("/{id}/hard")
     public ResponseEntity<ApiResponse<Void>> hardDelete(@PathVariable Long id) {
         variantUseCase.hardDelete(id);

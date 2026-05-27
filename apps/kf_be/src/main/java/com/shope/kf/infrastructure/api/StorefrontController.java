@@ -14,14 +14,21 @@ import com.shope.kf.infrastructure.exception.AppException;
 import com.shope.kf.infrastructure.exception.ErrorCode;
 import com.shope.kf.infrastructure.persistence.jpa.ProductJpaEntity;
 import com.shope.kf.infrastructure.persistence.repository.BannerJpaRepository;
+import com.shope.kf.infrastructure.persistence.repository.BlogPostJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.BrandJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.CategoryJpaRepository;
+import com.shope.kf.infrastructure.persistence.repository.CouponJpaRepository;
+import com.shope.kf.infrastructure.persistence.repository.FaqJpaRepository;
+import com.shope.kf.infrastructure.persistence.repository.MenuItemJpaRepository;
+import com.shope.kf.infrastructure.persistence.repository.MenuJpaRepository;
+import com.shope.kf.infrastructure.persistence.repository.PageJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.ProductImageJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.ProductJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.ProductCollectionJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.ProductAttributeJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.ProductOptionJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.ProductOptionValueJpaRepository;
+import com.shope.kf.infrastructure.persistence.repository.ProductRelationJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.ProductTagJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.PaymentMethodJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.SiteSettingJpaRepository;
@@ -34,11 +41,14 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/storefront")
@@ -59,6 +69,13 @@ public class StorefrontController {
     private final PaymentMethodJpaRepository paymentMethodRepo;
     private final StorePolicyJpaRepository storePolicyRepo;
     private final VariantJpaRepository variantRepo;
+    private final ProductRelationJpaRepository productRelationRepo;
+    private final PageJpaRepository pageRepo;
+    private final MenuJpaRepository menuRepo;
+    private final MenuItemJpaRepository menuItemRepo;
+    private final BlogPostJpaRepository blogPostRepo;
+    private final FaqJpaRepository faqRepo;
+    private final CouponJpaRepository couponRepo;
 
     public StorefrontController(
             ProductUseCase productUseCase,
@@ -76,7 +93,14 @@ public class StorefrontController {
             ShippingMethodJpaRepository shippingMethodRepo,
             PaymentMethodJpaRepository paymentMethodRepo,
             StorePolicyJpaRepository storePolicyRepo,
-            VariantJpaRepository variantRepo
+            VariantJpaRepository variantRepo,
+            ProductRelationJpaRepository productRelationRepo,
+            PageJpaRepository pageRepo,
+            MenuJpaRepository menuRepo,
+            MenuItemJpaRepository menuItemRepo,
+            BlogPostJpaRepository blogPostRepo,
+            FaqJpaRepository faqRepo,
+            CouponJpaRepository couponRepo
     ) {
         this.productUseCase = productUseCase;
         this.productRepo = productRepo;
@@ -94,6 +118,13 @@ public class StorefrontController {
         this.paymentMethodRepo = paymentMethodRepo;
         this.storePolicyRepo = storePolicyRepo;
         this.variantRepo = variantRepo;
+        this.productRelationRepo = productRelationRepo;
+        this.pageRepo = pageRepo;
+        this.menuRepo = menuRepo;
+        this.menuItemRepo = menuItemRepo;
+        this.blogPostRepo = blogPostRepo;
+        this.faqRepo = faqRepo;
+        this.couponRepo = couponRepo;
     }
 
     @GetMapping("/home")
@@ -189,6 +220,64 @@ public class StorefrontController {
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Policy not found"))));
     }
 
+    @GetMapping("/pages")
+    public ResponseEntity<ApiResponse<?>> pages() {
+        return ResponseEntity.ok(ApiResponse.ok(pageRepo.findByStatusIgnoreCaseOrderByPublishedAtDesc("PUBLISHED")));
+    }
+
+    @GetMapping("/pages/{slug}")
+    public ResponseEntity<ApiResponse<?>> page(@PathVariable String slug) {
+        return ResponseEntity.ok(ApiResponse.ok(pageRepo.findBySlugAndStatusIgnoreCase(slug, "PUBLISHED")
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Page not found"))));
+    }
+
+    @GetMapping("/menus/{code}")
+    public ResponseEntity<ApiResponse<?>> menu(@PathVariable String code) {
+        var menu = menuRepo.findByCodeAndActiveTrue(code)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Menu not found"));
+        return ResponseEntity.ok(ApiResponse.ok(menuItemRepo.findByMenuIdAndActiveTrueOrderByDisplayOrderAscIdAsc(menu.getId())));
+    }
+
+    @GetMapping("/blog-posts")
+    public ResponseEntity<ApiResponse<?>> blogPosts() {
+        return ResponseEntity.ok(ApiResponse.ok(blogPostRepo.findByStatusIgnoreCaseOrderByPublishedAtDesc("PUBLISHED")));
+    }
+
+    @GetMapping("/blog-posts/{slug}")
+    public ResponseEntity<ApiResponse<?>> blogPost(@PathVariable String slug) {
+        return ResponseEntity.ok(ApiResponse.ok(blogPostRepo.findBySlugAndStatusIgnoreCase(slug, "PUBLISHED")
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Blog post not found"))));
+    }
+
+    @GetMapping("/faqs")
+    public ResponseEntity<ApiResponse<?>> faqs() {
+        return ResponseEntity.ok(ApiResponse.ok(faqRepo.findByActiveTrueOrderByDisplayOrderAscIdAsc()));
+    }
+
+    @PostMapping("/coupons/validate")
+    public ResponseEntity<ApiResponse<CouponValidationResponse>> validateCoupon(@RequestBody CouponValidationRequest request) {
+        var coupon = couponRepo.findByCodeIgnoreCaseAndActiveTrue(request.code())
+                .orElse(null);
+        if (coupon == null) {
+            return ResponseEntity.ok(ApiResponse.ok(new CouponValidationResponse(false, "Coupon not found or inactive", null, BigDecimal.ZERO, false, request.subtotal())));
+        }
+        LocalDateTime now = LocalDateTime.now();
+        if ((coupon.getStartsAt() != null && coupon.getStartsAt().isAfter(now))
+                || (coupon.getEndsAt() != null && coupon.getEndsAt().isBefore(now))) {
+            return ResponseEntity.ok(ApiResponse.ok(new CouponValidationResponse(false, "Coupon is outside valid date range", coupon.getCode(), BigDecimal.ZERO, false, request.subtotal())));
+        }
+        BigDecimal subtotal = request.subtotal() == null ? BigDecimal.ZERO : request.subtotal();
+        if (coupon.getMinOrderAmount() != null && subtotal.compareTo(coupon.getMinOrderAmount()) < 0) {
+            return ResponseEntity.ok(ApiResponse.ok(new CouponValidationResponse(false, "Order subtotal does not meet minimum amount", coupon.getCode(), BigDecimal.ZERO, false, subtotal)));
+        }
+        if (coupon.getUsageLimit() != null && coupon.getUsedCount() != null && coupon.getUsedCount() >= coupon.getUsageLimit()) {
+            return ResponseEntity.ok(ApiResponse.ok(new CouponValidationResponse(false, "Coupon usage limit reached", coupon.getCode(), BigDecimal.ZERO, false, subtotal)));
+        }
+        BigDecimal discount = calculateCouponDiscount(coupon.getDiscountType(), coupon.getDiscountValue(), coupon.getMaxDiscountAmount(), subtotal);
+        BigDecimal totalAfterDiscount = subtotal.subtract(discount).max(BigDecimal.ZERO);
+        return ResponseEntity.ok(ApiResponse.ok(new CouponValidationResponse(true, "Coupon is valid", coupon.getCode(), discount, Boolean.TRUE.equals(coupon.getFreeShipping()), totalAfterDiscount)));
+    }
+
     @GetMapping("/filters")
     public ResponseEntity<ApiResponse<StorefrontFiltersResponse>> filters() {
         return ResponseEntity.ok(ApiResponse.ok(new StorefrontFiltersResponse(
@@ -214,13 +303,22 @@ public class StorefrontController {
             @RequestParam(defaultValue = "8") int size
     ) {
         ProductJpaEntity product = resolveProduct(slugOrId);
-        ProductFilter filter = new ProductFilter(null, product.getCategoryId(), product.getBrand(), product.getBrandId(), product.getCollectionId(), null, null, null, null, null, "ACTIVE", null, null, null, null, null);
-        var related = productUseCase.list(filter, PageQuery.of(0, size + 1, "newest"))
-                .map(this::toSummary);
-        var content = related.content().stream()
-                .filter(item -> !item.id().equals(product.getId()))
+        var configuredRelationIds = productRelationRepo.findByProductIdAndActiveTrueOrderByDisplayOrderAscIdAsc(product.getId()).stream()
+                .map(relation -> relation.getRelatedProductId())
                 .limit(size)
                 .toList();
+        if (!configuredRelationIds.isEmpty()) {
+            var content = configuredRelationIds.stream()
+                    .map(productRepo::findById)
+                    .flatMap(java.util.Optional::stream)
+                    .filter(this::isActive)
+                    .map(this::toSummary)
+                    .toList();
+            return ResponseEntity.ok(ApiResponse.ok(new PageResult<>(content, 0, size, content.size(), content.isEmpty() ? 0 : 1)));
+        }
+        ProductFilter filter = new ProductFilter(null, product.getCategoryId(), product.getBrand(), product.getBrandId(), product.getCollectionId(), null, null, null, null, null, "ACTIVE", null, null, null, null, null);
+        var related = productUseCase.list(filter, PageQuery.of(0, size + 1, "newest")).map(this::toSummary);
+        var content = related.content().stream().filter(item -> !item.id().equals(product.getId())).limit(size).toList();
         return ResponseEntity.ok(ApiResponse.ok(new PageResult<>(content, related.page(), size, content.size(), content.isEmpty() ? 0 : 1)));
     }
 
@@ -407,5 +505,34 @@ public class StorefrontController {
 
     private boolean isActive(ProductJpaEntity product) {
         return product.getStatus() == null || "ACTIVE".equalsIgnoreCase(product.getStatus());
+    }
+
+    private BigDecimal calculateCouponDiscount(String discountType, BigDecimal discountValue, BigDecimal maxDiscountAmount, BigDecimal subtotal) {
+        if (discountValue == null || subtotal == null || subtotal.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal discount;
+        if ("PERCENT".equalsIgnoreCase(discountType)) {
+            discount = subtotal.multiply(discountValue).divide(BigDecimal.valueOf(100));
+        } else {
+            discount = discountValue;
+        }
+        if (maxDiscountAmount != null && discount.compareTo(maxDiscountAmount) > 0) {
+            return maxDiscountAmount;
+        }
+        return discount.min(subtotal).max(BigDecimal.ZERO);
+    }
+
+    public record CouponValidationRequest(String code, BigDecimal subtotal, Long customerId) {
+    }
+
+    public record CouponValidationResponse(
+            boolean valid,
+            String message,
+            String code,
+            BigDecimal discountAmount,
+            boolean freeShipping,
+            BigDecimal totalAfterDiscount
+    ) {
     }
 }

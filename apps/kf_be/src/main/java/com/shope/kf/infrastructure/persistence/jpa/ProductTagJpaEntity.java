@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(
@@ -16,6 +17,7 @@ import lombok.Data;
         }
 )
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class ProductTagJpaEntity extends BaseJpaEntity {
     @Id
     @Column(length = 40)

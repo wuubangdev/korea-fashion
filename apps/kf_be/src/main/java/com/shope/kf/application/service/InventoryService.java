@@ -2,6 +2,8 @@ package com.shope.kf.application.service;
 
 import com.shope.kf.infrastructure.api.dto.request.InventoryAdjustmentRequest;
 import com.shope.kf.infrastructure.api.dto.response.InventoryAdjustmentResponse;
+import com.shope.kf.domain.model.Order;
+import com.shope.kf.domain.model.OrderItem;
 import com.shope.kf.infrastructure.exception.AppException;
 import com.shope.kf.infrastructure.exception.ErrorCode;
 import com.shope.kf.infrastructure.persistence.jpa.InventoryTransactionJpaEntity;
@@ -71,6 +73,76 @@ public class InventoryService {
                 variant.getAvailableQuantity(),
                 saved.getId()
         );
+    }
+
+    public void reserveOrder(Order order) {
+        if (order == null || order.getItems() == null || order.getItems().isEmpty()) {
+            return;
+        }
+        String referenceId = order.getOrderCode() == null ? String.valueOf(order.getId()) : order.getOrderCode();
+        for (OrderItem item : order.getItems()) {
+            if (item.getVariantId() == null || item.getQuantity() == null || item.getQuantity() <= 0) {
+                continue;
+            }
+            InventoryAdjustmentRequest request = new InventoryAdjustmentRequest();
+            request.setProductId(item.getProductId());
+            request.setVariantId(item.getVariantId());
+            request.setType("RESERVED");
+            request.setQuantity(item.getQuantity());
+            request.setReferenceType("ORDER");
+            request.setReferenceId(referenceId);
+            request.setNote("Reserved for order");
+            apply(request);
+        }
+    }
+
+    public void releaseOrder(Order order) {
+        if (order == null || order.getItems() == null || order.getItems().isEmpty()) {
+            return;
+        }
+        String referenceId = order.getOrderCode() == null ? String.valueOf(order.getId()) : order.getOrderCode();
+        for (OrderItem item : order.getItems()) {
+            if (item.getVariantId() == null || item.getQuantity() == null || item.getQuantity() <= 0) {
+                continue;
+            }
+            VariantJpaEntity variant = variantRepo.findById(item.getVariantId())
+                    .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Variant not found"));
+            int quantityToRelease = Math.min(item.getQuantity(), defaultInt(variant.getReservedQuantity()));
+            if (quantityToRelease <= 0) {
+                continue;
+            }
+            InventoryAdjustmentRequest request = new InventoryAdjustmentRequest();
+            request.setProductId(item.getProductId());
+            request.setVariantId(item.getVariantId());
+            request.setType("RELEASED");
+            request.setQuantity(quantityToRelease);
+            request.setReferenceType("ORDER");
+            request.setReferenceId(referenceId);
+            request.setNote("Released from cancelled order");
+            apply(request);
+        }
+    }
+
+    public void fulfillOrder(Order order) {
+        if (order == null || order.getItems() == null || order.getItems().isEmpty()) {
+            return;
+        }
+        releaseOrder(order);
+        String referenceId = order.getOrderCode() == null ? String.valueOf(order.getId()) : order.getOrderCode();
+        for (OrderItem item : order.getItems()) {
+            if (item.getVariantId() == null || item.getQuantity() == null || item.getQuantity() <= 0) {
+                continue;
+            }
+            InventoryAdjustmentRequest request = new InventoryAdjustmentRequest();
+            request.setProductId(item.getProductId());
+            request.setVariantId(item.getVariantId());
+            request.setType("SALE");
+            request.setQuantity(item.getQuantity());
+            request.setReferenceType("ORDER");
+            request.setReferenceId(referenceId);
+            request.setNote("Sold by delivered order");
+            apply(request);
+        }
     }
 
     private int defaultInt(Integer value) {

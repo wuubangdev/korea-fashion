@@ -18,8 +18,8 @@ public class UseCaseConfig {
     }
 
     @Bean
-    public OrderService orderService(OrderPersistencePort orderPort, ShipperPersistencePort shipperPort) {
-        return new OrderService(orderPort, shipperPort);
+    public OrderService orderService(OrderPersistencePort orderPort, ShipperPersistencePort shipperPort, InventoryService inventoryService) {
+        return new OrderService(orderPort, shipperPort, inventoryService);
     }
 
     @Bean

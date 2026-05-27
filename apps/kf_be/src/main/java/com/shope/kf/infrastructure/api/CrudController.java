@@ -6,6 +6,9 @@ import com.shope.kf.application.port.in.GenericCrudUseCase;
 import com.shope.kf.infrastructure.api.dto.response.ApiResponse;
 import com.shope.kf.infrastructure.exception.AppException;
 import com.shope.kf.infrastructure.exception.ErrorCode;
+import com.shope.kf.infrastructure.security.RequireAuth;
+import com.shope.kf.infrastructure.security.RoleConstants;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +20,7 @@ public abstract class CrudController<T, ID> {
     }
 
     @PostMapping
-    public ResponseEntity<T> create(@RequestBody T body) {
+    public ResponseEntity<T> create(@Valid @RequestBody T body) {
         return ResponseEntity.ok(useCase.create(body));
     }
 
@@ -39,7 +42,7 @@ public abstract class CrudController<T, ID> {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<T> update(@PathVariable String id, @RequestBody T body) {
+    public ResponseEntity<T> update(@PathVariable String id, @Valid @RequestBody T body) {
         ID parsedId = parseId(id);
         return useCase.update(parsedId, body)
                 .map(ResponseEntity::ok)
@@ -54,6 +57,7 @@ public abstract class CrudController<T, ID> {
         return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
     }
 
+    @RequireAuth(roles = {RoleConstants.ADMIN})
     @DeleteMapping("/{id}/hard")
     public ResponseEntity<ApiResponse<Void>> hardDelete(@PathVariable String id) {
         if (!useCase.hardDelete(parseId(id))) {

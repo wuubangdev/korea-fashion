@@ -30,9 +30,9 @@ class ProductServiceTest {
     void list_returnsPage() {
         Product p = Product.builder().id(1L).name("A").price(BigDecimal.ZERO).build();
         PageQuery query = PageQuery.of(0, 10, "id,desc");
-        when(port.findAll(null, query)).thenReturn(new PageResult<>(List.of(p), 0, 10, 1, 1));
+        when(port.findAll((String) null, query)).thenReturn(new PageResult<>(List.of(p), 0, 10, 1, 1));
 
-        PageResult<Product> page = service.list(null, query);
+        PageResult<Product> page = service.list((String) null, query);
         assertEquals(1, page.totalElements());
         assertEquals("A", page.content().get(0).getName());
     }

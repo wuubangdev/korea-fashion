@@ -10,6 +10,7 @@ import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.OrderUseCase;
 import com.shope.kf.domain.model.Order;
 import com.shope.kf.infrastructure.api.mapper.OrderApiMapper;
+import com.shope.kf.infrastructure.security.RoleConstants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -86,7 +87,7 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
     }
 
-    @com.shope.kf.infrastructure.security.RequireAuth
+    @com.shope.kf.infrastructure.security.RequireAuth(roles = {RoleConstants.ADMIN})
     @DeleteMapping("/{id}/hard")
     public ResponseEntity<ApiResponse<Void>> hardDelete(@PathVariable Long id) {
         orderUseCase.hardDelete(id);

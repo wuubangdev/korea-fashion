@@ -3,12 +3,14 @@ package com.shope.kf.infrastructure.persistence.jpa;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "order_items")
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class OrderItemJpaEntity extends BaseJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

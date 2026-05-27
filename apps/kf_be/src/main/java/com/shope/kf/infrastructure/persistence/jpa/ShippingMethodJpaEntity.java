@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
         }
 )
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class ShippingMethodJpaEntity extends BaseJpaEntity {
     @Id
     @Column(length = 30)

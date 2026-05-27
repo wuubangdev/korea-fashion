@@ -5,10 +5,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(name = "shippers")
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class ShipperJpaEntity extends BaseJpaEntity {
     @Id
     @Column(length = 10)

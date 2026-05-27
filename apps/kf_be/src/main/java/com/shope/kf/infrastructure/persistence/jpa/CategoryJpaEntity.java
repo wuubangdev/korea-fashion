@@ -2,6 +2,7 @@ package com.shope.kf.infrastructure.persistence.jpa;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(
@@ -12,6 +13,7 @@ import lombok.Data;
         }
 )
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class CategoryJpaEntity extends BaseJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

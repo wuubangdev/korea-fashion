@@ -2,6 +2,7 @@ package com.shope.kf.infrastructure.persistence.jpa;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -11,6 +12,7 @@ import java.util.List;
 @Entity
 @Table(name = "orders")
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class OrderJpaEntity extends BaseJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

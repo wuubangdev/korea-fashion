@@ -150,4 +150,94 @@ public class GenericCrudConfig {
     public GenericCrudUseCase<ProductTagJpaEntity, String> productTagCrudUseCase(ProductTagJpaRepository repository) {
         return new GenericJpaCrudAdapter<>(repository);
     }
+
+    @Bean
+    public GenericCrudUseCase<CouponJpaEntity, String> couponCrudUseCase(CouponJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<CouponRedemptionJpaEntity, String> couponRedemptionCrudUseCase(CouponRedemptionJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<ReturnRequestJpaEntity, String> returnRequestCrudUseCase(ReturnRequestJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<ReturnItemJpaEntity, Long> returnItemCrudUseCase(ReturnItemJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<RefundJpaEntity, String> refundCrudUseCase(RefundJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<ExchangeOrderJpaEntity, String> exchangeOrderCrudUseCase(ExchangeOrderJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<CustomerAddressJpaEntity, Long> customerAddressCrudUseCase(CustomerAddressJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<ReviewImageJpaEntity, Long> reviewImageCrudUseCase(ReviewImageJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<ProductRelationJpaEntity, Long> productRelationCrudUseCase(ProductRelationJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<PageJpaEntity, String> pageCrudUseCase(PageJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<MenuJpaEntity, String> menuCrudUseCase(MenuJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<MenuItemJpaEntity, Long> menuItemCrudUseCase(MenuItemJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<BlogPostJpaEntity, String> blogPostCrudUseCase(BlogPostJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<FaqJpaEntity, Long> faqCrudUseCase(FaqJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<PaymentTransactionJpaEntity, String> paymentTransactionCrudUseCase(PaymentTransactionJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<ShipmentJpaEntity, String> shipmentCrudUseCase(ShipmentJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<ShipmentEventJpaEntity, Long> shipmentEventCrudUseCase(ShipmentEventJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<AuditLogJpaEntity, Long> auditLogCrudUseCase(AuditLogJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
 }

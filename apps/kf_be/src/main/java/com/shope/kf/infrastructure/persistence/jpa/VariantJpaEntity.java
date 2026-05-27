@@ -2,12 +2,14 @@ package com.shope.kf.infrastructure.persistence.jpa;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "variants")
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class VariantJpaEntity extends BaseJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -19,15 +19,21 @@ public class OrderService implements OrderUseCase {
 
     private final OrderPersistencePort port;
     private final ShipperPersistencePort shipperPort;
+    private final InventoryService inventoryService;
 
-    public OrderService(OrderPersistencePort port, ShipperPersistencePort shipperPort) {
+    public OrderService(OrderPersistencePort port, ShipperPersistencePort shipperPort, InventoryService inventoryService) {
         this.port = port;
         this.shipperPort = shipperPort;
+        this.inventoryService = inventoryService;
     }
 
     @Override
     public Order create(Order order) {
+        if (order.getOrderCode() == null || order.getOrderCode().isBlank()) {
+            order.setOrderCode("KF" + System.currentTimeMillis());
+        }
         order.setShippingStatus("PENDING");
+        inventoryService.reserveOrder(order);
         return port.save(order);
     }
 
@@ -57,6 +63,7 @@ public class OrderService implements OrderUseCase {
             throw new AppException(ErrorCode.BAD_REQUEST, "Invalid shipping status");
         }
         Order existing = findById(id);
+        String previousStatus = existing.getShippingStatus();
         if (!"PENDING".equals(normalizedStatus) && existing.getShipperId() == null) {
             throw new AppException(ErrorCode.BAD_REQUEST, "Order has not been assigned to a shipper");
         }
@@ -65,10 +72,19 @@ public class OrderService implements OrderUseCase {
             existing.setShippedAt(OffsetDateTime.now());
             existing.setStatus("SHIPPING");
         } else if ("DELIVERED".equals(normalizedStatus)) {
+            if (!"DELIVERED".equalsIgnoreCase(previousStatus)) {
+                inventoryService.fulfillOrder(existing);
+            }
             existing.setDeliveredAt(OffsetDateTime.now());
             existing.setStatus("COMPLETED");
         } else if ("FAILED".equals(normalizedStatus) || "CANCELLED".equals(normalizedStatus)) {
+            if (!"FAILED".equalsIgnoreCase(previousStatus) && !"CANCELLED".equalsIgnoreCase(previousStatus)) {
+                inventoryService.releaseOrder(existing);
+            }
             existing.setStatus(normalizedStatus);
+            if ("CANCELLED".equals(normalizedStatus)) {
+                existing.setCancelledAt(OffsetDateTime.now());
+            }
         }
         return port.save(existing);
     }

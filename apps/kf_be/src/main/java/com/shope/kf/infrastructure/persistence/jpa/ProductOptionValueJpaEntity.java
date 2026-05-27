@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(
@@ -19,6 +20,7 @@ import lombok.Data;
         }
 )
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class ProductOptionValueJpaEntity extends BaseJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
