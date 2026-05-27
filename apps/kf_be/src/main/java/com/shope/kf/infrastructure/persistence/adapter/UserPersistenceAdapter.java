@@ -34,6 +34,15 @@ public class UserPersistenceAdapter implements UserPersistencePort {
 	@Override
 	public User save(User user) {
 		UserJpaEntity entity = UserMapper.toEntity(user, roleJpaRepository);
+		if (user.getId() != null) {
+			userJpaRepository.findById(user.getId()).ifPresent(existing -> {
+				entity.setVersion(existing.getVersion());
+				entity.setCreatedAt(existing.getCreatedAt());
+				entity.setCreatedBy(existing.getCreatedBy());
+				entity.setDeletedAt(existing.getDeletedAt());
+				entity.setDeletedBy(existing.getDeletedBy());
+			});
+		}
 		UserJpaEntity saved = userJpaRepository.save(entity);
 		return UserMapper.toDomain(saved);
 	}

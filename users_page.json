@@ -1,0 +1,88 @@
+﻿{
+    "success":  true,
+    "message":  "OK",
+    "data":  {
+                 "content":  [
+                                 {
+                                     "email":  "superadmin@example.com",
+                                     "id":  10,
+                                     "roles":  [
+                                                   "ROLE_CUSTOMER",
+                                                   "ROLE_STAFF",
+                                                   "ROLE_ADMIN",
+                                                   "ROLE_SHIPPER"
+                                               ],
+                                     "username":  "superadmin"
+                                 },
+                                 {
+                                     "email":  "customer@example.com",
+                                     "id":  9,
+                                     "roles":  [
+                                                   "ROLE_CUSTOMER"
+                                               ],
+                                     "username":  "customer"
+                                 },
+                                 {
+                                     "email":  "shipper@example.com",
+                                     "id":  8,
+                                     "roles":  [
+                                                   "ROLE_SHIPPER"
+                                               ],
+                                     "username":  "shipper"
+                                 },
+                                 {
+                                     "email":  "staff@example.com",
+                                     "id":  7,
+                                     "roles":  [
+                                                   "ROLE_STAFF"
+                                               ],
+                                     "username":  "staff"
+                                 },
+                                 {
+                                     "email":  "admin1@gmail.com",
+                                     "id":  6,
+                                     "roles":  [
+                                                   "ROLE_USER"
+                                               ],
+                                     "username":  "admin1"
+                                 },
+                                 {
+                                     "email":  "admin@gmail.com",
+                                     "id":  4,
+                                     "roles":  [
+                                                   "ROLE_USER"
+                                               ],
+                                     "username":  "amdin1"
+                                 },
+                                 {
+                                     "email":  "tuandc25v7x342@dttx.cttu.edu.vn",
+                                     "id":  3,
+                                     "roles":  [
+                                                   "ROLE_USER"
+                                               ],
+                                     "username":  "tuandc25v7x342"
+                                 },
+                                 {
+                                     "email":  "wuubangdev@gmail.com",
+                                     "id":  2,
+                                     "roles":  [
+                                                   "ROLE_USER"
+                                               ],
+                                     "username":  "wuubangdev"
+                                 },
+                                 {
+                                     "email":  "admin@example.com",
+                                     "id":  1,
+                                     "roles":  [
+                                                   "ROLE_USER"
+                                               ],
+                                     "username":  "admin"
+                                 }
+                             ],
+                 "page":  0,
+                 "size":  100,
+                 "totalElements":  9,
+                 "totalPages":  1
+             },
+    "timestamp":  "2026-05-27T09:44:18.355232273Z"
+}
