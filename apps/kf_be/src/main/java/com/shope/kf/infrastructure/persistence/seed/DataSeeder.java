@@ -19,8 +19,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
@@ -57,20 +58,11 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         RoleJpaEntity adminRole = ensureRole(RoleConstants.ROLE_ADMIN);
-        ensureRole(RoleConstants.ROLE_STAFF);
-        ensureRole(RoleConstants.ROLE_SHIPPER);
-        ensureRole(RoleConstants.ROLE_CUSTOMER);
+        RoleJpaEntity staffRole = ensureRole(RoleConstants.ROLE_STAFF);
+        RoleJpaEntity shipperRole = ensureRole(RoleConstants.ROLE_SHIPPER);
+        RoleJpaEntity customerRole = ensureRole(RoleConstants.ROLE_CUSTOMER);
 
-        // create an admin if not exists
-        if (userRepo.findByUsername("admin").isEmpty()) {
-            UserJpaEntity admin = new UserJpaEntity();
-            admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("adminpass"));
-            admin.setEmail("admin@example.com");
-            admin.setRoles(new HashSet<>());
-            admin.getRoles().add(adminRole);
-            userRepo.save(admin);
-        }
+        seedUsers(adminRole, staffRole, shipperRole, customerRole);
 
         if (siteSettingRepo.findById("default").isEmpty()) {
             SiteSettingJpaEntity setting = new SiteSettingJpaEntity();
@@ -161,6 +153,30 @@ public class DataSeeder implements CommandLineRunner {
             RoleJpaEntity role = new RoleJpaEntity();
             role.setName(name);
             return roleRepo.save(role);
+        });
+    }
+
+    private void seedUsers(
+            RoleJpaEntity adminRole,
+            RoleJpaEntity staffRole,
+            RoleJpaEntity shipperRole,
+            RoleJpaEntity customerRole
+    ) {
+        ensureUser("admin", "adminpass", "admin@example.com", Set.of(adminRole));
+        ensureUser("staff", "staffpass", "staff@example.com", Set.of(staffRole));
+        ensureUser("shipper", "shipperpass", "shipper@example.com", Set.of(shipperRole));
+        ensureUser("customer", "customerpass", "customer@example.com", Set.of(customerRole));
+        ensureUser("superadmin", "superadminpass", "superadmin@example.com", Set.of(adminRole, staffRole, shipperRole, customerRole));
+    }
+
+    private UserJpaEntity ensureUser(String username, String rawPassword, String email, Set<RoleJpaEntity> roles) {
+        return userRepo.findByUsername(username).orElseGet(() -> {
+            UserJpaEntity user = new UserJpaEntity();
+            user.setUsername(username);
+            user.setPassword(passwordEncoder.encode(rawPassword));
+            user.setEmail(email);
+            user.setRoles(new HashSet<>(roles));
+            return userRepo.save(user);
         });
     }
 }
