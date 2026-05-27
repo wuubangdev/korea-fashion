@@ -30,7 +30,11 @@ MYSQL_PASSWORD=your_mysql_password
 SPRING_DATASOURCE_URL=jdbc:mysql://your-db-host:3399/korea_fashion?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
 SPRING_DATASOURCE_USERNAME=your_mysql_user
 SPRING_DATASOURCE_PASSWORD=your_mysql_password
+SPRING_JPA_HIBERNATE_DDL_AUTO=update
+SPRING_JPA_SHOW_SQL=false
+SPRING_JPA_FORMAT_SQL=false
 APP_JWT_SECRET=replace-with-long-random-secret
+APP_CORS_ALLOWED_ORIGINS=*
 
 LOCAL_MYSQL_DATABASE=kf
 LOCAL_MYSQL_USER=kf
@@ -178,7 +182,11 @@ Create `/home/study/korea-fashion/.env.production` directly on the VPS. Do not c
 SPRING_DATASOURCE_URL=jdbc:mysql://103.173.66.91:3399/korea_fashion?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
 SPRING_DATASOURCE_USERNAME=root
 SPRING_DATASOURCE_PASSWORD=<database-password>
+SPRING_JPA_HIBERNATE_DDL_AUTO=update
+SPRING_JPA_SHOW_SQL=false
+SPRING_JPA_FORMAT_SQL=false
 APP_JWT_SECRET=<long-random-jwt-secret>
+APP_CORS_ALLOWED_ORIGINS=*
 
 BACKEND_PORT=3398
 FRONTEND_PORT=3397
@@ -186,6 +194,7 @@ NEXT_PUBLIC_API_URL=http://103.173.66.91:3398
 ```
 
 Generate a JWT secret on the VPS with `openssl rand -base64 48`. Production Compose exposes frontend port `3397`, backend port `3398`, and connects to the existing external MySQL service on port `3399`.
+Keep `SPRING_JPA_HIBERNATE_DDL_AUTO=update` while the schema is still changing so Hibernate can add new tables and columns on startup. If a column still is not created, inspect backend logs for `alter table` errors and confirm the database user has `ALTER`, `CREATE`, and `INDEX` privileges.
 
 Run the first deploy manually on the VPS:
 
