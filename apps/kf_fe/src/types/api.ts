@@ -24,6 +24,22 @@ export type Product = {
   price?: number | string;
   brand?: string;
   origin?: string;
+  sku?: string;
+  slug?: string;
+  material?: string;
+  careInstructions?: string;
+  fit?: string;
+  gender?: string;
+  season?: string;
+  countryOfManufacture?: string;
+  status?: string;
+  stockQuantity?: number;
+  compareAtPrice?: number | string;
+  ratingAverage?: number | string;
+  reviewCount?: number;
+  tags?: string;
+  seoTitle?: string;
+  seoDescription?: string;
 };
 
 export type ProductPayload = {
@@ -33,6 +49,22 @@ export type ProductPayload = {
   price: number;
   brand?: string;
   origin?: string;
+  sku?: string;
+  slug?: string;
+  material?: string;
+  careInstructions?: string;
+  fit?: string;
+  gender?: string;
+  season?: string;
+  countryOfManufacture?: string;
+  status?: string;
+  stockQuantity?: number;
+  compareAtPrice?: number;
+  ratingAverage?: number;
+  reviewCount?: number;
+  tags?: string;
+  seoTitle?: string;
+  seoDescription?: string;
 };
 
 export type Category = {
@@ -40,6 +72,56 @@ export type Category = {
   code?: string;
   name: string;
   description?: string;
+  slug?: string;
+  imageUrl?: string;
+  bannerImageUrl?: string;
+  parentId?: number;
+  displayOrder?: number;
+  active?: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
+};
+
+export type Banner = {
+  id: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  imageUrl: string;
+  mobileImageUrl?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  placement?: string;
+  displayOrder?: number;
+  active?: boolean;
+  startsAt?: string;
+  endsAt?: string;
+};
+
+export type SiteSetting = {
+  id: string;
+  siteName: string;
+  siteDescription?: string;
+  mainLogoUrl?: string;
+  footerLogoUrl?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  accentColor?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
+  seoThumbnailUrl?: string;
+  canonicalUrl?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  tiktokUrl?: string;
+  youtubeUrl?: string;
+  hotline?: string;
+  email?: string;
+  address?: string;
+  footerAbout?: string;
 };
 
 export type User = {
