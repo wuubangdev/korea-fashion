@@ -146,21 +146,6 @@ public class OpenApiConfig {
                 .displayName("01 - Storefront Public APIs")
                 .pathsToMatch(
                         "/api/storefront/**",
-                        "/api/products/**",
-                        "/api/categories/**",
-                        "/api/variants/**",
-                        "/api/colors/**",
-                        "/api/sizes/**",
-                        "/api/brands/**",
-                        "/api/product-collections/**",
-                        "/api/product-tags/**",
-                        "/api/banners/**",
-                        "/api/site-settings/**",
-                        "/api/pages/**",
-                        "/api/menus/**",
-                        "/api/menu-items/**",
-                        "/api/blog-posts/**",
-                        "/api/faqs/**",
                         "/api/health/**"
                 )
                 .build();

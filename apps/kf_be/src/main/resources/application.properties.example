@@ -18,3 +18,8 @@ app.jwt.expiration-ms=86400000
 
 # CORS settings
 app.cors.allowed-origins=${APP_CORS_ALLOWED_ORIGINS:*}
+
+# Swagger UI groups
+springdoc.api-docs.groups.enabled=true
+springdoc.swagger-ui.disable-swagger-default-url=true
+springdoc.swagger-ui.urls-primary-name=02-admin-private
