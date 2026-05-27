@@ -10,6 +10,7 @@ public interface OrderUseCase {
     Order assignShipper(Long id, String shipperId);
     Order updateShippingStatus(Long id, String shippingStatus);
     void delete(Long id);
+    void hardDelete(Long id);
     Order findById(Long id);
     PageResult<Order> list(String search, PageQuery pageQuery);
     PageResult<Order> listByShipper(String shipperId, PageQuery pageQuery);

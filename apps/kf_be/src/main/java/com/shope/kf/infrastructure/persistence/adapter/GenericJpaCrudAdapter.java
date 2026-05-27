@@ -3,8 +3,10 @@ package com.shope.kf.infrastructure.persistence.adapter;
 import com.shope.kf.application.common.PageQuery;
 import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.GenericCrudUseCase;
+import com.shope.kf.infrastructure.persistence.jpa.BaseJpaEntity;
 import com.shope.kf.infrastructure.persistence.jpa.mapper.PageMapper;
 import jakarta.persistence.Id;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -51,11 +53,28 @@ public class GenericJpaCrudAdapter<T, ID, R extends JpaRepository<T, ID> & JpaSp
 
     @Override
     public boolean delete(ID id) {
-        if (!repository.existsById(id)) {
+        Optional<T> entity = repository.findById(id);
+        if (entity.isEmpty()) {
             return false;
+        }
+        T value = entity.get();
+        if (value instanceof BaseJpaEntity auditable) {
+            auditable.markDeleted("system");
+            repository.save(value);
+            return true;
         }
         repository.deleteById(id);
         return true;
+    }
+
+    @Override
+    public boolean hardDelete(ID id) {
+        try {
+            repository.deleteById(id);
+            return true;
+        } catch (EmptyResultDataAccessException ex) {
+            return false;
+        }
     }
 
     private Specification<T> containsText(String search) {

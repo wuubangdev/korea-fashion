@@ -10,6 +10,7 @@ public interface OrderPersistencePort {
     Order save(Order order);
     Optional<Order> findById(Long id);
     void deleteById(Long id);
+    void hardDeleteById(Long id);
     PageResult<Order> findAll(String search, PageQuery pageQuery);
     PageResult<Order> findByShipperId(String shipperId, PageQuery pageQuery);
 }

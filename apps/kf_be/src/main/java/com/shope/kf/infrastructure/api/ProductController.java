@@ -5,11 +5,15 @@ import com.shope.kf.infrastructure.api.dto.request.UpdateProductRequest;
 import com.shope.kf.infrastructure.api.dto.response.ProductResponse;
 import com.shope.kf.application.common.PageQuery;
 import com.shope.kf.application.common.PageResult;
+import com.shope.kf.application.common.ProductFilter;
 import com.shope.kf.application.port.in.ProductUseCase;
 import com.shope.kf.domain.model.Product;
+import com.shope.kf.infrastructure.api.dto.response.ApiResponse;
 import com.shope.kf.infrastructure.api.mapper.ProductApiMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/products")
@@ -32,11 +36,27 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<PageResult<ProductResponse>> list(
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) String brandId,
+            @RequestParam(required = false) String collectionId,
+            @RequestParam(required = false) String gender,
+            @RequestParam(required = false) String style,
+            @RequestParam(required = false) String season,
+            @RequestParam(required = false) BigDecimal priceMin,
+            @RequestParam(required = false) BigDecimal priceMax,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Boolean inStock,
+            @RequestParam(required = false) Boolean featured,
+            @RequestParam(required = false) Boolean newArrival,
+            @RequestParam(required = false) Boolean bestSeller,
+            @RequestParam(required = false) Boolean sale,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id,desc") String sort
     ) {
-        return ResponseEntity.ok(productUseCase.list(search, PageQuery.of(page, size, sort)).map(ProductApiMapper::toResponse));
+        ProductFilter filter = new ProductFilter(search, categoryId, brand, brandId, collectionId, gender, style, season, priceMin, priceMax, status, inStock, featured, newArrival, bestSeller, sale);
+        return ResponseEntity.ok(productUseCase.list(filter, PageQuery.of(page, size, sort)).map(ProductApiMapper::toResponse));
     }
 
     @GetMapping("/{id}")
@@ -55,9 +75,16 @@ public class ProductController {
 
     @com.shope.kf.infrastructure.security.RequireAuth
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         productUseCase.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth
+    @DeleteMapping("/{id}/hard")
+    public ResponseEntity<ApiResponse<Void>> hardDelete(@PathVariable Long id) {
+        productUseCase.hardDelete(id);
+        return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
     }
 
 }

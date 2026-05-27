@@ -10,7 +10,7 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "carts")
 @Data
-public class CartJpaEntity {
+public class CartJpaEntity extends BaseJpaEntity {
     @Id
     private String id;
     private OffsetDateTime createdAt;

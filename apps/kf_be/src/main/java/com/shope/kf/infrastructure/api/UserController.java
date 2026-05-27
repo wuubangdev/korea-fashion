@@ -7,6 +7,7 @@ import com.shope.kf.application.common.PageQuery;
 import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.UserUseCase;
 import com.shope.kf.domain.model.User;
+import com.shope.kf.infrastructure.api.dto.response.ApiResponse;
 import com.shope.kf.infrastructure.api.mapper.UserApiMapper;
 import com.shope.kf.infrastructure.security.RequireAuth;
 import jakarta.validation.Valid;
@@ -51,9 +52,15 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         userUseCase.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
+    }
+
+    @DeleteMapping("/{id}/hard")
+    public ResponseEntity<ApiResponse<Void>> hardDelete(@PathVariable Long id) {
+        userUseCase.hardDelete(id);
+        return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
     }
 
 }

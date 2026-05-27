@@ -34,7 +34,16 @@ public class OrderPersistenceAdapter implements OrderPersistencePort {
 
     @Override
     public void deleteById(Long id) {
-        repo.deleteById(id);
+        repo.findById(id).ifPresent(order -> {
+            order.markDeleted("system");
+            repo.save(order);
+        });
+    }
+
+    @Override
+    public void hardDeleteById(Long id) {
+        repo.hardDeleteItemsByOrderId(id);
+        repo.hardDeleteById(id);
     }
 
     @Override

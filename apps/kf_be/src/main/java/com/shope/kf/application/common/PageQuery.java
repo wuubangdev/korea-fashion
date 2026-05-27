@@ -8,6 +8,9 @@ public record PageQuery(int page, int size, String sortBy, SortDirection directi
         if (size <= 0) {
             size = 10;
         }
+        if (size > 100) {
+            size = 100;
+        }
         if (sortBy == null || sortBy.isBlank()) {
             sortBy = "id";
         }
@@ -17,6 +20,16 @@ public record PageQuery(int page, int size, String sortBy, SortDirection directi
     }
 
     public static PageQuery of(int page, int size, String sort) {
+        if (sort != null && !sort.contains(",")) {
+            return switch (sort) {
+                case "newest" -> new PageQuery(page, size, "id", SortDirection.DESC);
+                case "priceAsc" -> new PageQuery(page, size, "price", SortDirection.ASC);
+                case "priceDesc" -> new PageQuery(page, size, "price", SortDirection.DESC);
+                case "bestSelling" -> new PageQuery(page, size, "soldCount", SortDirection.DESC);
+                case "rating" -> new PageQuery(page, size, "ratingAverage", SortDirection.DESC);
+                default -> new PageQuery(page, size, sort, SortDirection.DESC);
+            };
+        }
         String[] parts = sort == null ? new String[0] : sort.split(",");
         String sortBy = parts.length > 0 && !parts[0].isBlank() ? parts[0] : "id";
         SortDirection direction = parts.length > 1 ? SortDirection.from(parts[1]) : SortDirection.DESC;

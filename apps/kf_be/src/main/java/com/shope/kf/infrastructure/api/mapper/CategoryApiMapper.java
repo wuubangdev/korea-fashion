@@ -14,6 +14,14 @@ public final class CategoryApiMapper {
                 .code(request.getCode())
                 .name(request.getName())
                 .description(request.getDescription())
+                .slug(request.getSlug())
+                .imageUrl(request.getImageUrl())
+                .bannerImageUrl(request.getBannerImageUrl())
+                .parentId(request.getParentId())
+                .displayOrder(request.getDisplayOrder())
+                .active(request.getActive())
+                .seoTitle(request.getSeoTitle())
+                .seoDescription(request.getSeoDescription())
                 .build();
     }
 
@@ -22,6 +30,14 @@ public final class CategoryApiMapper {
                 .code(request.getCode())
                 .name(request.getName())
                 .description(request.getDescription())
+                .slug(request.getSlug())
+                .imageUrl(request.getImageUrl())
+                .bannerImageUrl(request.getBannerImageUrl())
+                .parentId(request.getParentId())
+                .displayOrder(request.getDisplayOrder())
+                .active(request.getActive())
+                .seoTitle(request.getSeoTitle())
+                .seoDescription(request.getSeoDescription())
                 .build();
     }
 
@@ -31,6 +47,14 @@ public final class CategoryApiMapper {
                 .code(category.getCode())
                 .name(category.getName())
                 .description(category.getDescription())
+                .slug(category.getSlug())
+                .imageUrl(category.getImageUrl())
+                .bannerImageUrl(category.getBannerImageUrl())
+                .parentId(category.getParentId())
+                .displayOrder(category.getDisplayOrder())
+                .active(category.getActive())
+                .seoTitle(category.getSeoTitle())
+                .seoDescription(category.getSeoDescription())
                 .build();
     }
 }

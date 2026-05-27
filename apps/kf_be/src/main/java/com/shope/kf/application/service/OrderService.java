@@ -6,10 +6,14 @@ import com.shope.kf.application.port.in.OrderUseCase;
 import com.shope.kf.application.port.out.OrderPersistencePort;
 import com.shope.kf.application.port.out.ShipperPersistencePort;
 import com.shope.kf.domain.model.Order;
+import com.shope.kf.infrastructure.exception.AppException;
+import com.shope.kf.infrastructure.exception.ErrorCode;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.Set;
 
+@Transactional
 public class OrderService implements OrderUseCase {
     private static final Set<String> SHIPPING_STATUSES = Set.of("PENDING", "ASSIGNED", "SHIPPING", "DELIVERED", "FAILED", "CANCELLED");
 
@@ -29,7 +33,7 @@ public class OrderService implements OrderUseCase {
 
     @Override
     public Order updateStatus(Long id, String status) {
-        Order existing = port.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
+        Order existing = port.findById(id).orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Order not found"));
         existing.setStatus(status);
         return port.save(existing);
     }
@@ -37,7 +41,7 @@ public class OrderService implements OrderUseCase {
     @Override
     public Order assignShipper(Long id, String shipperId) {
         if (!shipperPort.existsById(shipperId)) {
-            throw new RuntimeException("Shipper not found");
+            throw new AppException(ErrorCode.NOT_FOUND, "Shipper not found");
         }
         Order existing = findById(id);
         existing.setShipperId(shipperId);
@@ -50,11 +54,11 @@ public class OrderService implements OrderUseCase {
     public Order updateShippingStatus(Long id, String shippingStatus) {
         String normalizedStatus = shippingStatus.toUpperCase();
         if (!SHIPPING_STATUSES.contains(normalizedStatus)) {
-            throw new RuntimeException("Invalid shipping status");
+            throw new AppException(ErrorCode.BAD_REQUEST, "Invalid shipping status");
         }
         Order existing = findById(id);
         if (!"PENDING".equals(normalizedStatus) && existing.getShipperId() == null) {
-            throw new RuntimeException("Order has not been assigned to a shipper");
+            throw new AppException(ErrorCode.BAD_REQUEST, "Order has not been assigned to a shipper");
         }
         existing.setShippingStatus(normalizedStatus);
         if ("SHIPPING".equals(normalizedStatus)) {
@@ -75,19 +79,27 @@ public class OrderService implements OrderUseCase {
     }
 
     @Override
-    public Order findById(Long id) {
-        return port.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
+    public void hardDelete(Long id) {
+        port.hardDeleteById(id);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Order findById(Long id) {
+        return port.findById(id).orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Order not found"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public PageResult<Order> list(String search, PageQuery pageQuery) {
         return port.findAll(search, pageQuery);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResult<Order> listByShipper(String shipperId, PageQuery pageQuery) {
         if (!shipperPort.existsById(shipperId)) {
-            throw new RuntimeException("Shipper not found");
+            throw new AppException(ErrorCode.NOT_FOUND, "Shipper not found");
         }
         return port.findByShipperId(shipperId, pageQuery);
     }

@@ -15,13 +15,26 @@ public class UpdateVariantRequest {
     @NotBlank
     private String sku;
 
+    private String barcode;
+
     @NotNull
     @PositiveOrZero
     private Integer quantity;
+    private Integer reservedQuantity;
+    private Integer availableQuantity;
+    private Integer lowStockThreshold;
 
     @NotNull
     private BigDecimal price;
 
+    private BigDecimal compareAtPrice;
+    private BigDecimal costPrice;
+    private String sizeId;
     private String size;
+    private String colorId;
     private String color;
+    private String colorHex;
+    private BigDecimal weight;
+    private String imageUrl;
+    private Boolean active;
 }

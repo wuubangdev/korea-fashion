@@ -4,6 +4,7 @@ import com.shope.kf.application.command.AuthCommand;
 import com.shope.kf.application.result.AuthResult;
 import com.shope.kf.domain.model.Role;
 import com.shope.kf.domain.model.User;
+import com.shope.kf.infrastructure.security.RoleConstants;
 
 import java.util.Collections;
 
@@ -16,7 +17,7 @@ public final class AuthMapper {
                 .username(command.username())
                 .password(encodedPassword)
                 .email(command.email())
-                .roles(Collections.singleton(new Role(null, "ROLE_USER")))
+                .roles(Collections.singleton(new Role(null, RoleConstants.ROLE_CUSTOMER)))
                 .build();
     }
 

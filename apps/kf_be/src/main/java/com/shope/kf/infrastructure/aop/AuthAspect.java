@@ -37,6 +37,9 @@ public class AuthAspect {
             throw new UnauthorizedException("No request context");
         }
         HttpServletRequest req = ((ServletRequestAttributes) attrs).getRequest();
+        if (isPublicReadMethod(req.getMethod()) && isPublicReadPath(req.getRequestURI())) {
+            return pjp.proceed();
+        }
         String header = req.getHeader("Authorization");
         if (header == null || header.isBlank()) {
             throw new UnauthorizedException("Missing Authorization header");
@@ -76,6 +79,37 @@ public class AuthAspect {
         String normalizedUserRole = normalizeRole(userRole);
         String normalizedRequiredRole = normalizeRole(requiredRole);
         return normalizedUserRole.equals(normalizedRequiredRole);
+    }
+
+    private boolean isPublicReadMethod(String method) {
+        return "GET".equalsIgnoreCase(method)
+                || "HEAD".equalsIgnoreCase(method)
+                || "OPTIONS".equalsIgnoreCase(method);
+    }
+
+    private boolean isPublicReadPath(String path) {
+        return path != null && (
+                path.startsWith("/api/storefront")
+                        || path.startsWith("/api/products")
+                        || path.startsWith("/api/categories")
+                        || path.startsWith("/api/variants")
+                        || path.startsWith("/api/colors")
+                        || path.startsWith("/api/sizes")
+                        || path.startsWith("/api/promotions")
+                        || path.startsWith("/api/banners")
+                        || path.startsWith("/api/site-settings")
+                        || path.startsWith("/api/product-images")
+                        || path.startsWith("/api/brands")
+                        || path.startsWith("/api/product-collections")
+                        || path.startsWith("/api/product-attributes")
+                        || path.startsWith("/api/product-options")
+                        || path.startsWith("/api/product-option-values")
+                        || path.startsWith("/api/product-tags")
+                        || path.startsWith("/api/shipping-methods")
+                        || path.startsWith("/api/payment-methods")
+                        || path.startsWith("/api/store-policies")
+                        || path.startsWith("/api/health")
+        );
     }
 
     private String normalizeRole(String role) {

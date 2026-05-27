@@ -5,7 +5,11 @@ import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.VariantUseCase;
 import com.shope.kf.application.port.out.VariantPersistencePort;
 import com.shope.kf.domain.model.Variant;
+import com.shope.kf.infrastructure.exception.AppException;
+import com.shope.kf.infrastructure.exception.ErrorCode;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 public class VariantService implements VariantUseCase {
 
     private final VariantPersistencePort port;
@@ -31,16 +35,24 @@ public class VariantService implements VariantUseCase {
     }
 
     @Override
-    public Variant findById(Long id) {
-        return port.findById(id).orElseThrow(() -> new RuntimeException("Variant not found"));
+    public void hardDelete(Long id) {
+        port.hardDeleteById(id);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Variant findById(Long id) {
+        return port.findById(id).orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Variant not found"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public PageResult<Variant> list(String search, PageQuery pageQuery) {
         return port.findAll(search, pageQuery);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResult<Variant> listByProduct(Long productId, PageQuery pageQuery) {
         return port.findByProduct(productId, pageQuery);
     }

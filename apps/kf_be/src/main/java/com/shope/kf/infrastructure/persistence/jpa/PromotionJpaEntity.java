@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "promotions")
 @Data
-public class PromotionJpaEntity {
+public class PromotionJpaEntity extends BaseJpaEntity {
     @Id
     @Column(length = 10)
     private String id;
@@ -26,4 +26,19 @@ public class PromotionJpaEntity {
 
     @Column(length = 200)
     private String conditionText;
+
+    @Column(length = 40)
+    private String code;
+
+    @Column(length = 40)
+    private String type;
+
+    private BigDecimal discountAmount;
+    private BigDecimal minimumOrderValue;
+    private Integer usageLimit;
+    private Integer usedCount;
+    private Boolean active;
+
+    @Column(length = 500)
+    private String bannerImageUrl;
 }

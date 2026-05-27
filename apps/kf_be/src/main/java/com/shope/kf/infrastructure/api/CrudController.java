@@ -3,6 +3,9 @@ package com.shope.kf.infrastructure.api;
 import com.shope.kf.application.common.PageQuery;
 import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.GenericCrudUseCase;
+import com.shope.kf.infrastructure.api.dto.response.ApiResponse;
+import com.shope.kf.infrastructure.exception.AppException;
+import com.shope.kf.infrastructure.exception.ErrorCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +35,7 @@ public abstract class CrudController<T, ID> {
     public ResponseEntity<T> get(@PathVariable String id) {
         return useCase.findById(parseId(id))
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Resource not found"));
     }
 
     @PutMapping("/{id}")
@@ -40,15 +43,23 @@ public abstract class CrudController<T, ID> {
         ID parsedId = parseId(id);
         return useCase.update(parsedId, body)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Resource not found"));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id) {
         if (!useCase.delete(parseId(id))) {
-            return ResponseEntity.notFound().build();
+            throw new AppException(ErrorCode.NOT_FOUND, "Resource not found");
         }
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
+    }
+
+    @DeleteMapping("/{id}/hard")
+    public ResponseEntity<ApiResponse<Void>> hardDelete(@PathVariable String id) {
+        if (!useCase.hardDelete(parseId(id))) {
+            throw new AppException(ErrorCode.NOT_FOUND, "Resource not found");
+        }
+        return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
     }
 
     protected abstract ID parseId(String id);

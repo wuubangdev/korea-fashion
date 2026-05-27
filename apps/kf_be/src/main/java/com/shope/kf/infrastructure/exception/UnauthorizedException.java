@@ -1,7 +1,7 @@
 package com.shope.kf.infrastructure.exception;
 
-public class UnauthorizedException extends RuntimeException {
+public class UnauthorizedException extends AppException {
     public UnauthorizedException(String message) {
-        super(message);
+        super(ErrorCode.UNAUTHORIZED, message);
     }
 }

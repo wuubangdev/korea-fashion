@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "purchase_receipt_items")
 @Data
-public class PurchaseReceiptItemJpaEntity {
+public class PurchaseReceiptItemJpaEntity extends BaseJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

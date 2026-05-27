@@ -16,8 +16,15 @@ public final class OrderItemMapper {
                 .id(entity.getId())
                 .productId(entity.getProductId())
                 .variantId(entity.getVariantId())
+                .productName(entity.getProductName())
+                .productImageUrl(entity.getProductImageUrl())
+                .sku(entity.getSku())
+                .size(entity.getSize())
+                .color(entity.getColor())
                 .quantity(entity.getQuantity())
+                .price(entity.getPrice())
                 .unitPrice(entity.getUnitPrice())
+                .discount(entity.getDiscount())
                 .total(entity.getTotal())
                 .build();
     }
@@ -30,8 +37,15 @@ public final class OrderItemMapper {
         entity.setId(item.getId());
         entity.setProductId(item.getProductId());
         entity.setVariantId(item.getVariantId());
+        entity.setProductName(item.getProductName());
+        entity.setProductImageUrl(item.getProductImageUrl());
+        entity.setSku(item.getSku());
+        entity.setSize(item.getSize());
+        entity.setColor(item.getColor());
         entity.setQuantity(item.getQuantity());
+        entity.setPrice(item.getPrice());
         entity.setUnitPrice(item.getUnitPrice());
+        entity.setDiscount(item.getDiscount());
         entity.setTotal(item.getTotal());
         entity.setOrder(order);
         return entity;

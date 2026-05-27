@@ -36,7 +36,15 @@ public class CategoryPersistenceAdapter implements CategoryPersistencePort {
 
     @Override
     public void deleteById(Long id) {
-        repo.deleteById(id);
+        repo.findById(id).ifPresent(category -> {
+            category.markDeleted("system");
+            repo.save(category);
+        });
+    }
+
+    @Override
+    public void hardDeleteById(Long id) {
+        repo.hardDeleteById(id);
     }
 
     @Override

@@ -9,7 +9,7 @@ import lombok.Data;
 @Entity
 @Table(name = "suppliers")
 @Data
-public class SupplierJpaEntity {
+public class SupplierJpaEntity extends BaseJpaEntity {
     @Id
     @Column(length = 10)
     private String id;
@@ -25,4 +25,22 @@ public class SupplierJpaEntity {
 
     @Column(length = 50)
     private String email;
+
+    @Column(length = 80)
+    private String contactPerson;
+
+    @Column(length = 80)
+    private String country;
+
+    @Column(length = 80)
+    private String city;
+
+    @Column(length = 100)
+    private String website;
+
+    @Column(length = 30)
+    private String status;
+
+    @Column(length = 500)
+    private String note;
 }

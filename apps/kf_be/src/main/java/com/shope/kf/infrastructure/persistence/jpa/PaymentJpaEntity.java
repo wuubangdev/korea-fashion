@@ -12,7 +12,7 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "payments")
 @Data
-public class PaymentJpaEntity {
+public class PaymentJpaEntity extends BaseJpaEntity {
     @Id
     @Column(length = 10)
     private String id;

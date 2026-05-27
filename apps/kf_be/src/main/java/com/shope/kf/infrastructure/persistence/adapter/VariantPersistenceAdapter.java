@@ -36,7 +36,15 @@ public class VariantPersistenceAdapter implements VariantPersistencePort {
 
     @Override
     public void deleteById(Long id) {
-        repo.deleteById(id);
+        repo.findById(id).ifPresent(variant -> {
+            variant.markDeleted("system");
+            repo.save(variant);
+        });
+    }
+
+    @Override
+    public void hardDeleteById(Long id) {
+        repo.hardDeleteById(id);
     }
 
     @Override

@@ -8,6 +8,7 @@ public interface CategoryUseCase {
     Category create(Category category);
     Category update(Long id, Category category);
     void delete(Long id);
+    void hardDelete(Long id);
     Category findById(Long id);
     PageResult<Category> list(String search, PageQuery pageQuery);
 }

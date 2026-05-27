@@ -45,7 +45,16 @@ public class UserPersistenceAdapter implements UserPersistencePort {
 
 	@Override
 	public void deleteById(Long id) {
-		userJpaRepository.deleteById(id);
+		userJpaRepository.findById(id).ifPresent(user -> {
+			user.markDeleted("system");
+			userJpaRepository.save(user);
+		});
+	}
+
+	@Override
+	public void hardDeleteById(Long id) {
+		userJpaRepository.hardDeleteRolesByUserId(id);
+		userJpaRepository.hardDeleteById(id);
 	}
 
 	@Override

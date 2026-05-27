@@ -10,7 +10,7 @@ import lombok.Data;
 @Entity
 @Table(name = "cart_items")
 @Data
-public class CartItemJpaEntity {
+public class CartItemJpaEntity extends BaseJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

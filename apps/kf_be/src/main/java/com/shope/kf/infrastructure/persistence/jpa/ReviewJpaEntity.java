@@ -11,7 +11,7 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "reviews")
 @Data
-public class ReviewJpaEntity {
+public class ReviewJpaEntity extends BaseJpaEntity {
     @Id
     @Column(length = 10)
     private String id;

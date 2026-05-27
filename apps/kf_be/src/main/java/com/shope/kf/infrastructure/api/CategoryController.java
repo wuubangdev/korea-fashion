@@ -7,6 +7,7 @@ import com.shope.kf.application.common.PageQuery;
 import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.CategoryUseCase;
 import com.shope.kf.domain.model.Category;
+import com.shope.kf.infrastructure.api.dto.response.ApiResponse;
 import com.shope.kf.infrastructure.api.mapper.CategoryApiMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -55,9 +56,16 @@ public class CategoryController {
 
     @com.shope.kf.infrastructure.security.RequireAuth
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         categoryUseCase.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth
+    @DeleteMapping("/{id}/hard")
+    public ResponseEntity<ApiResponse<Void>> hardDelete(@PathVariable Long id) {
+        categoryUseCase.hardDelete(id);
+        return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
     }
 
 }

@@ -1,45 +1,50 @@
 package com.shope.kf.infrastructure.exception;
 
-import org.springframework.http.HttpStatus;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Object> handleValidation(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = ex.getBindingResult().getFieldErrors().stream()
-                .collect(Collectors.toMap(
-                        fe -> fe.getField(),
-                        fe -> fe.getDefaultMessage(),
-                        (a, b) -> a + "; " + b,
-                        HashMap::new
-                ));
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        var errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> new FieldErrorDetail(error.getField(), error.getDefaultMessage()))
+                .collect(Collectors.toList());
+        return ResponseEntity
+                .status(ErrorCode.VALIDATION_ERROR.status())
+                .body(ErrorResponse.validation(request.getRequestURI(), errors));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadableBody(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        return build(ErrorCode.BAD_REQUEST, "Request body is invalid or malformed", request);
+    }
+
+    @ExceptionHandler(AppException.class)
+    public ResponseEntity<ErrorResponse> handleApp(AppException ex, HttpServletRequest request) {
+        return build(ex.getErrorCode(), ex.getMessage(), request);
     }
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Object> handleRuntime(RuntimeException ex) {
-        Map<String, String> m = Map.of("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(m);
+    public ResponseEntity<ErrorResponse> handleRuntime(RuntimeException ex, HttpServletRequest request) {
+        return build(ErrorCode.BAD_REQUEST, ex.getMessage(), request);
     }
 
-    @ExceptionHandler({com.shope.kf.infrastructure.exception.UnauthorizedException.class})
-    public ResponseEntity<Object> handleUnauthorized(RuntimeException ex) {
-        Map<String, String> m = Map.of("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(m);
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex, HttpServletRequest request) {
+        return build(ErrorCode.INTERNAL_ERROR, ErrorCode.INTERNAL_ERROR.defaultMessage(), request);
     }
 
-    @ExceptionHandler({com.shope.kf.infrastructure.exception.ForbiddenException.class})
-    public ResponseEntity<Object> handleForbidden(RuntimeException ex) {
-        Map<String, String> m = Map.of("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(m);
+    private ResponseEntity<ErrorResponse> build(ErrorCode errorCode, String message, HttpServletRequest request) {
+        return ResponseEntity
+                .status(errorCode.status())
+                .body(ErrorResponse.of(errorCode, message, request.getRequestURI()));
     }
 }

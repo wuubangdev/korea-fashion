@@ -9,7 +9,7 @@ import java.util.Set;
 @Entity
 @Table(name = "users")
 @Data
-public class UserJpaEntity {
+public class UserJpaEntity extends BaseJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

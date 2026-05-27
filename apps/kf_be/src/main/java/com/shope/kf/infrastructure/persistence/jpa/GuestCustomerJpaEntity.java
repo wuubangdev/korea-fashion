@@ -9,7 +9,7 @@ import lombok.Data;
 @Entity
 @Table(name = "guest_customers")
 @Data
-public class GuestCustomerJpaEntity {
+public class GuestCustomerJpaEntity extends BaseJpaEntity {
     @Id
     @Column(length = 10)
     private String id;

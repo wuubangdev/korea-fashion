@@ -14,4 +14,12 @@ public class Category {
     private String code;
     private String name;
     private String description;
+    private String slug;
+    private String imageUrl;
+    private String bannerImageUrl;
+    private Long parentId;
+    private Integer displayOrder;
+    private Boolean active;
+    private String seoTitle;
+    private String seoDescription;
 }

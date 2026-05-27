@@ -5,7 +5,11 @@ import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.CategoryUseCase;
 import com.shope.kf.application.port.out.CategoryPersistencePort;
 import com.shope.kf.domain.model.Category;
+import com.shope.kf.infrastructure.exception.AppException;
+import com.shope.kf.infrastructure.exception.ErrorCode;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 public class CategoryService implements CategoryUseCase {
 
     private final CategoryPersistencePort port;
@@ -31,11 +35,18 @@ public class CategoryService implements CategoryUseCase {
     }
 
     @Override
-    public Category findById(Long id) {
-        return port.findById(id).orElseThrow(() -> new RuntimeException("Category not found"));
+    public void hardDelete(Long id) {
+        port.hardDeleteById(id);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Category findById(Long id) {
+        return port.findById(id).orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Category not found"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public PageResult<Category> list(String search, PageQuery pageQuery) {
         return port.findAll(search, pageQuery);
     }

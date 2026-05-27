@@ -9,10 +9,14 @@ import com.shope.kf.application.port.out.UserPersistencePort;
 import com.shope.kf.application.result.AuthResult;
 import com.shope.kf.domain.model.Role;
 import com.shope.kf.domain.model.User;
+import com.shope.kf.infrastructure.exception.AppException;
+import com.shope.kf.infrastructure.exception.ErrorCode;
 
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 public class AuthService implements AuthUseCase {
 
     private final UserPersistencePort userPort;
@@ -26,21 +30,22 @@ public class AuthService implements AuthUseCase {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AuthResult login(AuthCommand command) {
         return userPort.findByUsername(command.username())
                 .map(u -> {
                     if (!passwordHasher.matches(command.password(), u.getPassword())) {
-                        throw new RuntimeException("Invalid credentials");
+                        throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid credentials");
                     }
                     String token = tokenProvider.generateToken(u.getUsername(), roleNames(u));
                     return AuthMapper.toResult(u, token);
-                }).orElseThrow(() -> new RuntimeException("User not found"));
+                }).orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED, "Invalid credentials"));
     }
 
     @Override
     public AuthResult register(AuthCommand command) {
         if (userPort.findByUsername(command.username()).isPresent()) {
-            throw new RuntimeException("Username already exists");
+            throw new AppException(ErrorCode.CONFLICT, "Username already exists");
         }
         User toSave = AuthMapper.toRegisteredUser(command, passwordHasher.hash(command.password()));
 

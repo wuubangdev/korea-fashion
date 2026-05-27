@@ -8,6 +8,7 @@ public interface UserUseCase {
     User create(User user);
     User update(Long id, User user);
     void delete(Long id);
+    void hardDelete(Long id);
     User findById(Long id);
     PageResult<User> list(String search, PageQuery pageQuery);
 }

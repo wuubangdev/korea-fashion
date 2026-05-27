@@ -16,6 +16,14 @@ public final class CategoryMapper {
                 .code(entity.getCode())
                 .name(entity.getName())
                 .description(entity.getDescription())
+                .slug(entity.getSlug())
+                .imageUrl(entity.getImageUrl())
+                .bannerImageUrl(entity.getBannerImageUrl())
+                .parentId(entity.getParentId())
+                .displayOrder(entity.getDisplayOrder())
+                .active(entity.getActive())
+                .seoTitle(entity.getSeoTitle())
+                .seoDescription(entity.getSeoDescription())
                 .build();
     }
 
@@ -28,6 +36,14 @@ public final class CategoryMapper {
         entity.setCode(category.getCode());
         entity.setName(category.getName());
         entity.setDescription(category.getDescription());
+        entity.setSlug(category.getSlug());
+        entity.setImageUrl(category.getImageUrl());
+        entity.setBannerImageUrl(category.getBannerImageUrl());
+        entity.setParentId(category.getParentId());
+        entity.setDisplayOrder(category.getDisplayOrder());
+        entity.setActive(category.getActive());
+        entity.setSeoTitle(category.getSeoTitle());
+        entity.setSeoDescription(category.getSeoDescription());
         return entity;
     }
 }

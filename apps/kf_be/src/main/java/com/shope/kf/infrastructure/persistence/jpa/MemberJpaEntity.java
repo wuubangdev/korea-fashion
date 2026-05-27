@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "members")
 @Data
-public class MemberJpaEntity {
+public class MemberJpaEntity extends BaseJpaEntity {
     @Id
     @Column(length = 10)
     private String id;

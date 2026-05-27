@@ -11,4 +11,5 @@ public interface GenericCrudUseCase<T, ID> {
     Optional<T> findById(ID id);
     Optional<T> update(ID id, T body);
     boolean delete(ID id);
+    boolean hardDelete(ID id);
 }

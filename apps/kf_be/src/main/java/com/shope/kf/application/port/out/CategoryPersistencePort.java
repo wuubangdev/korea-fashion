@@ -10,5 +10,6 @@ public interface CategoryPersistencePort {
     Category save(Category category);
     Optional<Category> findById(Long id);
     void deleteById(Long id);
+    void hardDeleteById(Long id);
     PageResult<Category> findAll(String search, PageQuery pageQuery);
 }

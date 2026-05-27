@@ -3,6 +3,7 @@ package com.shope.kf.infrastructure.api;
 import com.shope.kf.infrastructure.api.dto.request.CreateOrderRequest;
 import com.shope.kf.infrastructure.api.dto.request.AssignShipperRequest;
 import com.shope.kf.infrastructure.api.dto.request.UpdateShippingStatusRequest;
+import com.shope.kf.infrastructure.api.dto.response.ApiResponse;
 import com.shope.kf.infrastructure.api.dto.response.OrderResponse;
 import com.shope.kf.application.common.PageQuery;
 import com.shope.kf.application.common.PageResult;
@@ -80,9 +81,16 @@ public class OrderController {
 
     @com.shope.kf.infrastructure.security.RequireAuth
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         orderUseCase.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth
+    @DeleteMapping("/{id}/hard")
+    public ResponseEntity<ApiResponse<Void>> hardDelete(@PathVariable Long id) {
+        orderUseCase.hardDelete(id);
+        return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
     }
 
 }

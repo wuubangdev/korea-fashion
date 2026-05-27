@@ -6,7 +6,11 @@ import com.shope.kf.application.port.in.UserUseCase;
 import com.shope.kf.application.port.out.PasswordHasher;
 import com.shope.kf.application.port.out.UserPersistencePort;
 import com.shope.kf.domain.model.User;
+import com.shope.kf.infrastructure.exception.AppException;
+import com.shope.kf.infrastructure.exception.ErrorCode;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 public class UserService implements UserUseCase {
     private final UserPersistencePort port;
     private final PasswordHasher passwordHasher;
@@ -19,7 +23,7 @@ public class UserService implements UserUseCase {
     @Override
     public User create(User user) {
         if (port.findByUsername(user.getUsername()).isPresent()) {
-            throw new RuntimeException("Username already exists");
+            throw new AppException(ErrorCode.CONFLICT, "Username already exists");
         }
         user.setPassword(passwordHasher.hash(user.getPassword()));
         return port.save(user);
@@ -43,11 +47,18 @@ public class UserService implements UserUseCase {
     }
 
     @Override
-    public User findById(Long id) {
-        return port.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+    public void hardDelete(Long id) {
+        port.hardDeleteById(id);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public User findById(Long id) {
+        return port.findById(id).orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "User not found"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public PageResult<User> list(String search, PageQuery pageQuery) {
         return port.findAll(search, pageQuery);
     }

@@ -11,7 +11,7 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "purchase_receipts")
 @Data
-public class PurchaseReceiptJpaEntity {
+public class PurchaseReceiptJpaEntity extends BaseJpaEntity {
     @Id
     private String id;
     private OffsetDateTime importedAt;

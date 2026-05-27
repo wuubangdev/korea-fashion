@@ -9,11 +9,20 @@ import lombok.Data;
 @Entity
 @Table(name = "colors")
 @Data
-public class ColorJpaEntity {
+public class ColorJpaEntity extends BaseJpaEntity {
     @Id
     @Column(length = 5)
     private String id;
 
     @Column(length = 20)
     private String name;
+
+    @Column(length = 20)
+    private String hexCode;
+
+    @Column(length = 80)
+    private String displayName;
+
+    private Integer displayOrder;
+    private Boolean active;
 }

@@ -6,8 +6,10 @@ import com.shope.kf.infrastructure.persistence.jpa.*;
 import com.shope.kf.infrastructure.persistence.repository.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @Configuration
+@EnableJpaAuditing(auditorAwareRef = "auditorProvider")
 public class GenericCrudConfig {
     @Bean
     public GenericCrudUseCase<AdminJpaEntity, String> adminCrudUseCase(AdminJpaRepository repository) {
@@ -81,6 +83,71 @@ public class GenericCrudConfig {
 
     @Bean
     public GenericCrudUseCase<OrderItemJpaEntity, Long> orderItemCrudUseCase(OrderItemJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<BannerJpaEntity, String> bannerCrudUseCase(BannerJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<SiteSettingJpaEntity, String> siteSettingCrudUseCase(SiteSettingJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<ProductImageJpaEntity, Long> productImageCrudUseCase(ProductImageJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<BrandJpaEntity, String> brandCrudUseCase(BrandJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<ProductCollectionJpaEntity, String> productCollectionCrudUseCase(ProductCollectionJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<ProductAttributeJpaEntity, Long> productAttributeCrudUseCase(ProductAttributeJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<InventoryTransactionJpaEntity, Long> inventoryTransactionCrudUseCase(InventoryTransactionJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<ShippingMethodJpaEntity, String> shippingMethodCrudUseCase(ShippingMethodJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<PaymentMethodJpaEntity, String> paymentMethodCrudUseCase(PaymentMethodJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<StorePolicyJpaEntity, String> storePolicyCrudUseCase(StorePolicyJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<ProductOptionJpaEntity, Long> productOptionCrudUseCase(ProductOptionJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<ProductOptionValueJpaEntity, Long> productOptionValueCrudUseCase(ProductOptionValueJpaRepository repository) {
+        return new GenericJpaCrudAdapter<>(repository);
+    }
+
+    @Bean
+    public GenericCrudUseCase<ProductTagJpaEntity, String> productTagCrudUseCase(ProductTagJpaRepository repository) {
         return new GenericJpaCrudAdapter<>(repository);
     }
 }
