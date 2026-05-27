@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 
 const navGroups = [
@@ -26,10 +27,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="border-b border-slate-200 bg-white lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:border-r">
         <div className="flex h-full flex-col px-4 py-5">
           <div className="flex items-center justify-between gap-3">
-            <Link href="/admin" className="min-w-0">
-              <div className="text-base font-semibold tracking-tight">
-                Korea Fashion
-              </div>
+            <Link href="/admin" className="min-w-0" aria-label="Korea Fashion admin">
+              <Image
+                src="/korea-fashion-logo.svg"
+                alt="Korea Fashion"
+                width={165}
+                height={36}
+                priority
+                className="h-9 w-auto"
+              />
               <div className="mt-1 text-xs font-medium uppercase text-slate-500">
                 Commerce admin
               </div>
