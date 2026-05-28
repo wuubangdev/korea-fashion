@@ -2,6 +2,7 @@
 
 import { Database } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/components/ToastProvider";
 import { Button } from "@/components/ui/button";
 import { createCategory, createProduct } from "@/lib/api/domains/catalog";
 
@@ -65,6 +66,7 @@ const products = [
 export function SeedDataButton() {
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { notify } = useToast();
 
   async function seedData() {
     setIsLoading(true);
@@ -78,7 +80,13 @@ export function SeedDataButton() {
     const created = results.filter((result) => result.status === "fulfilled").length;
     const failed = results.length - created;
 
-    setMessage(`Da goi API tao du lieu mau: ${created} thanh cong, ${failed} bo qua/loi.`);
+    const resultMessage = `Đã gọi API tạo dữ liệu mẫu: ${created} thành công, ${failed} bỏ qua/lỗi.`;
+    setMessage(resultMessage);
+    notify({
+      message: resultMessage,
+      title: failed > 0 ? "Tạo dữ liệu mẫu hoàn tất một phần" : "Tạo dữ liệu mẫu thành công",
+      type: failed > 0 ? "error" : "success",
+    });
     setIsLoading(false);
   }
 
@@ -86,7 +94,7 @@ export function SeedDataButton() {
     <div>
       <Button onClick={seedData} disabled={isLoading} variant="outline">
         <Database className="h-4 w-4" />
-        {isLoading ? "Dang tao du lieu..." : "Tao du lieu mau"}
+        {isLoading ? "Đang tạo dữ liệu..." : "Tạo dữ liệu mẫu"}
       </Button>
       {message ? <p className="mt-2 text-xs text-slate-500">{message}</p> : null}
     </div>

@@ -28,8 +28,8 @@ export function Pagination({
   return (
     <div className="mt-4 flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-slate-600">
-        Tong <span className="font-medium text-slate-950">{totalElements}</span>{" "}
-        ban ghi, trang{" "}
+        Tổng <span className="font-medium text-slate-950">{totalElements}</span>{" "}
+        bản ghi, trang{" "}
         <span className="font-medium text-slate-950">
           {totalPages === 0 ? 0 : page + 1}/{totalPages}
         </span>
@@ -56,7 +56,7 @@ export function Pagination({
           variant="outline"
           size="sm"
         >
-          Truoc
+          Trước
         </Button>
         <Button
           onClick={() => onPageChange(page + 1)}

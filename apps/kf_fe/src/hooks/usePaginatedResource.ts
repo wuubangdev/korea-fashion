@@ -83,7 +83,7 @@ export function usePaginatedResource<T>({
           return;
         }
 
-        setError(err instanceof Error ? err.message : "Khong the tai du lieu");
+        setError(err instanceof Error ? err.message : "Không thể tải dữ liệu");
         setData(emptyPage<T>(page, size));
       })
       .finally(() => {

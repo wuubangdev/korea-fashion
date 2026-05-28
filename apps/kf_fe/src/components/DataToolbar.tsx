@@ -20,10 +20,10 @@ type DataToolbarProps = {
 };
 
 const sortOptions = [
-  { label: "Moi nhat", value: "id,desc" },
-  { label: "Cu nhat", value: "id,asc" },
-  { label: "Ten A-Z", value: "name,asc" },
-  { label: "Ten Z-A", value: "name,desc" },
+  { label: "Mới nhất", value: "id,desc" },
+  { label: "Cũ nhất", value: "id,asc" },
+  { label: "Tên A-Z", value: "name,asc" },
+  { label: "Tên Z-A", value: "name,desc" },
 ];
 
 export function DataToolbar({
@@ -31,7 +31,7 @@ export function DataToolbar({
   sort,
   onSearchChange,
   onSortChange,
-  filterLabel = "Bo loc",
+  filterLabel = "Bộ lọc",
   filterValue = "",
   filterOptions = [],
   onFilterChange,
@@ -39,11 +39,11 @@ export function DataToolbar({
   return (
     <div className="mb-4 grid gap-3 rounded-lg border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_180px]">
       <label className="block">
-        <span className="sr-only">Tim kiem</span>
+        <span className="sr-only">Tìm kiếm</span>
         <Input
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Tim kiem..."
+          placeholder="Tìm kiếm..."
         />
       </label>
 
@@ -67,7 +67,7 @@ export function DataToolbar({
       )}
 
       <label className="block">
-        <span className="sr-only">Sap xep</span>
+        <span className="sr-only">Sắp xếp</span>
         <Select
           value={sort}
           onChange={(event) => onSortChange(event.target.value)}

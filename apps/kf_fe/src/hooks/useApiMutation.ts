@@ -31,7 +31,7 @@ export function useApiMutation<TData, TBody = unknown>() {
       setData(result);
       return result;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Khong the ket noi API";
+      const message = err instanceof Error ? err.message : "Không thể kết nối API";
       setError(message);
       throw err;
     } finally {

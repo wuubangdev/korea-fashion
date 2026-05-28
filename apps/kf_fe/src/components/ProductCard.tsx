@@ -11,6 +11,12 @@ import type { Product } from "@/types/api";
 
 export function ProductCard({ product }: { product: Product }) {
   const cart = useCart();
+  const price = Number(product.price ?? 0);
+  const compareAtPrice = Number(product.compareAtPrice ?? 0);
+  const discountPercent =
+    compareAtPrice > price && price > 0
+      ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
+      : 0;
 
   return (
     <article className="group overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -25,16 +31,17 @@ export function ProductCard({ product }: { product: Product }) {
             }}
           />
         </Link>
-        <div className="absolute left-3 top-3 flex gap-2">
+        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
           <Badge className="bg-white text-stone-950 shadow-sm">Mới</Badge>
-          {product.origin ? <Badge className="bg-rose-700 text-white">{product.origin}</Badge> : null}
+          {discountPercent > 0 ? <Badge className="bg-rose-700 text-white">-{discountPercent}%</Badge> : null}
+          {product.origin ? <Badge className="bg-stone-900 text-white">{product.origin}</Badge> : null}
         </div>
         <button
           className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-md bg-white/90 text-stone-700 shadow-sm transition hover:bg-white hover:text-rose-700"
           aria-label="Yêu thích"
           type="button"
         >
-          <Heart className="h-4 w-4" />
+          <Heart aria-hidden className="h-4 w-4" />
         </button>
       </div>
       <div className="p-4">
@@ -47,10 +54,18 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="mt-2">
           <ProductRating rating={product.ratingAverage} count={product.reviewCount} />
         </div>
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <div className="font-semibold text-stone-950">{formatMoney(product.price)}</div>
+        <div className="mt-4 flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <div className="font-semibold text-stone-950">{formatMoney(product.price)}</div>
+            {discountPercent > 0 ? (
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                <span className="text-stone-400 line-through">{formatMoney(compareAtPrice)}</span>
+                <span className="font-medium text-rose-700">Tiết kiệm {formatMoney(compareAtPrice - price)}</span>
+              </div>
+            ) : null}
+          </div>
           <Button size="sm" onClick={() => cart.add(product)}>
-            <ShoppingBag className="h-4 w-4" />
+            <ShoppingBag aria-hidden className="h-4 w-4" />
             Thêm
           </Button>
         </div>

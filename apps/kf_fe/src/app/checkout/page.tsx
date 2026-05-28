@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CheckCircle2, CreditCard, MapPin, Phone, UserRound } from "lucide-react";
 import { StoreFooter } from "@/components/StoreFooter";
 import { StoreHeader } from "@/components/StoreHeader";
+import { useToast } from "@/components/ToastProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import type { CreateOrderPayload, Order } from "@/types/api";
 export default function CheckoutPage() {
   const cart = useCart();
   const order = useApiMutation<Order, CreateOrderPayload>();
+  const { notify } = useToast();
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -54,8 +56,17 @@ export default function CheckoutPage() {
 
       setCreatedOrderId(result.id);
       cart.clear();
-    } catch {
-      // Error state is handled by useApiMutation.
+      notify({
+        message: `Đơn hàng #${result.id} đã được tạo thành công.`,
+        title: "Đặt hàng thành công",
+        type: "success",
+      });
+    } catch (err) {
+      notify({
+        message: err instanceof Error ? err.message : "Không thể tạo đơn hàng.",
+        title: "Đặt hàng thất bại",
+        type: "error",
+      });
     }
   }
 

@@ -1,21 +1,25 @@
 "use client";
 
-import { ChevronDown, Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
+import { ChevronDown, Heart, LogOut, Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useApiResource } from "@/hooks/useApiResource";
 import { useCart } from "@/hooks/useCart";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { AUTH_TOKEN_KEY, AUTH_USER_KEY, clearAuthSession } from "@/lib/auth";
 import type { Category, PageResult, Product } from "@/types/api";
 
 type Collection<T> = PageResult<T> | T[] | null;
 
+type SessionState = {
+  token: string | null;
+  username: string;
+};
+
 const staticNavItems = [
-  { href: "/", label: "Trang chủ" },
-  { href: "/profile", label: "Tài khoản" },
-  { href: "/policies", label: "Nội quy & chính sách" },
+  { href: "/policies", label: "Chính sách" },
   { href: "/contact", label: "Liên hệ" },
 ];
 
@@ -35,10 +39,16 @@ function getBrandHref(brand: string) {
   return `/products?brand=${encodeURIComponent(brand)}`;
 }
 
+function getInitials(username: string) {
+  const safeName = username.trim();
+  return safeName ? safeName.slice(0, 2).toUpperCase() : "KF";
+}
+
 export function StoreHeader() {
   const cart = useCart();
   const { settings } = useSiteSettings();
   const [isOpen, setIsOpen] = useState(false);
+  const [session, setSession] = useState<SessionState>({ token: null, username: "" });
 
   const categoriesResource = useApiResource<Collection<Category>>({
     path: "/api/storefront/categories",
@@ -63,6 +73,32 @@ export function StoreHeader() {
       ).slice(0, 10),
     [productsResource.data],
   );
+  const isLoggedIn = Boolean(session.token);
+  const accountName = session.username || "Tài khoản";
+
+  useEffect(() => {
+    function syncSession() {
+      setSession({
+        token: window.localStorage.getItem(AUTH_TOKEN_KEY),
+        username: window.localStorage.getItem(AUTH_USER_KEY) || "",
+      });
+    }
+
+    syncSession();
+    window.addEventListener("storage", syncSession);
+    window.addEventListener("auth:update", syncSession);
+    return () => {
+      window.removeEventListener("storage", syncSession);
+      window.removeEventListener("auth:update", syncSession);
+    };
+  }, []);
+
+  function handleLogout() {
+    clearAuthSession();
+    setSession({ token: null, username: "" });
+    setIsOpen(false);
+    window.dispatchEvent(new Event("auth:update"));
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur">
@@ -88,7 +124,7 @@ export function StoreHeader() {
           <div className="group relative">
             <Link href="/products" className="inline-flex items-center gap-1 py-2 hover:text-stone-950">
               Sản phẩm
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown aria-hidden className="h-4 w-4" />
             </Link>
             <div className="invisible absolute left-0 top-full w-64 translate-y-2 rounded-md border border-stone-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
               <Link href="/products" className="block rounded-md px-3 py-2 text-stone-700 hover:bg-stone-100 hover:text-stone-950">
@@ -113,7 +149,7 @@ export function StoreHeader() {
           <div className="group relative">
             <Link href="/products" className="inline-flex items-center gap-1 py-2 hover:text-stone-950">
               Thương hiệu
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown aria-hidden className="h-4 w-4" />
             </Link>
             <div className="invisible absolute left-0 top-full w-60 translate-y-2 rounded-md border border-stone-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
               {brands.length ? (
@@ -137,27 +173,60 @@ export function StoreHeader() {
               {item.label}
             </Link>
           ))}
-          <Link href="/admin" className="hover:text-stone-950">
-            Admin
-          </Link>
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link href="/products" className="hidden sm:block">
-            <Button variant="ghost" size="icon" aria-label="Tìm sản phẩm">
-              <Search className="h-4 w-4" />
+          <Button className="hidden sm:inline-flex" variant="ghost" size="icon" aria-label="Tìm sản phẩm" disabled>
+            <Search aria-hidden className="h-4 w-4" />
+          </Button>
+
+          {isLoggedIn ? (
+            <div className="group relative">
+              <Button variant="ghost" size="icon" aria-label={`Tài khoản ${accountName}`}>
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-stone-900 text-[11px] font-semibold text-white">
+                  {getInitials(accountName)}
+                </span>
+              </Button>
+              <div className="invisible absolute right-0 top-full w-56 translate-y-2 rounded-md border border-stone-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+                <div className="border-b border-stone-100 px-3 py-2">
+                  <p className="truncate text-sm font-semibold text-stone-950">{accountName}</p>
+                  <p className="mt-0.5 text-xs text-stone-500">Đang đăng nhập</p>
+                </div>
+                <Link href="/profile" className="mt-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 hover:text-stone-950">
+                  <UserRound aria-hidden className="h-4 w-4" />
+                  Thông tin tài khoản
+                </Link>
+                <Link href="/wishlist" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 hover:text-stone-950">
+                  <Heart aria-hidden className="h-4 w-4" />
+                  Danh sách yêu thích
+                </Link>
+                <button
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-100 hover:text-stone-950"
+                  type="button"
+                  onClick={handleLogout}
+                >
+                  <LogOut aria-hidden className="h-4 w-4" />
+                  Đăng xuất
+                </button>
+              </div>
+            </div>
+          ) : (
+            <Link href="/login">
+              <Button variant="ghost" size="icon" aria-label="Đăng nhập">
+                <UserRound aria-hidden className="h-4 w-4" />
+              </Button>
+            </Link>
+          )}
+
+          <Link href="/cart" className="relative">
+            <Button variant="outline" size="icon" aria-label={`Giỏ hàng có ${cart.count} sản phẩm`}>
+              <ShoppingBag aria-hidden className="h-4 w-4" />
             </Button>
-          </Link>
-          <Link href="/profile">
-            <Button variant="ghost" size="icon" aria-label="Tài khoản">
-              <UserRound className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/cart">
-            <Button variant="outline" size="sm" aria-label="Giỏ hàng">
-              <ShoppingBag className="h-4 w-4" />
-              <span>{cart.count}</span>
-            </Button>
+            {cart.count > 0 ? (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-semibold leading-none text-white">
+                {cart.count > 99 ? "99+" : cart.count}
+              </span>
+            ) : null}
           </Link>
           <Button
             className="md:hidden"
@@ -166,7 +235,7 @@ export function StoreHeader() {
             aria-label="Mở menu"
             onClick={() => setIsOpen((value) => !value)}
           >
-            {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            {isOpen ? <X aria-hidden className="h-4 w-4" /> : <Menu aria-hidden className="h-4 w-4" />}
           </Button>
         </div>
       </div>
@@ -207,9 +276,6 @@ export function StoreHeader() {
                 {item.label}
               </Link>
             ))}
-            <Link href="/admin" className="rounded-md px-3 py-2 hover:bg-stone-100" onClick={() => setIsOpen(false)}>
-              Admin
-            </Link>
           </nav>
         </div>
       ) : null}

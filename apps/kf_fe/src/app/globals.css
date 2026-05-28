@@ -25,6 +25,18 @@ textarea {
   font: inherit;
 }
 
+a[href],
+button:not(:disabled),
+[role="button"],
+summary {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 .animate-in {
   animation: fade-in 180ms ease-out;
 }

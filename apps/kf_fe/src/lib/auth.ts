@@ -27,10 +27,12 @@ export function saveAuthSession(auth: AuthResponse) {
   document.cookie = `${AUTH_TOKEN_KEY}=${encodeURIComponent(
     auth.token,
   )}; path=/; max-age=${AUTH_COOKIE_MAX_AGE}; SameSite=Lax`;
+  window.dispatchEvent(new Event("auth:update"));
 }
 
 export function clearAuthSession() {
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(AUTH_USER_KEY);
   document.cookie = `${AUTH_TOKEN_KEY}=; path=/; max-age=0; SameSite=Lax`;
+  window.dispatchEvent(new Event("auth:update"));
 }

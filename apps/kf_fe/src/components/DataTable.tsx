@@ -4,7 +4,7 @@ import { Table, TableCell, TableHead } from "@/components/ui/table";
 
 export type Column<T> = {
   key: string;
-  header: string;
+  header: ReactNode;
   render: (item: T) => ReactNode;
   className?: string;
 };
@@ -13,14 +13,14 @@ type DataTableProps<T> = {
   columns: Column<T>[];
   data: T[];
   emptyText?: string;
-  getRowKey: (item: T) => string | number;
+  getRowKey: (item: T, index: number) => string | number;
   isLoading?: boolean;
 };
 
 export function DataTable<T>({
   columns,
   data,
-  emptyText = "Chua co du lieu",
+  emptyText = "Chưa có dữ liệu",
   getRowKey,
   isLoading = false,
 }: DataTableProps<T>) {
@@ -47,7 +47,7 @@ export function DataTable<T>({
                   colSpan={columns.length}
                   className="px-4 py-10 text-center text-sm text-slate-500"
                 >
-                  <Loader label="Dang tai du lieu..." className="justify-center" />
+                  <Loader label="Đang tải dữ liệu..." className="justify-center" />
                 </td>
               </tr>
             ) : null}
@@ -62,8 +62,8 @@ export function DataTable<T>({
               </tr>
             ) : null}
             {!isLoading
-              ? data.map((item) => (
-                  <tr key={getRowKey(item)} className="hover:bg-slate-50">
+              ? data.map((item, index) => (
+                  <tr key={getRowKey(item, index)} className="hover:bg-slate-50">
                     {columns.map((column) => (
                       <TableCell
                         key={column.key}

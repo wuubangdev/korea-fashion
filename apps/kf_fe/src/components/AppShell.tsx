@@ -1,24 +1,25 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import type { ReactNode } from "react";
+import { adminResourceGroupLabels, adminResourceGroups, adminResources } from "@/config/adminResources";
 
 const navGroups = [
   {
-    title: "Van hanh",
+    title: "Vận hành",
     items: [
-      { href: "/admin", label: "Dashboard", meta: "Tong quan shop" },
-      { href: "/orders", label: "Don hang", meta: "Xu ly va giao hang" },
-      { href: "/products", label: "San pham", meta: "Gia, ton kho, hinh anh" },
-      { href: "/categories", label: "Danh muc", meta: "Bo suu tap va nhom hang" },
+      { href: "/admin", label: "Tổng quan", meta: "Tổng quan cửa hàng" },
     ],
   },
-  {
-    title: "Khach hang",
-    items: [
-      { href: "/users", label: "Nguoi dung", meta: "Tai khoan va vai tro" },
-      { href: "/login", label: "Dang nhap", meta: "Kiem tra phien quan tri" },
-    ],
-  },
+  ...adminResourceGroups.map((group) => ({
+    title: adminResourceGroupLabels[group],
+    items: adminResources
+      .filter((resource) => resource.group === group)
+      .map((resource) => ({
+        href: `/admin/resources/${resource.slug}`,
+        label: resource.label,
+        meta: resource.path,
+      })),
+  })),
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -37,31 +38,31 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className="h-9 w-auto"
               />
               <div className="mt-1 text-xs font-medium uppercase text-slate-500">
-                Commerce admin
+                Quản trị bán hàng
               </div>
             </Link>
             <Link
               href="/"
               className="rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"
             >
-              Shop
+              Cửa hàng
             </Link>
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-2">
             <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3">
-              <div className="text-xs font-medium text-emerald-700">Hom nay</div>
+              <div className="text-xs font-medium text-emerald-700">Hôm nay</div>
               <div className="mt-1 text-lg font-semibold text-emerald-950">24</div>
-              <div className="text-xs text-emerald-700">don moi</div>
+              <div className="text-xs text-emerald-700">đơn mới</div>
             </div>
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
-              <div className="text-xs font-medium text-amber-700">Can xu ly</div>
+              <div className="text-xs font-medium text-amber-700">Cần xử lý</div>
               <div className="mt-1 text-lg font-semibold text-amber-950">8</div>
-              <div className="text-xs text-amber-700">viec</div>
+              <div className="text-xs text-amber-700">việc</div>
             </div>
           </div>
 
-          <nav className="mt-6 space-y-6">
+          <nav className="mt-6 space-y-6 overflow-y-auto pr-1">
             {navGroups.map((group) => (
               <div key={group.title}>
                 <div className="px-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -89,15 +90,15 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <div className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-3 lg:mt-auto">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              He thong
+              Hệ thống
             </div>
             <div className="mt-2 space-y-2 text-sm text-slate-700">
               <div className="flex items-center justify-between gap-3">
                 <span>API</span>
-                <span className="font-medium text-emerald-700">Online</span>
+                <span className="font-medium text-emerald-700">Hoạt động</span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span>Phien</span>
+                <span>Phiên</span>
                 <span className="font-medium text-slate-950">JWT</span>
               </div>
             </div>
@@ -109,10 +110,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="border-b border-slate-200 bg-white">
           <div className="flex min-h-16 flex-col justify-center gap-1 px-4 py-4 sm:px-6 lg:px-8">
             <div className="text-sm font-medium text-slate-500">
-              Bang dieu khien quan tri
+              Bảng điều khiển quản trị
             </div>
             <div className="text-lg font-semibold tracking-tight">
-              Quan ly nen tang thuong mai dien tu
+              Quản lý nền tảng thương mại điện tử
             </div>
           </div>
         </header>
