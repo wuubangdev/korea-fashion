@@ -2,8 +2,9 @@
 
 import { Heart, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { ProductRating } from "@/components/ProductRating";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
 import { formatMoney } from "@/lib/format";
 import type { Product } from "@/types/api";
@@ -38,20 +39,16 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
       <div className="p-4">
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase text-stone-500">
-            {product.brand || "Korea Fashion"}
-          </p>
-          <Link
-            href={`/products/${product.id}`}
-            className="mt-1 line-clamp-1 block text-sm font-semibold text-stone-950"
-          >
+          <p className="text-xs font-medium uppercase text-stone-500">{product.brand || "Korea Fashion"}</p>
+          <Link href={`/products/${product.id}`} className="mt-1 line-clamp-1 block text-sm font-semibold text-stone-950">
             {product.name}
           </Link>
         </div>
+        <div className="mt-2">
+          <ProductRating rating={product.ratingAverage} count={product.reviewCount} />
+        </div>
         <div className="mt-4 flex items-center justify-between gap-3">
-          <div className="font-semibold text-stone-950">
-            {formatMoney(product.price)}
-          </div>
+          <div className="font-semibold text-stone-950">{formatMoney(product.price)}</div>
           <Button size="sm" onClick={() => cart.add(product)}>
             <ShoppingBag className="h-4 w-4" />
             Thêm

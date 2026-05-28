@@ -42,6 +42,26 @@ export type Product = {
   seoDescription?: string;
 };
 
+export type Review = {
+  id: string;
+  productId?: number;
+  userId?: number;
+  orderId?: number;
+  orderItemId?: number;
+  rating?: number;
+  title?: string;
+  content?: string;
+  status?: string;
+  reviewerName?: string;
+  reviewerAvatarUrl?: string;
+  verifiedPurchase?: boolean;
+  helpfulCount?: number;
+  reportCount?: number;
+  adminReply?: string;
+  adminRepliedAt?: string;
+  reviewedAt?: string;
+};
+
 export type ProductPayload = {
   name: string;
   description?: string;
@@ -116,8 +136,10 @@ export type SiteSetting = {
   canonicalUrl?: string;
   facebookUrl?: string;
   instagramUrl?: string;
+  messengerUrl?: string;
   tiktokUrl?: string;
   youtubeUrl?: string;
+  zaloUrl?: string;
   hotline?: string;
   email?: string;
   address?: string;
