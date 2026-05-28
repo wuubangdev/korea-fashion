@@ -18,4 +18,8 @@ public interface VariantJpaRepository extends JpaRepository<VariantJpaEntity, Lo
     @Modifying
     @Query(value = "delete from variants where id = :id", nativeQuery = true)
     int hardDeleteById(@Param("id") Long id);
+
+    @Modifying
+    @Query(value = "delete from variants where id in (:ids)", nativeQuery = true)
+    int hardDeleteByIdIn(@Param("ids") List<Long> ids);
 }

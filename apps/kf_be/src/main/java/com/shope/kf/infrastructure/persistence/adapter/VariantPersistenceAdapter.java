@@ -11,6 +11,7 @@ import com.shope.kf.infrastructure.persistence.repository.VariantJpaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -25,6 +26,9 @@ public class VariantPersistenceAdapter implements VariantPersistencePort {
     @Override
     public Variant save(Variant variant) {
         VariantJpaEntity e = VariantMapper.toEntity(variant);
+        if (variant.getId() != null) {
+            repo.findById(variant.getId()).ifPresent(existing -> JpaAuditMetadata.copyVersionAndAudit(existing, e));
+        }
         VariantJpaEntity saved = repo.save(e);
         return VariantMapper.toDomain(saved);
     }
@@ -43,8 +47,27 @@ public class VariantPersistenceAdapter implements VariantPersistencePort {
     }
 
     @Override
+    public void deleteAllById(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        repo.findAllById(ids).forEach(variant -> {
+            variant.markDeleted("system");
+            repo.save(variant);
+        });
+    }
+
+    @Override
     public void hardDeleteById(Long id) {
         repo.hardDeleteById(id);
+    }
+
+    @Override
+    public void hardDeleteAllById(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        repo.hardDeleteByIdIn(ids);
     }
 
     @Override

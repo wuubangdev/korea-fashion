@@ -11,6 +11,8 @@ import com.shope.kf.infrastructure.persistence.repository.OrderJpaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class OrderPersistenceAdapter implements OrderPersistencePort {
 
@@ -23,6 +25,9 @@ public class OrderPersistenceAdapter implements OrderPersistencePort {
     @Override
     public Order save(Order order) {
         OrderJpaEntity e = OrderMapper.toEntity(order);
+        if (order.getId() != null) {
+            repo.findById(order.getId()).ifPresent(existing -> JpaAuditMetadata.copyVersionAndAudit(existing, e));
+        }
         OrderJpaEntity saved = repo.save(e);
         return OrderMapper.toDomain(saved);
     }
@@ -41,9 +46,29 @@ public class OrderPersistenceAdapter implements OrderPersistencePort {
     }
 
     @Override
+    public void deleteAllById(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        repo.findAllById(ids).forEach(order -> {
+            order.markDeleted("system");
+            repo.save(order);
+        });
+    }
+
+    @Override
     public void hardDeleteById(Long id) {
         repo.hardDeleteItemsByOrderId(id);
         repo.hardDeleteById(id);
+    }
+
+    @Override
+    public void hardDeleteAllById(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        repo.hardDeleteItemsByOrderIdIn(ids);
+        repo.hardDeleteByIdIn(ids);
     }
 
     @Override

@@ -9,6 +9,8 @@ import com.shope.kf.infrastructure.exception.AppException;
 import com.shope.kf.infrastructure.exception.ErrorCode;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Transactional
 public class VariantService implements VariantUseCase {
 
@@ -24,6 +26,14 @@ public class VariantService implements VariantUseCase {
     }
 
     @Override
+    public Variant copy(Long id) {
+        Variant variant = findById(id);
+        variant.setId(null);
+        variant.setSku(CopyValue.unique(variant.getSku()));
+        return port.save(variant);
+    }
+
+    @Override
     public Variant update(Long id, Variant variant) {
         variant.setId(id);
         return port.save(variant);
@@ -35,8 +45,18 @@ public class VariantService implements VariantUseCase {
     }
 
     @Override
+    public void deleteAll(List<Long> ids) {
+        port.deleteAllById(ids);
+    }
+
+    @Override
     public void hardDelete(Long id) {
         port.hardDeleteById(id);
+    }
+
+    @Override
+    public void hardDeleteAll(List<Long> ids) {
+        port.hardDeleteAllById(ids);
     }
 
     @Override

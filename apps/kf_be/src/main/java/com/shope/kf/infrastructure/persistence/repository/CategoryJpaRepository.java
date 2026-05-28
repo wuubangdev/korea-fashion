@@ -17,4 +17,8 @@ public interface CategoryJpaRepository extends JpaRepository<CategoryJpaEntity, 
     @Modifying
     @Query(value = "delete from categories where id = :id", nativeQuery = true)
     int hardDeleteById(@Param("id") Long id);
+
+    @Modifying
+    @Query(value = "delete from categories where id in (:ids)", nativeQuery = true)
+    int hardDeleteByIdIn(@Param("ids") List<Long> ids);
 }

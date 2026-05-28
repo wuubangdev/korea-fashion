@@ -10,6 +10,8 @@ import com.shope.kf.infrastructure.exception.AppException;
 import com.shope.kf.infrastructure.exception.ErrorCode;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Transactional
 public class ProductService implements ProductUseCase {
 
@@ -25,6 +27,15 @@ public class ProductService implements ProductUseCase {
     }
 
     @Override
+    public Product copy(Long id) {
+        Product product = findById(id);
+        product.setId(null);
+        product.setSku(CopyValue.unique(product.getSku()));
+        product.setSlug(CopyValue.unique(product.getSlug()));
+        return port.save(product);
+    }
+
+    @Override
     public Product update(Long id, Product product) {
         product.setId(id);
         return port.save(product);
@@ -36,8 +47,18 @@ public class ProductService implements ProductUseCase {
     }
 
     @Override
+    public void deleteAll(List<Long> ids) {
+        port.deleteAllById(ids);
+    }
+
+    @Override
     public void hardDelete(Long id) {
         port.hardDeleteById(id);
+    }
+
+    @Override
+    public void hardDeleteAll(List<Long> ids) {
+        port.hardDeleteAllById(ids);
     }
 
     @Override

@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
@@ -32,6 +33,13 @@ public class ProductController {
         Product p = ProductApiMapper.toDomain(req);
         Product saved = productUseCase.create(p);
         return ResponseEntity.ok(ProductApiMapper.toResponse(saved));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth
+    @PostMapping("/{id}/copy")
+    public ResponseEntity<ProductResponse> copy(@PathVariable Long id) {
+        Product copied = productUseCase.copy(id);
+        return ResponseEntity.ok(ProductApiMapper.toResponse(copied));
     }
 
     @GetMapping
@@ -81,10 +89,24 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
     }
 
+    @com.shope.kf.infrastructure.security.RequireAuth
+    @DeleteMapping("/bulk")
+    public ResponseEntity<ApiResponse<Void>> deleteAll(@RequestBody List<Long> ids) {
+        productUseCase.deleteAll(ids);
+        return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
+    }
+
     @com.shope.kf.infrastructure.security.RequireAuth(roles = {RoleConstants.ADMIN})
     @DeleteMapping("/{id}/hard")
     public ResponseEntity<ApiResponse<Void>> hardDelete(@PathVariable Long id) {
         productUseCase.hardDelete(id);
+        return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth(roles = {RoleConstants.ADMIN})
+    @DeleteMapping("/hard/bulk")
+    public ResponseEntity<ApiResponse<Void>> hardDeleteAll(@RequestBody List<Long> ids) {
+        productUseCase.hardDeleteAll(ids);
         return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
     }
 

@@ -44,10 +44,14 @@ public class GenericJpaCrudAdapter<T, ID, R extends JpaRepository<T, ID> & JpaSp
 
     @Override
     public Optional<T> update(ID id, T body) {
-        if (!repository.existsById(id)) {
+        Optional<T> existing = repository.findById(id);
+        if (existing.isEmpty()) {
             return Optional.empty();
         }
         setId(body, id);
+        if (existing.get() instanceof BaseJpaEntity source && body instanceof BaseJpaEntity target) {
+            JpaAuditMetadata.copyVersionAndAudit(source, target);
+        }
         return Optional.of(repository.save(body));
     }
 

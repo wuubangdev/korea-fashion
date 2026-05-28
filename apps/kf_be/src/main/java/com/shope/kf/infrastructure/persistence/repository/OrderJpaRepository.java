@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long> {
     Page<OrderJpaEntity> findByStatusContainingIgnoreCase(String status, Pageable pageable);
@@ -19,8 +20,16 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long> 
     int hardDeleteById(@Param("id") Long id);
 
     @Modifying
+    @Query(value = "delete from orders where id in (:ids)", nativeQuery = true)
+    int hardDeleteByIdIn(@Param("ids") List<Long> ids);
+
+    @Modifying
     @Query(value = "delete from order_items where order_id = :id", nativeQuery = true)
     int hardDeleteItemsByOrderId(@Param("id") Long id);
+
+    @Modifying
+    @Query(value = "delete from order_items where order_id in (:ids)", nativeQuery = true)
+    int hardDeleteItemsByOrderIdIn(@Param("ids") List<Long> ids);
 
     @Query("select coalesce(sum(o.grandTotal), 0) from OrderJpaEntity o where upper(o.status) in (upper(:statusA), upper(:statusB))")
     BigDecimal sumGrandTotalByStatuses(@Param("statusA") String statusA, @Param("statusB") String statusB);

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
@@ -19,6 +20,14 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
     int hardDeleteById(@Param("id") Long id);
 
     @Modifying
+    @Query(value = "delete from users where id in (:ids)", nativeQuery = true)
+    int hardDeleteByIdIn(@Param("ids") List<Long> ids);
+
+    @Modifying
     @Query(value = "delete from user_roles where user_id = :id", nativeQuery = true)
     int hardDeleteRolesByUserId(@Param("id") Long id);
+
+    @Modifying
+    @Query(value = "delete from user_roles where user_id in (:ids)", nativeQuery = true)
+    int hardDeleteRolesByUserIdIn(@Param("ids") List<Long> ids);
 }

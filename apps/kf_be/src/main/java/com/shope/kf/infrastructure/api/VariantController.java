@@ -14,6 +14,8 @@ import com.shope.kf.infrastructure.security.RoleConstants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequireAuth
 @RestController
 @RequestMapping("/api/variants")
@@ -30,6 +32,12 @@ public class VariantController {
         Variant v = VariantApiMapper.toDomain(req);
         Variant saved = variantUseCase.create(v);
         return ResponseEntity.ok(VariantApiMapper.toResponse(saved));
+    }
+
+    @PostMapping("/{id}/copy")
+    public ResponseEntity<VariantResponse> copy(@PathVariable Long id) {
+        Variant copied = variantUseCase.copy(id);
+        return ResponseEntity.ok(VariantApiMapper.toResponse(copied));
     }
 
     @GetMapping
@@ -69,10 +77,23 @@ public class VariantController {
         return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
     }
 
+    @DeleteMapping("/bulk")
+    public ResponseEntity<ApiResponse<Void>> deleteAll(@RequestBody List<Long> ids) {
+        variantUseCase.deleteAll(ids);
+        return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
+    }
+
     @RequireAuth(roles = {RoleConstants.ADMIN})
     @DeleteMapping("/{id}/hard")
     public ResponseEntity<ApiResponse<Void>> hardDelete(@PathVariable Long id) {
         variantUseCase.hardDelete(id);
+        return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
+    }
+
+    @RequireAuth(roles = {RoleConstants.ADMIN})
+    @DeleteMapping("/hard/bulk")
+    public ResponseEntity<ApiResponse<Void>> hardDeleteAll(@RequestBody List<Long> ids) {
+        variantUseCase.hardDeleteAll(ids);
         return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
     }
 

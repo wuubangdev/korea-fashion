@@ -10,6 +10,7 @@ import com.shope.kf.infrastructure.exception.AppException;
 import com.shope.kf.infrastructure.exception.ErrorCode;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.time.OffsetDateTime;
 import java.util.Set;
 
@@ -35,6 +36,17 @@ public class OrderService implements OrderUseCase {
         order.setShippingStatus("PENDING");
         inventoryService.reserveOrder(order);
         return port.save(order);
+    }
+
+    @Override
+    public Order copy(Long id) {
+        Order order = findById(id);
+        order.setId(null);
+        order.setOrderCode(null);
+        if (order.getItems() != null) {
+            order.getItems().forEach(item -> item.setId(null));
+        }
+        return create(order);
     }
 
     @Override
@@ -95,8 +107,18 @@ public class OrderService implements OrderUseCase {
     }
 
     @Override
+    public void deleteAll(List<Long> ids) {
+        port.deleteAllById(ids);
+    }
+
+    @Override
     public void hardDelete(Long id) {
         port.hardDeleteById(id);
+    }
+
+    @Override
+    public void hardDeleteAll(List<Long> ids) {
+        port.hardDeleteAllById(ids);
     }
 
     @Override

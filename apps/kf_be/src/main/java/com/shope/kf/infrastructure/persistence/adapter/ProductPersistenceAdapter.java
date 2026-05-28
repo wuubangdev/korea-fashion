@@ -14,6 +14,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -29,13 +30,7 @@ public class ProductPersistenceAdapter implements ProductPersistencePort {
     public Product save(Product product) {
         ProductJpaEntity entity = ProductMapper.toEntity(product);
         if (product.getId() != null) {
-            repo.findById(product.getId()).ifPresent(existing -> {
-                entity.setVersion(existing.getVersion());
-                entity.setCreatedAt(existing.getCreatedAt());
-                entity.setCreatedBy(existing.getCreatedBy());
-                entity.setDeletedAt(existing.getDeletedAt());
-                entity.setDeletedBy(existing.getDeletedBy());
-            });
+            repo.findById(product.getId()).ifPresent(existing -> JpaAuditMetadata.copyVersionAndAudit(existing, entity));
         }
         ProductJpaEntity saved = repo.save(entity);
         return ProductMapper.toDomain(saved);
@@ -55,8 +50,27 @@ public class ProductPersistenceAdapter implements ProductPersistencePort {
     }
 
     @Override
+    public void deleteAllById(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        repo.findAllById(ids).forEach(product -> {
+            product.markDeleted("system");
+            repo.save(product);
+        });
+    }
+
+    @Override
     public void hardDeleteById(Long id) {
         repo.hardDeleteById(id);
+    }
+
+    @Override
+    public void hardDeleteAllById(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        repo.hardDeleteByIdIn(ids);
     }
 
     @Override

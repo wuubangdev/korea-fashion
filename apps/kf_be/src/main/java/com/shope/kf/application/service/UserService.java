@@ -10,6 +10,8 @@ import com.shope.kf.infrastructure.exception.AppException;
 import com.shope.kf.infrastructure.exception.ErrorCode;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Transactional
 public class UserService implements UserUseCase {
     private final UserPersistencePort port;
@@ -26,6 +28,15 @@ public class UserService implements UserUseCase {
             throw new AppException(ErrorCode.CONFLICT, "Username already exists");
         }
         user.setPassword(passwordHasher.hash(user.getPassword()));
+        return port.save(user);
+    }
+
+    @Override
+    public User copy(Long id) {
+        User user = findById(id);
+        user.setId(null);
+        user.setUsername(CopyValue.unique(user.getUsername()));
+        user.setEmail(CopyValue.unique(user.getEmail()));
         return port.save(user);
     }
 
@@ -47,8 +58,18 @@ public class UserService implements UserUseCase {
     }
 
     @Override
+    public void deleteAll(List<Long> ids) {
+        port.deleteAllById(ids);
+    }
+
+    @Override
     public void hardDelete(Long id) {
         port.hardDeleteById(id);
+    }
+
+    @Override
+    public void hardDeleteAll(List<Long> ids) {
+        port.hardDeleteAllById(ids);
     }
 
     @Override

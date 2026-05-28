@@ -14,6 +14,8 @@ import com.shope.kf.infrastructure.security.RoleConstants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
@@ -28,6 +30,13 @@ public class OrderController {
     public ResponseEntity<OrderResponse> create(@jakarta.validation.Valid @RequestBody CreateOrderRequest req) {
         Order saved = orderUseCase.create(OrderApiMapper.toDomain(req));
         return ResponseEntity.ok(OrderApiMapper.toResponse(saved));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth
+    @PostMapping("/{id}/copy")
+    public ResponseEntity<OrderResponse> copy(@PathVariable Long id) {
+        Order copied = orderUseCase.copy(id);
+        return ResponseEntity.ok(OrderApiMapper.toResponse(copied));
     }
 
     @com.shope.kf.infrastructure.security.RequireAuth
@@ -87,10 +96,24 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
     }
 
+    @com.shope.kf.infrastructure.security.RequireAuth
+    @DeleteMapping("/bulk")
+    public ResponseEntity<ApiResponse<Void>> deleteAll(@RequestBody List<Long> ids) {
+        orderUseCase.deleteAll(ids);
+        return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
+    }
+
     @com.shope.kf.infrastructure.security.RequireAuth(roles = {RoleConstants.ADMIN})
     @DeleteMapping("/{id}/hard")
     public ResponseEntity<ApiResponse<Void>> hardDelete(@PathVariable Long id) {
         orderUseCase.hardDelete(id);
+        return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth(roles = {RoleConstants.ADMIN})
+    @DeleteMapping("/hard/bulk")
+    public ResponseEntity<ApiResponse<Void>> hardDeleteAll(@RequestBody List<Long> ids) {
+        orderUseCase.hardDeleteAll(ids);
         return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
     }
 

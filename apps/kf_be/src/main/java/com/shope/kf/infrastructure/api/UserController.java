@@ -15,6 +15,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequireAuth
 @RestController
 @RequestMapping("/api/users")
@@ -29,6 +31,12 @@ public class UserController {
     public ResponseEntity<UserResponse> create(@Valid @RequestBody CreateUserRequest req) {
         User saved = userUseCase.create(UserApiMapper.toDomain(req));
         return ResponseEntity.ok(UserApiMapper.toResponse(saved));
+    }
+
+    @PostMapping("/{id}/copy")
+    public ResponseEntity<UserResponse> copy(@PathVariable Long id) {
+        User copied = userUseCase.copy(id);
+        return ResponseEntity.ok(UserApiMapper.toResponse(copied));
     }
 
     @GetMapping
@@ -58,10 +66,23 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
     }
 
+    @DeleteMapping("/bulk")
+    public ResponseEntity<ApiResponse<Void>> deleteAll(@RequestBody List<Long> ids) {
+        userUseCase.deleteAll(ids);
+        return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
+    }
+
     @RequireAuth(roles = {RoleConstants.ADMIN})
     @DeleteMapping("/{id}/hard")
     public ResponseEntity<ApiResponse<Void>> hardDelete(@PathVariable Long id) {
         userUseCase.hardDelete(id);
+        return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
+    }
+
+    @RequireAuth(roles = {RoleConstants.ADMIN})
+    @DeleteMapping("/hard/bulk")
+    public ResponseEntity<ApiResponse<Void>> hardDeleteAll(@RequestBody List<Long> ids) {
+        userUseCase.hardDeleteAll(ids);
         return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
     }
 

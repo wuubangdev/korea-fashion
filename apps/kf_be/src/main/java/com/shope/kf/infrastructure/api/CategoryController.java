@@ -13,6 +13,8 @@ import com.shope.kf.infrastructure.security.RoleConstants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/categories")
 public class CategoryController {
@@ -29,6 +31,13 @@ public class CategoryController {
         Category c = CategoryApiMapper.toDomain(req);
         Category saved = categoryUseCase.create(c);
         return ResponseEntity.ok(CategoryApiMapper.toResponse(saved));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth
+    @PostMapping("/{id}/copy")
+    public ResponseEntity<CategoryResponse> copy(@PathVariable Long id) {
+        Category copied = categoryUseCase.copy(id);
+        return ResponseEntity.ok(CategoryApiMapper.toResponse(copied));
     }
 
     @GetMapping
@@ -62,10 +71,24 @@ public class CategoryController {
         return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
     }
 
+    @com.shope.kf.infrastructure.security.RequireAuth
+    @DeleteMapping("/bulk")
+    public ResponseEntity<ApiResponse<Void>> deleteAll(@RequestBody List<Long> ids) {
+        categoryUseCase.deleteAll(ids);
+        return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
+    }
+
     @com.shope.kf.infrastructure.security.RequireAuth(roles = {RoleConstants.ADMIN})
     @DeleteMapping("/{id}/hard")
     public ResponseEntity<ApiResponse<Void>> hardDelete(@PathVariable Long id) {
         categoryUseCase.hardDelete(id);
+        return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth(roles = {RoleConstants.ADMIN})
+    @DeleteMapping("/hard/bulk")
+    public ResponseEntity<ApiResponse<Void>> hardDeleteAll(@RequestBody List<Long> ids) {
+        categoryUseCase.hardDeleteAll(ids);
         return ResponseEntity.ok(ApiResponse.ok("Hard deleted successfully", null));
     }
 

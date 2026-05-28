@@ -9,6 +9,8 @@ import com.shope.kf.infrastructure.exception.AppException;
 import com.shope.kf.infrastructure.exception.ErrorCode;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Transactional
 public class CategoryService implements CategoryUseCase {
 
@@ -24,6 +26,15 @@ public class CategoryService implements CategoryUseCase {
     }
 
     @Override
+    public Category copy(Long id) {
+        Category category = findById(id);
+        category.setId(null);
+        category.setCode(CopyValue.unique(category.getCode()));
+        category.setSlug(CopyValue.unique(category.getSlug()));
+        return port.save(category);
+    }
+
+    @Override
     public Category update(Long id, Category category) {
         category.setId(id);
         return port.save(category);
@@ -35,8 +46,18 @@ public class CategoryService implements CategoryUseCase {
     }
 
     @Override
+    public void deleteAll(List<Long> ids) {
+        port.deleteAllById(ids);
+    }
+
+    @Override
     public void hardDelete(Long id) {
         port.hardDeleteById(id);
+    }
+
+    @Override
+    public void hardDeleteAll(List<Long> ids) {
+        port.hardDeleteAllById(ids);
     }
 
     @Override

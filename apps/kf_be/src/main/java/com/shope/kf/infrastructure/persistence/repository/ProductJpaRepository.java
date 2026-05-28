@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ProductJpaRepository extends JpaRepository<ProductJpaEntity, Long>, JpaSpecificationExecutor<ProductJpaEntity> {
@@ -18,6 +19,10 @@ public interface ProductJpaRepository extends JpaRepository<ProductJpaEntity, Lo
     @Modifying
     @Query(value = "delete from products where id = :id", nativeQuery = true)
     int hardDeleteById(@Param("id") Long id);
+
+    @Modifying
+    @Query(value = "delete from products where id in (:ids)", nativeQuery = true)
+    int hardDeleteByIdIn(@Param("ids") List<Long> ids);
 
     @Query("select count(p) from ProductJpaEntity p where p.stockQuantity is not null and p.stockQuantity <= :threshold")
     long countLowStock(@Param("threshold") int threshold);

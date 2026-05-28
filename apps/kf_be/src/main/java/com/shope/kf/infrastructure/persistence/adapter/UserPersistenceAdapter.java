@@ -12,6 +12,7 @@ import com.shope.kf.infrastructure.persistence.repository.UserJpaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -35,20 +36,10 @@ public class UserPersistenceAdapter implements UserPersistencePort {
 	public User save(User user) {
 		UserJpaEntity entity = UserMapper.toEntity(user, roleJpaRepository);
 		if (user.getId() != null) {
-			userJpaRepository.findById(user.getId()).ifPresent(existing -> copyVersionAndAudit(existing, entity));
+			userJpaRepository.findById(user.getId()).ifPresent(existing -> JpaAuditMetadata.copyVersionAndAudit(existing, entity));
 		}
 		UserJpaEntity saved = userJpaRepository.save(entity);
 		return UserMapper.toDomain(saved);
-	}
-
-	private void copyVersionAndAudit(UserJpaEntity source, UserJpaEntity target) {
-		target.setVersion(source.getVersion());
-		target.setCreatedAt(source.getCreatedAt());
-		target.setUpdatedAt(source.getUpdatedAt());
-		target.setCreatedBy(source.getCreatedBy());
-		target.setUpdatedBy(source.getUpdatedBy());
-		target.setDeletedAt(source.getDeletedAt());
-		target.setDeletedBy(source.getDeletedBy());
 	}
 
 	@Override
@@ -65,9 +56,29 @@ public class UserPersistenceAdapter implements UserPersistencePort {
 	}
 
 	@Override
+	public void deleteAllById(List<Long> ids) {
+		if (ids == null || ids.isEmpty()) {
+			return;
+		}
+		userJpaRepository.findAllById(ids).forEach(user -> {
+			user.markDeleted("system");
+			userJpaRepository.save(user);
+		});
+	}
+
+	@Override
 	public void hardDeleteById(Long id) {
 		userJpaRepository.hardDeleteRolesByUserId(id);
 		userJpaRepository.hardDeleteById(id);
+	}
+
+	@Override
+	public void hardDeleteAllById(List<Long> ids) {
+		if (ids == null || ids.isEmpty()) {
+			return;
+		}
+		userJpaRepository.hardDeleteRolesByUserIdIn(ids);
+		userJpaRepository.hardDeleteByIdIn(ids);
 	}
 
 	@Override
