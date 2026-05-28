@@ -2,6 +2,7 @@ package com.shope.kf.infrastructure.api.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -21,6 +22,7 @@ public class UpdateProductRequest {
 	private String imageUrl;
 
 	@NotNull
+	@PositiveOrZero
 	private BigDecimal price;
 
 	private String brand;
@@ -47,20 +49,31 @@ public class UpdateProductRequest {
 	private String warrantyPolicy;
 	private String returnPolicy;
 	private String status;
+	@PositiveOrZero
 	private Integer stockQuantity;
 	private Boolean featured;
 	private Boolean newArrival;
 	private Boolean bestSeller;
 	private Boolean sale;
+	@PositiveOrZero
 	private Integer viewCount;
+	@PositiveOrZero
 	private Integer soldCount;
+	@PositiveOrZero
 	private BigDecimal compareAtPrice;
+	@PositiveOrZero
 	private BigDecimal costPrice;
+	@PositiveOrZero
 	private BigDecimal ratingAverage;
+	@PositiveOrZero
 	private Integer reviewCount;
+	@PositiveOrZero
 	private BigDecimal weight;
+	@PositiveOrZero
 	private BigDecimal packageWidth;
+	@PositiveOrZero
 	private BigDecimal packageHeight;
+	@PositiveOrZero
 	private BigDecimal packageLength;
 	private OffsetDateTime publishedAt;
 	private String tags;

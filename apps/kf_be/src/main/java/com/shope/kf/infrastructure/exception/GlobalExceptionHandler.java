@@ -1,5 +1,6 @@
 package com.shope.kf.infrastructure.exception;
 
+import com.shope.kf.domain.exception.DomainException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -30,6 +31,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ErrorResponse> handleApp(AppException ex, HttpServletRequest request) {
         return build(ex.getErrorCode(), ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<ErrorResponse> handleDomain(DomainException ex, HttpServletRequest request) {
+        return build(ErrorCode.BAD_REQUEST, ex.getMessage(), request);
     }
 
     @ExceptionHandler(RuntimeException.class)

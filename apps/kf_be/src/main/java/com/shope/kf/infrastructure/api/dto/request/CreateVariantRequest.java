@@ -20,20 +20,27 @@ public class CreateVariantRequest {
     @NotNull
     @PositiveOrZero
     private Integer quantity;
+    @PositiveOrZero
     private Integer reservedQuantity;
+    @PositiveOrZero
     private Integer availableQuantity;
+    @PositiveOrZero
     private Integer lowStockThreshold;
 
     @NotNull
+    @PositiveOrZero
     private BigDecimal price;
 
+    @PositiveOrZero
     private BigDecimal compareAtPrice;
+    @PositiveOrZero
     private BigDecimal costPrice;
     private String sizeId;
     private String size;
     private String colorId;
     private String color;
     private String colorHex;
+    @PositiveOrZero
     private BigDecimal weight;
     private String imageUrl;
     private Boolean active;

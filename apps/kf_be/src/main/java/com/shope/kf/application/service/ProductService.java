@@ -5,6 +5,7 @@ import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.common.ProductFilter;
 import com.shope.kf.application.port.in.ProductUseCase;
 import com.shope.kf.application.port.out.ProductPersistencePort;
+import com.shope.kf.domain.exception.DomainException;
 import com.shope.kf.domain.model.Product;
 import com.shope.kf.infrastructure.exception.AppException;
 import com.shope.kf.infrastructure.exception.ErrorCode;
@@ -23,6 +24,7 @@ public class ProductService implements ProductUseCase {
 
     @Override
     public Product create(Product product) {
+        normalize(product);
         return port.save(product);
     }
 
@@ -32,12 +34,14 @@ public class ProductService implements ProductUseCase {
         product.setId(null);
         product.setSku(CopyValue.unique(product.getSku()));
         product.setSlug(CopyValue.unique(product.getSlug()));
+        normalize(product);
         return port.save(product);
     }
 
     @Override
     public Product update(Long id, Product product) {
         product.setId(id);
+        normalize(product);
         return port.save(product);
     }
 
@@ -77,5 +81,13 @@ public class ProductService implements ProductUseCase {
     @Transactional(readOnly = true)
     public PageResult<Product> list(ProductFilter filter, PageQuery pageQuery) {
         return port.findAll(filter, pageQuery);
+    }
+
+    private void normalize(Product product) {
+        try {
+            product.normalizeForSave();
+        } catch (DomainException ex) {
+            throw new AppException(ErrorCode.BAD_REQUEST, ex.getMessage());
+        }
     }
 }

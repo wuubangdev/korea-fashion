@@ -25,4 +25,20 @@ public class OrderItem {
     private BigDecimal unitPrice;
     private BigDecimal discount;
     private BigDecimal total;
+
+    public BigDecimal calculateTotal() {
+        BigDecimal effectivePrice = price == null ? unitPrice : price;
+        if (effectivePrice == null || quantity == null) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal calculatedTotal = effectivePrice.multiply(BigDecimal.valueOf(quantity));
+        if (discount != null) {
+            calculatedTotal = calculatedTotal.subtract(discount);
+        }
+        return calculatedTotal.max(BigDecimal.ZERO);
+    }
+
+    public void recalculateTotal() {
+        total = calculateTotal();
+    }
 }

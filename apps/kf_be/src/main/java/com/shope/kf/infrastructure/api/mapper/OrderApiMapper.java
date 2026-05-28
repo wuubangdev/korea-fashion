@@ -4,6 +4,7 @@ import com.shope.kf.infrastructure.api.dto.request.CreateOrderRequest;
 import com.shope.kf.infrastructure.api.dto.response.OrderResponse;
 import com.shope.kf.domain.model.Order;
 import com.shope.kf.domain.model.OrderItem;
+import com.shope.kf.infrastructure.constant.CommerceStatus;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -36,10 +37,10 @@ public final class OrderApiMapper {
                 .taxTotal(taxTotal)
                 .grandTotal(grandTotal)
                 .total(grandTotal)
-                .status("NEW")
-                .paymentStatus("UNPAID")
-                .fulfillmentStatus("UNFULFILLED")
-                .shippingStatus("PENDING")
+                .status(CommerceStatus.NEW)
+                .paymentStatus(CommerceStatus.UNPAID)
+                .fulfillmentStatus(CommerceStatus.UNFULFILLED)
+                .shippingStatus(CommerceStatus.PENDING)
                 .deliveryAddress(request.getDeliveryAddress())
                 .shippingMethodId(request.getShippingMethodId())
                 .paymentMethodId(request.getPaymentMethodId())
@@ -92,8 +93,7 @@ public final class OrderApiMapper {
     private static OrderItem toDomainItem(CreateOrderRequest.OrderItemRequest request) {
         BigDecimal discount = defaultAmount(request.getDiscount());
         BigDecimal price = request.getPrice() == null ? request.getUnitPrice() : request.getPrice();
-        BigDecimal total = price.multiply(BigDecimal.valueOf(request.getQuantity())).subtract(discount);
-        return OrderItem.builder()
+        OrderItem item = OrderItem.builder()
                 .productId(request.getProductId())
                 .variantId(request.getVariantId())
                 .productName(request.getProductName())
@@ -105,8 +105,9 @@ public final class OrderApiMapper {
                 .price(price)
                 .unitPrice(request.getUnitPrice())
                 .discount(discount)
-                .total(total)
                 .build();
+        item.recalculateTotal();
+        return item;
     }
 
     private static OrderResponse.OrderItemResponse toResponseItem(OrderItem item) {

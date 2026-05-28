@@ -18,6 +18,11 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public DashboardService dashboardService(DashboardQueryPort dashboardQueryPort) {
+        return new DashboardService(dashboardQueryPort);
+    }
+
+    @Bean
     public OrderService orderService(OrderPersistencePort orderPort, ShipperPersistencePort shipperPort, InventoryService inventoryService) {
         return new OrderService(orderPort, shipperPort, inventoryService);
     }
@@ -25,6 +30,11 @@ public class UseCaseConfig {
     @Bean
     public ProductService productService(ProductPersistencePort port) {
         return new ProductService(port);
+    }
+
+    @Bean
+    public StorefrontService storefrontService(StorefrontQueryPort storefrontQueryPort) {
+        return new StorefrontService(storefrontQueryPort);
     }
 
     @Bean

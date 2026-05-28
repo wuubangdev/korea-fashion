@@ -1,77 +1,63 @@
 package com.shope.kf.application.service;
 
-import com.shope.kf.infrastructure.api.dto.request.InventoryAdjustmentRequest;
-import com.shope.kf.infrastructure.api.dto.response.InventoryAdjustmentResponse;
+import com.shope.kf.application.port.out.InventoryPersistencePort;
+import com.shope.kf.domain.exception.DomainException;
 import com.shope.kf.domain.model.Order;
 import com.shope.kf.domain.model.OrderItem;
+import com.shope.kf.domain.model.Variant;
+import com.shope.kf.infrastructure.api.dto.request.InventoryAdjustmentRequest;
+import com.shope.kf.infrastructure.api.dto.response.InventoryAdjustmentResponse;
 import com.shope.kf.infrastructure.exception.AppException;
 import com.shope.kf.infrastructure.exception.ErrorCode;
-import com.shope.kf.infrastructure.persistence.jpa.InventoryTransactionJpaEntity;
-import com.shope.kf.infrastructure.persistence.jpa.VariantJpaEntity;
-import com.shope.kf.infrastructure.persistence.repository.InventoryTransactionJpaRepository;
-import com.shope.kf.infrastructure.persistence.repository.VariantJpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
 public class InventoryService {
-    private final VariantJpaRepository variantRepo;
-    private final InventoryTransactionJpaRepository transactionRepo;
+    private final InventoryPersistencePort inventoryPort;
 
-    public InventoryService(VariantJpaRepository variantRepo, InventoryTransactionJpaRepository transactionRepo) {
-        this.variantRepo = variantRepo;
-        this.transactionRepo = transactionRepo;
+    public InventoryService(InventoryPersistencePort inventoryPort) {
+        this.inventoryPort = inventoryPort;
     }
 
     public InventoryAdjustmentResponse apply(InventoryAdjustmentRequest request) {
-        VariantJpaEntity variant = variantRepo.findById(request.getVariantId())
+        Variant variant = inventoryPort.findVariantById(request.getVariantId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Variant not found"));
 
-        int currentQuantity = defaultInt(variant.getQuantity());
-        int currentReserved = defaultInt(variant.getReservedQuantity());
+        int currentQuantity = variant.quantityOrZero();
         int delta = request.getQuantity();
         if (delta == 0) {
             throw new AppException(ErrorCode.BAD_REQUEST, "Quantity must not be zero");
         }
 
-        int nextQuantity = currentQuantity;
-        int nextReserved = currentReserved;
         String type = request.getType().trim().toUpperCase();
-        switch (type) {
-            case "IMPORT", "RETURN", "ADJUSTMENT_IN" -> nextQuantity = currentQuantity + Math.abs(delta);
-            case "SALE", "DAMAGE", "ADJUSTMENT_OUT" -> nextQuantity = currentQuantity - Math.abs(delta);
-            case "RESERVED" -> nextReserved = currentReserved + Math.abs(delta);
-            case "RELEASED" -> nextReserved = currentReserved - Math.abs(delta);
-            default -> throw new AppException(ErrorCode.BAD_REQUEST, "Invalid inventory transaction type");
-        }
-        if (nextQuantity < 0 || nextReserved < 0 || nextReserved > nextQuantity) {
-            throw new AppException(ErrorCode.BAD_REQUEST, "Inventory quantity is not valid");
+        try {
+            applyToVariant(variant, type, Math.abs(delta));
+        } catch (DomainException ex) {
+            throw new AppException(ErrorCode.BAD_REQUEST, ex.getMessage());
         }
 
-        variant.setQuantity(nextQuantity);
-        variant.setReservedQuantity(nextReserved);
-        variant.setAvailableQuantity(nextQuantity - nextReserved);
-        variantRepo.save(variant);
+        inventoryPort.saveVariant(variant);
 
-        InventoryTransactionJpaEntity tx = new InventoryTransactionJpaEntity();
-        tx.setProductId(request.getProductId() == null ? variant.getProductId() : request.getProductId());
-        tx.setVariantId(variant.getId());
-        tx.setType(type);
-        tx.setQuantity(delta);
-        tx.setQuantityBefore(currentQuantity);
-        tx.setQuantityAfter(nextQuantity);
-        tx.setReferenceType(request.getReferenceType());
-        tx.setReferenceId(request.getReferenceId());
-        tx.setNote(request.getNote());
-        InventoryTransactionJpaEntity saved = transactionRepo.save(tx);
+        Long transactionId = inventoryPort.saveTransaction(new InventoryPersistencePort.InventoryTransactionData(
+                request.getProductId() == null ? variant.getProductId() : request.getProductId(),
+                variant.getId(),
+                type,
+                delta,
+                currentQuantity,
+                variant.quantityOrZero(),
+                request.getReferenceType(),
+                request.getReferenceId(),
+                request.getNote()
+        ));
 
         return new InventoryAdjustmentResponse(
                 variant.getId(),
                 variant.getQuantity(),
                 variant.getReservedQuantity(),
                 variant.getAvailableQuantity(),
-                saved.getId()
+                transactionId
         );
     }
 
@@ -105,9 +91,9 @@ public class InventoryService {
             if (item.getVariantId() == null || item.getQuantity() == null || item.getQuantity() <= 0) {
                 continue;
             }
-            VariantJpaEntity variant = variantRepo.findById(item.getVariantId())
+            Variant variant = inventoryPort.findVariantById(item.getVariantId())
                     .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Variant not found"));
-            int quantityToRelease = Math.min(item.getQuantity(), defaultInt(variant.getReservedQuantity()));
+            int quantityToRelease = Math.min(item.getQuantity(), variant.reservedQuantityOrZero());
             if (quantityToRelease <= 0) {
                 continue;
             }
@@ -145,7 +131,13 @@ public class InventoryService {
         }
     }
 
-    private int defaultInt(Integer value) {
-        return value == null ? 0 : value;
+    private void applyToVariant(Variant variant, String type, int amount) {
+        switch (type) {
+            case "IMPORT", "RETURN", "ADJUSTMENT_IN" -> variant.increaseStock(amount);
+            case "SALE", "DAMAGE", "ADJUSTMENT_OUT" -> variant.decreaseStock(amount);
+            case "RESERVED" -> variant.reserve(amount);
+            case "RELEASED" -> variant.release(amount);
+            default -> throw new AppException(ErrorCode.BAD_REQUEST, "Invalid inventory transaction type");
+        }
     }
 }

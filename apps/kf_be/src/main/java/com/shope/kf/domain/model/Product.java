@@ -1,5 +1,6 @@
 package com.shope.kf.domain.model;
 
+import com.shope.kf.domain.exception.InvalidProductException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -67,4 +68,22 @@ public class Product {
     private String canonicalUrl;
     private String schemaType;
     private String robots;
+
+    public void normalizeForSave() {
+        if (status == null || status.isBlank()) {
+            status = ProductStatus.DRAFT.name();
+        } else {
+            status = ProductStatus.parse(status).name();
+        }
+        if (price != null && price.signum() < 0) {
+            throw new InvalidProductException("Product price must be zero or positive");
+        }
+        if (stockQuantity != null && stockQuantity < 0) {
+            throw new InvalidProductException("Product stock quantity must be zero or positive");
+        }
+    }
+
+    public boolean isPubliclyVisible() {
+        return ProductStatus.ACTIVE.name().equals(status) || ProductStatus.PUBLISHED.name().equals(status);
+    }
 }
