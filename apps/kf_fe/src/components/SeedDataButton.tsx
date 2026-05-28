@@ -3,7 +3,7 @@
 import { Database } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { createCategory, createProduct } from "@/lib/store-api";
+import { createCategory, createProduct } from "@/lib/api/domains/catalog";
 
 const categories = [
   {

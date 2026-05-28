@@ -1,10 +1,10 @@
 import type { PageQuery, PageResult } from "@/types/api";
 
-const API_BASE_URL =
+export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
   "http://103.173.66.91:3398";
 
-type RequestOptions = {
+export type RequestOptions = {
   body?: unknown;
   headers?: HeadersInit;
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -41,7 +41,7 @@ function getStoredToken() {
   return localStorage.getItem("kf_token");
 }
 
-function buildUrl(path: string, query?: PageQuery | Record<string, unknown>) {
+export function buildUrl(path: string, query?: PageQuery | Record<string, unknown>) {
   const url = new URL(`${API_BASE_URL}${path}`);
 
   if (!query) {
@@ -110,7 +110,7 @@ export async function apiFetch<T>(
 
 export async function apiGet<T>(
   path: string,
-  query?: PageQuery,
+  query?: PageQuery | Record<string, unknown>,
   options?: RequestOptions,
 ) {
   return apiFetch<T>(path, query, { ...options, method: "GET" });
