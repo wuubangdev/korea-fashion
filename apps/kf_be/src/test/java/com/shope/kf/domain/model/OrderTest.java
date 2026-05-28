@@ -77,4 +77,14 @@ class OrderTest {
 
         assertThrows(InvalidDomainStateException.class, () -> order.changeShippingStatus(Order.SHIPPING_SHIPPING, OffsetDateTime.now()));
     }
+
+    @Test
+    void changeShippingStatus_rejectsTransitionOutOfTerminalStatus() {
+        Order order = Order.builder()
+                .shipperId("shipper-1")
+                .shippingStatus(Order.SHIPPING_CANCELLED)
+                .build();
+
+        assertThrows(InvalidDomainStateException.class, () -> order.changeShippingStatus(Order.SHIPPING_DELIVERED, OffsetDateTime.now()));
+    }
 }

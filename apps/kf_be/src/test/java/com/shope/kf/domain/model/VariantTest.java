@@ -1,6 +1,7 @@
 package com.shope.kf.domain.model;
 
 import com.shope.kf.domain.exception.InsufficientStockException;
+import com.shope.kf.domain.exception.InvalidDomainStateException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -52,5 +53,29 @@ class VariantTest {
 
         assertFalse(variant.isInStock());
         assertTrue(variant.isLowStock());
+    }
+
+    @Test
+    void normalizeForSave_recalculatesAvailableQuantityAndDefaultsActive() {
+        Variant variant = Variant.builder()
+                .quantity(10)
+                .reservedQuantity(3)
+                .availableQuantity(99)
+                .build();
+
+        variant.normalizeForSave();
+
+        assertEquals(7, variant.getAvailableQuantity());
+        assertTrue(variant.getActive());
+    }
+
+    @Test
+    void normalizeForSave_rejectsReservedQuantityGreaterThanQuantity() {
+        Variant variant = Variant.builder()
+                .quantity(2)
+                .reservedQuantity(3)
+                .build();
+
+        assertThrows(InvalidDomainStateException.class, variant::normalizeForSave);
     }
 }

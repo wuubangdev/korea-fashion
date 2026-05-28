@@ -12,6 +12,15 @@ import java.util.List;
 
 public interface CategoryJpaRepository extends JpaRepository<CategoryJpaEntity, Long> {
     Page<CategoryJpaEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    @Query("""
+            select c from CategoryJpaEntity c
+            where lower(c.name) like lower(concat('%', :keyword, '%'))
+               or lower(c.code) like lower(concat('%', :keyword, '%'))
+               or lower(c.slug) like lower(concat('%', :keyword, '%'))
+            """)
+    Page<CategoryJpaEntity> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
     List<CategoryJpaEntity> findByActiveTrueOrderByDisplayOrderAscIdAsc();
 
     @Modifying

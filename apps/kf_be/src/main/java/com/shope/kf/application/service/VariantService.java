@@ -4,6 +4,7 @@ import com.shope.kf.application.common.PageQuery;
 import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.VariantUseCase;
 import com.shope.kf.application.port.out.VariantPersistencePort;
+import com.shope.kf.domain.exception.DomainException;
 import com.shope.kf.domain.model.Variant;
 import com.shope.kf.infrastructure.exception.AppException;
 import com.shope.kf.infrastructure.exception.ErrorCode;
@@ -22,6 +23,7 @@ public class VariantService implements VariantUseCase {
 
     @Override
     public Variant create(Variant variant) {
+        normalize(variant);
         return port.save(variant);
     }
 
@@ -30,12 +32,14 @@ public class VariantService implements VariantUseCase {
         Variant variant = findById(id);
         variant.setId(null);
         variant.setSku(CopyValue.unique(variant.getSku()));
+        normalize(variant);
         return port.save(variant);
     }
 
     @Override
     public Variant update(Long id, Variant variant) {
         variant.setId(id);
+        normalize(variant);
         return port.save(variant);
     }
 
@@ -75,5 +79,13 @@ public class VariantService implements VariantUseCase {
     @Transactional(readOnly = true)
     public PageResult<Variant> listByProduct(Long productId, PageQuery pageQuery) {
         return port.findByProduct(productId, pageQuery);
+    }
+
+    private void normalize(Variant variant) {
+        try {
+            variant.normalizeForSave();
+        } catch (DomainException ex) {
+            throw new AppException(ErrorCode.BAD_REQUEST, ex.getMessage());
+        }
     }
 }

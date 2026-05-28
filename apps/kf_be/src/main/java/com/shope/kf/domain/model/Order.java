@@ -99,6 +99,9 @@ public class Order {
     public ShippingInventoryEffect changeShippingStatus(String nextStatus, OffsetDateTime now) {
         OrderShippingStatus normalizedStatus = OrderShippingStatus.parse(nextStatus);
         OrderShippingStatus previousStatus = shippingStatus == null ? null : OrderShippingStatus.parse(shippingStatus);
+        if (previousStatus != null && !previousStatus.canTransitionTo(normalizedStatus)) {
+            throw new InvalidDomainStateException("Invalid shipping status transition");
+        }
         if (normalizedStatus.requiresShipper() && (shipperId == null || shipperId.isBlank())) {
             throw new InvalidDomainStateException("Order has not been assigned to a shipper");
         }

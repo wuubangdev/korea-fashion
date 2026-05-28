@@ -34,6 +34,31 @@ public class Variant {
     private String imageUrl;
     private Boolean active;
 
+    public void normalizeForSave() {
+        if (quantity == null) {
+            quantity = 0;
+        }
+        if (reservedQuantity == null) {
+            reservedQuantity = 0;
+        }
+        validateNonNegative(quantity, "Variant quantity must be zero or positive");
+        validateNonNegative(reservedQuantity, "Variant reserved quantity must be zero or positive");
+        if (lowStockThreshold != null) {
+            validateNonNegative(lowStockThreshold, "Variant low stock threshold must be zero or positive");
+        }
+        validateNonNegative(price, "Variant price must be zero or positive");
+        validateNonNegative(compareAtPrice, "Variant compare-at price must be zero or positive");
+        validateNonNegative(costPrice, "Variant cost price must be zero or positive");
+        validateNonNegative(weight, "Variant weight must be zero or positive");
+        if (reservedQuantity > quantity) {
+            throw new InvalidDomainStateException("Variant reserved quantity cannot exceed quantity");
+        }
+        availableQuantity = quantity - reservedQuantity;
+        if (active == null) {
+            active = true;
+        }
+    }
+
     public int reserve(int amount) {
         requirePositive(amount, "Reserved quantity must be positive");
         if (amount > availableQuantityOrZero()) {
@@ -97,6 +122,18 @@ public class Variant {
 
     private void requirePositive(int amount, String message) {
         if (amount <= 0) {
+            throw new InvalidDomainStateException(message);
+        }
+    }
+
+    private void validateNonNegative(Integer value, String message) {
+        if (value != null && value < 0) {
+            throw new InvalidDomainStateException(message);
+        }
+    }
+
+    private void validateNonNegative(BigDecimal value, String message) {
+        if (value != null && value.signum() < 0) {
             throw new InvalidDomainStateException(message);
         }
     }

@@ -30,4 +30,23 @@ public enum OrderShippingStatus {
     public boolean isTerminalFailure() {
         return this == FAILED || this == CANCELLED;
     }
+
+    public boolean isTerminal() {
+        return this == DELIVERED || isTerminalFailure();
+    }
+
+    public boolean canTransitionTo(OrderShippingStatus next) {
+        if (next == null) {
+            return false;
+        }
+        if (this == next) {
+            return true;
+        }
+        return switch (this) {
+            case PENDING -> next == ASSIGNED || next == CANCELLED;
+            case ASSIGNED -> next == SHIPPING || next == CANCELLED || next == FAILED;
+            case SHIPPING -> next == DELIVERED || next == CANCELLED || next == FAILED;
+            case DELIVERED, FAILED, CANCELLED -> false;
+        };
+    }
 }

@@ -51,10 +51,11 @@ public class CategoryPersistenceAdapter implements CategoryPersistencePort {
         if (ids == null || ids.isEmpty()) {
             return;
         }
-        repo.findAllById(ids).forEach(category -> {
+        List<CategoryJpaEntity> categories = repo.findAllById(ids);
+        categories.forEach(category -> {
             category.markDeleted("system");
-            repo.save(category);
         });
+        repo.saveAll(categories);
     }
 
     @Override
@@ -73,7 +74,9 @@ public class CategoryPersistenceAdapter implements CategoryPersistencePort {
     @Override
     public PageResult<Category> findAll(String search, PageQuery pageQuery) {
         var pageable = PageMapper.toPageable(pageQuery);
-        Page<CategoryJpaEntity> page = (search == null || search.isBlank()) ? repo.findAll(pageable) : repo.findByNameContainingIgnoreCase(search, pageable);
+        Page<CategoryJpaEntity> page = (search == null || search.isBlank())
+                ? repo.findAll(pageable)
+                : repo.searchByKeyword(search.trim(), pageable);
         return PageMapper.toResult(page, CategoryMapper::toDomain);
     }
 }
