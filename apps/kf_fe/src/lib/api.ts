@@ -16,6 +16,13 @@ type RequestOptions = {
   token?: string | null;
 };
 
+type ApiResponseEnvelope<T> = {
+  data: T;
+  message?: string;
+  success: boolean;
+  timestamp?: string;
+};
+
 export class ApiError extends Error {
   status: number;
 
@@ -98,7 +105,7 @@ export async function apiFetch<T>(
     return undefined as T;
   }
 
-  return (await response.json()) as T;
+  return unwrapApiResponse<T>(await response.json());
 }
 
 export async function apiGet<T>(
@@ -124,4 +131,22 @@ async function readError(response: Response) {
   } catch {
     return `Request failed (${response.status})`;
   }
+}
+
+function unwrapApiResponse<T>(body: unknown) {
+  if (isApiResponseEnvelope<T>(body)) {
+    return body.data;
+  }
+
+  return body as T;
+}
+
+function isApiResponseEnvelope<T>(body: unknown): body is ApiResponseEnvelope<T> {
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    "success" in body &&
+    "data" in body &&
+    typeof (body as { success: unknown }).success === "boolean"
+  );
 }
