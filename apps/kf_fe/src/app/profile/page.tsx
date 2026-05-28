@@ -266,7 +266,7 @@ export default function ProfilePage() {
                           <p className="mt-1 text-sm text-stone-500">So luong: {item.quantity}</p>
                         </div>
                         <p className="shrink-0 text-sm font-semibold text-stone-950">
-                          {formatMoney(item.product.price * item.quantity)}
+                          {formatMoney(Number(item.product.price ?? 0) * item.quantity)}
                         </p>
                       </div>
                     ))}

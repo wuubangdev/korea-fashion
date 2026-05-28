@@ -1,6 +1,6 @@
 "use client";
 
-import { Facebook, Instagram, Mail, MapPin, Phone, Youtube } from "lucide-react";
+import { Globe, Mail, MapPin, Phone, type LucideIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { StorefrontFloatingActions } from "@/components/StorefrontFloatingActions";
@@ -8,6 +8,7 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export function StoreFooter() {
   const { settings } = useSiteSettings();
+  const logoSrc = settings.footerLogoUrl || settings.mainLogoUrl;
 
   return (
     <>
@@ -15,11 +16,11 @@ export function StoreFooter() {
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1.3fr_1fr_1fr] lg:px-8">
           <div>
             <div className="flex items-center gap-3">
-              {settings.footerLogoUrl || settings.mainLogoUrl ? (
+              {logoSrc ? (
                 <Image
                   unoptimized
                   className="h-11 w-11 rounded-md object-contain"
-                  src={settings.footerLogoUrl || settings.mainLogoUrl}
+                  src={logoSrc}
                   alt={settings.siteName}
                   width={44}
                   height={44}
@@ -31,9 +32,9 @@ export function StoreFooter() {
               {settings.footerAbout || settings.siteDescription}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              {settings.facebookUrl ? <SocialLink href={settings.facebookUrl} label="Facebook" icon={Facebook} /> : null}
-              {settings.instagramUrl ? <SocialLink href={settings.instagramUrl} label="Instagram" icon={Instagram} /> : null}
-              {settings.youtubeUrl ? <SocialLink href={settings.youtubeUrl} label="Youtube" icon={Youtube} /> : null}
+              {settings.facebookUrl ? <SocialLink href={settings.facebookUrl} label="Facebook" icon={Globe} /> : null}
+              {settings.instagramUrl ? <SocialLink href={settings.instagramUrl} label="Instagram" icon={Globe} /> : null}
+              {settings.youtubeUrl ? <SocialLink href={settings.youtubeUrl} label="Youtube" icon={Globe} /> : null}
             </div>
           </div>
           <div>
@@ -90,14 +91,14 @@ export function StoreFooter() {
   );
 }
 
-function SocialLink({ href, icon: Icon, label }: { href: string; icon: typeof Facebook; label: string }) {
+function SocialLink({ href, icon: Icon, label }: { href: string; icon: LucideIcon; label: string }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
       aria-label={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/75 transition hover:bg-white hover:text-stone-950"
+      className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/75 transition hover:bg-white hover:text-white hover:text-stone-950"
     >
       <Icon className="h-4 w-4" />
     </a>

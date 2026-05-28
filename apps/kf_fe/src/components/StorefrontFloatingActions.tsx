@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp, Facebook, Instagram, MessageCircle, Phone, Send, Youtube } from "lucide-react";
+import { ArrowUp, Globe, MessageCircle, Phone, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
@@ -28,9 +28,9 @@ export function StorefrontFloatingActions() {
   const actions: FloatingAction[] = [
     settings.messengerUrl ? { href: settings.messengerUrl, icon: MessageCircle, label: "Messenger" } : null,
     settings.zaloUrl ? { href: settings.zaloUrl, icon: Send, label: "Zalo" } : null,
-    settings.facebookUrl ? { href: settings.facebookUrl, icon: Facebook, label: "Facebook" } : null,
-    settings.instagramUrl ? { href: settings.instagramUrl, icon: Instagram, label: "Instagram" } : null,
-    settings.youtubeUrl ? { href: settings.youtubeUrl, icon: Youtube, label: "Youtube" } : null,
+    settings.facebookUrl ? { href: settings.facebookUrl, icon: Globe, label: "Facebook" } : null,
+    settings.instagramUrl ? { href: settings.instagramUrl, icon: Globe, label: "Instagram" } : null,
+    settings.youtubeUrl ? { href: settings.youtubeUrl, icon: Globe, label: "Youtube" } : null,
     settings.hotline ? { href: `tel:${settings.hotline.replace(/\s/g, "")}`, icon: Phone, label: settings.hotline } : null,
   ].filter(Boolean) as FloatingAction[];
 
