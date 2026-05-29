@@ -154,6 +154,29 @@ export type SiteSetting = {
   footerAbout?: string;
 };
 
+export type ContactMessage = {
+  id?: number;
+  fullName: string;
+  email?: string;
+  phone?: string;
+  subject?: string;
+  message: string;
+  status?: "NEW" | "IN_PROGRESS" | "RESOLVED" | "SPAM" | string;
+  source?: string;
+  adminNote?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type CreateContactMessagePayload = {
+  fullName: string;
+  email?: string;
+  phone?: string;
+  subject?: string;
+  message: string;
+  source?: string;
+};
+
 export type User = {
   id: number;
   username: string;

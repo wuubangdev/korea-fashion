@@ -8,6 +8,7 @@ const resourceLabels: Record<string, string> = {
   carts: "Giỏ hàng",
   categories: "Danh mục",
   colors: "Màu sắc",
+  "contact-messages": "Liên hệ",
   "coupon-redemptions": "Lượt dùng mã",
   coupons: "Mã giảm giá",
   "customer-addresses": "Địa chỉ khách hàng",

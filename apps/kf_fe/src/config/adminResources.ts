@@ -74,6 +74,7 @@ export const adminResources: AdminResource[] = [
 
   { slug: "banners", label: "Banner", path: "/api/banners", group: "Content", description: "Banner hiển thị ngoài cửa hàng.", preferredColumns: ["id", "title", "placement", "displayOrder", "active"] },
   { slug: "blog-posts", label: "Bài viết", path: "/api/blog-posts", group: "Content", description: "Nội dung blog.", preferredColumns: ["id", "title", "slug", "status", "publishedAt"] },
+  { slug: "contact-messages", label: "Liên hệ", path: "/api/contact-messages", group: "Content", actions: extendedActions, description: "Tin nhắn liên hệ từ khách hàng.", preferredColumns: ["id", "fullName", "phone", "email", "subject", "status", "createdAt"] },
   { slug: "faqs", label: "FAQ", path: "/api/faqs", group: "Content", description: "Câu hỏi thường gặp.", preferredColumns: ["id", "question", "displayOrder", "active"] },
   { slug: "menus", label: "Menu", path: "/api/menus", group: "Content", description: "Menu hiển thị ngoài cửa hàng.", preferredColumns: ["id", "name", "code", "active"] },
   { slug: "menu-items", label: "Mục menu", path: "/api/menu-items", group: "Content", description: "Liên kết trong menu.", preferredColumns: ["id", "menuId", "label", "url", "displayOrder"] },

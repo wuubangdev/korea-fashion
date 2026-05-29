@@ -1,6 +1,6 @@
-import { apiGet, type RequestOptions } from "../client";
+import { apiFetch, apiGet, type RequestOptions } from "../client";
 import { crudEndpoint } from "../resource";
-import type { Banner, PageResult, SiteSetting } from "@/types/api";
+import type { Banner, ContactMessage, CreateContactMessagePayload, PageResult, SiteSetting } from "@/types/api";
 
 export type BlogPost = Record<string, unknown>;
 export type Faq = Record<string, unknown>;
@@ -11,6 +11,15 @@ export type StorePolicy = Record<string, unknown>;
 
 export const bannersApi = crudEndpoint<Banner, Banner, Partial<Banner>>("/api/banners");
 export const blogPostsApi = crudEndpoint<BlogPost, BlogPost, Partial<BlogPost>>("/api/blog-posts");
+export const contactMessagesApi = {
+  ...crudEndpoint<ContactMessage, ContactMessage, Partial<ContactMessage>>("/api/contact-messages"),
+  submit: (payload: CreateContactMessagePayload, options?: RequestOptions) =>
+    apiFetch<ContactMessage>("/api/contact-messages", undefined, {
+      ...options,
+      body: payload,
+      method: "POST",
+    }),
+};
 export const faqsApi = crudEndpoint<Faq>("/api/faqs");
 export const menusApi = crudEndpoint<Menu, Menu, Partial<Menu>>("/api/menus");
 export const menuItemsApi = crudEndpoint<MenuItem>("/api/menu-items");
