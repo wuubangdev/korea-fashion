@@ -2,21 +2,44 @@
 
 import { Heart, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { ProductRating } from "@/components/ProductRating";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
+import { accountApi } from "@/lib/api";
+import { AUTH_TOKEN_KEY } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
 import type { Product } from "@/types/api";
 
 export function ProductCard({ product }: { product: Product }) {
   const cart = useCart();
+  const router = useRouter();
+  const [isWishlistSaved, setIsWishlistSaved] = useState(false);
+  const [isWishlistSaving, setIsWishlistSaving] = useState(false);
   const price = Number(product.price ?? 0);
   const compareAtPrice = Number(product.compareAtPrice ?? 0);
   const discountPercent =
     compareAtPrice > price && price > 0
       ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
       : 0;
+
+  const handleWishlist = async () => {
+    const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    setIsWishlistSaving(true);
+    try {
+      await accountApi.addWishlist(product.id, { token });
+      setIsWishlistSaved(true);
+    } finally {
+      setIsWishlistSaving(false);
+    }
+  };
 
   return (
     <article className="group overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -37,11 +60,13 @@ export function ProductCard({ product }: { product: Product }) {
           {product.origin ? <Badge className="bg-stone-900 text-white">{product.origin}</Badge> : null}
         </div>
         <button
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-md bg-white/90 text-stone-700 shadow-sm transition hover:bg-white hover:text-rose-700"
-          aria-label="Yêu thích"
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-md bg-white/90 text-stone-700 shadow-sm transition hover:bg-white hover:text-rose-700 disabled:opacity-60"
+          aria-label="Thêm vào yêu thích"
+          disabled={isWishlistSaving}
+          onClick={handleWishlist}
           type="button"
         >
-          <Heart aria-hidden className="h-4 w-4" />
+          <Heart aria-hidden className={`h-4 w-4 ${isWishlistSaved ? "fill-rose-600 text-rose-600" : ""}`} />
         </button>
       </div>
       <div className="p-4">

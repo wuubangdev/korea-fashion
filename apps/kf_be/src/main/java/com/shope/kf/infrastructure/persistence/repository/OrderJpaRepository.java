@@ -13,6 +13,7 @@ import java.util.List;
 
 public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long> {
     Page<OrderJpaEntity> findByStatusContainingIgnoreCase(String status, Pageable pageable);
+    Page<OrderJpaEntity> findByCustomerId(Long customerId, Pageable pageable);
     Page<OrderJpaEntity> findByShipperId(String shipperId, Pageable pageable);
 
     @Modifying

@@ -62,6 +62,14 @@ export type Review = {
   reviewedAt?: string;
 };
 
+export type CreateReviewPayload = {
+  productId: number;
+  orderId?: number;
+  rating: number;
+  title?: string;
+  content?: string;
+};
+
 export type ProductPayload = {
   name: string;
   description?: string;
@@ -175,14 +183,30 @@ export type OrderItem = {
 
 export type Order = {
   id: number;
+  orderCode?: string;
   orderDate?: string;
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
   total?: number | string;
+  grandTotal?: number | string;
+  paymentStatus?: string;
+  fulfillmentStatus?: string;
   status?: string;
   shipperId?: string;
   shippingStatus?: string;
   deliveryAddress?: string;
   note?: string;
   items?: OrderItem[];
+};
+
+export type Payment = {
+  id: string;
+  orderId?: number;
+  amount?: number | string;
+  paidAt?: string;
+  method?: string;
+  status?: string;
 };
 
 export type CreateOrderPayload = {

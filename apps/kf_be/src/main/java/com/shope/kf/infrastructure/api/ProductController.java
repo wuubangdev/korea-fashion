@@ -10,6 +10,9 @@ import com.shope.kf.application.port.in.ProductUseCase;
 import com.shope.kf.domain.model.Product;
 import com.shope.kf.infrastructure.api.dto.response.ApiResponse;
 import com.shope.kf.infrastructure.api.mapper.ProductApiMapper;
+import com.shope.kf.infrastructure.persistence.jpa.ReviewJpaEntity;
+import com.shope.kf.infrastructure.persistence.jpa.mapper.PageMapper;
+import com.shope.kf.infrastructure.persistence.repository.ReviewJpaRepository;
 import com.shope.kf.infrastructure.security.RoleConstants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +25,11 @@ import java.util.List;
 public class ProductController {
 
     private final ProductUseCase productUseCase;
+    private final ReviewJpaRepository reviewRepository;
 
-    public ProductController(ProductUseCase productUseCase) {
+    public ProductController(ProductUseCase productUseCase, ReviewJpaRepository reviewRepository) {
         this.productUseCase = productUseCase;
+        this.reviewRepository = reviewRepository;
     }
 
     @com.shope.kf.infrastructure.security.RequireAuth
@@ -82,6 +87,19 @@ public class ProductController {
     public ResponseEntity<ProductResponse> get(@PathVariable Long id) {
         Product p = productUseCase.findById(id);
         return ResponseEntity.ok(ProductApiMapper.toResponse(p));
+    }
+
+    @GetMapping("/{id}/reviews")
+    public ResponseEntity<PageResult<ReviewJpaEntity>> reviews(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "reviewedAt,desc") String sort
+    ) {
+        return ResponseEntity.ok(PageMapper.toResult(
+                reviewRepository.findByProductIdAndStatusIgnoreCase(id, "APPROVED", PageMapper.toPageable(PageQuery.of(page, size, sort))),
+                review -> review
+        ));
     }
 
     @com.shope.kf.infrastructure.security.RequireAuth
