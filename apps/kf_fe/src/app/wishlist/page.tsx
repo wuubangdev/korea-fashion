@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { ProductRating } from "@/components/ProductRating";
+import { SafeImage } from "@/components/SafeImage";
 import { StoreFooter } from "@/components/StoreFooter";
 import { StoreHeader } from "@/components/StoreHeader";
 import { Button } from "@/components/ui/button";
@@ -91,13 +92,11 @@ export default function WishlistPage() {
             {items.map((product) => (
               <article key={product.id} className="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
                 <Link href={`/products/${product.id}`} className="block">
-                  <div
-                    className="aspect-[4/5] bg-stone-100"
-                    style={{
-                      backgroundImage: product.imageUrl ? `url('${product.imageUrl}')` : undefined,
-                      backgroundPosition: "center",
-                      backgroundSize: "cover",
-                    }}
+                  <SafeImage
+                    alt={product.name}
+                    className="aspect-[4/5]"
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                    src={product.imageUrl}
                   />
                 </Link>
                 <div className="p-4">

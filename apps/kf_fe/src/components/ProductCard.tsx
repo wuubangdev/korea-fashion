@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ProductRating } from "@/components/ProductRating";
+import { SafeImage } from "@/components/SafeImage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
@@ -45,13 +46,11 @@ export function ProductCard({ product }: { product: Product }) {
     <article className="card-enter hover-lift group overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm shadow-stone-950/5">
       <div className="relative">
         <Link href={`/products/${product.id}`} className="block overflow-hidden bg-stone-100">
-          <div
+          <SafeImage
+            alt={product.name}
             className="soft-shine aspect-[4/5] transition duration-700 ease-out group-hover:scale-[1.045]"
-            style={{
-              backgroundImage: product.imageUrl ? `url('${product.imageUrl}')` : undefined,
-              backgroundPosition: "center",
-              backgroundSize: "cover",
-            }}
+            sizes="(min-width: 1280px) 300px, (min-width: 640px) 50vw, 100vw"
+            src={product.imageUrl}
           />
         </Link>
         <div className="absolute left-3 top-3 flex flex-wrap gap-2">

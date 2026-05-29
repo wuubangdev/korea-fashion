@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { StoreFooter } from "@/components/StoreFooter";
 import { StoreHeader } from "@/components/StoreHeader";
+import { SafeImage } from "@/components/SafeImage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCart } from "@/hooks/useCart";
@@ -52,15 +53,11 @@ export default function CartPage() {
                     key={item.product.id}
                     className="grid gap-4 rounded-md border border-stone-200 bg-white p-4 sm:grid-cols-[112px_1fr_auto]"
                   >
-                    <div
-                      className="h-28 rounded-md bg-stone-100"
-                      style={{
-                        backgroundImage: item.product.imageUrl
-                          ? `url('${item.product.imageUrl}')`
-                          : undefined,
-                        backgroundPosition: "center",
-                        backgroundSize: "cover",
-                      }}
+                    <SafeImage
+                      alt={item.product.name}
+                      className="h-28 rounded-md"
+                      sizes="112px"
+                      src={item.product.imageUrl}
                     />
                     <div className="min-w-0">
                       <Link

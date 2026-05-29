@@ -9,6 +9,7 @@ import { DataTable, type Column } from "@/components/DataTable";
 import { DataToolbar } from "@/components/DataToolbar";
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination } from "@/components/Pagination";
+import { SafeImage } from "@/components/SafeImage";
 import { useToast } from "@/components/ToastProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -778,7 +779,7 @@ function FieldControl({
         isVideoUrl(field.value) ? (
           <video className="mt-1 max-h-40 rounded-md border border-stone-200 bg-black" src={field.value} controls />
         ) : (
-          <img className="mt-1 max-h-40 rounded-md border border-stone-200 object-contain" src={field.value} alt="" />
+          <SafeImage alt="Media preview" className="mt-1 h-40 max-w-xs rounded-md border border-stone-200" imgClassName="object-contain" sizes="320px" src={field.value} />
         )
       ) : null}
     </div>

@@ -16,6 +16,7 @@ import {
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
+import { SafeImage } from "@/components/SafeImage";
 import { useToast } from "@/components/ToastProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -447,7 +448,7 @@ function MediaCard({
         {item.mediaType === "VIDEO" ? (
           <video className="h-full w-full object-cover" src={item.url} controls />
         ) : item.mediaType === "IMAGE" ? (
-          <img className="h-full w-full object-cover" src={item.url} alt={displayName(item)} />
+          <SafeImage alt={displayName(item)} className="h-full w-full" sizes="360px" src={item.url} />
         ) : (
           <LinkIcon className="h-8 w-8 text-stone-400" />
         )}
