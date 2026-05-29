@@ -237,6 +237,11 @@ public class GenericCrudConfig {
     }
 
     @Bean
+    public GenericCrudUseCase<ContactMessageJpaEntity, Long> contactMessageCrudUseCase(ContactMessageJpaRepository repository) {
+        return genericCrudUseCase(repository, ContactMessageJpaEntity.class);
+    }
+
+    @Bean
     public GenericCrudUseCase<PaymentTransactionJpaEntity, String> paymentTransactionCrudUseCase(PaymentTransactionJpaRepository repository) {
         return genericCrudUseCase(repository, PaymentTransactionJpaEntity.class);
     }
