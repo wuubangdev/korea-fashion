@@ -12,8 +12,11 @@ public interface UserUseCase {
     User update(Long id, User user);
     void delete(Long id);
     void deleteAll(List<Long> ids);
+    void restore(Long id);
+    void restoreAll(List<Long> ids);
     void hardDelete(Long id);
     void hardDeleteAll(List<Long> ids);
     User findById(Long id);
     PageResult<User> list(String search, PageQuery pageQuery);
+    PageResult<User> trash(String search, PageQuery pageQuery);
 }

@@ -13,8 +13,11 @@ public interface ProductPersistencePort {
     Optional<Product> findById(Long id);
     void deleteById(Long id);
     void deleteAllById(List<Long> ids);
+    void restoreById(Long id);
+    void restoreAllById(List<Long> ids);
     void hardDeleteById(Long id);
     void hardDeleteAllById(List<Long> ids);
     PageResult<Product> findAll(String search, PageQuery pageQuery);
+    PageResult<Product> findDeleted(String search, PageQuery pageQuery);
     PageResult<Product> findAll(ProductFilter filter, PageQuery pageQuery);
 }

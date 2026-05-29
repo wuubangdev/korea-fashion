@@ -12,7 +12,10 @@ public interface CategoryPersistencePort {
     Optional<Category> findById(Long id);
     void deleteById(Long id);
     void deleteAllById(List<Long> ids);
+    void restoreById(Long id);
+    void restoreAllById(List<Long> ids);
     void hardDeleteById(Long id);
     void hardDeleteAllById(List<Long> ids);
     PageResult<Category> findAll(String search, PageQuery pageQuery);
+    PageResult<Category> findDeleted(String search, PageQuery pageQuery);
 }

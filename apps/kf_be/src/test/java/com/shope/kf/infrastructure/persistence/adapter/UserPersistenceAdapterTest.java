@@ -28,7 +28,7 @@ class UserPersistenceAdapterTest {
     void setUp() {
         userJpaRepository = Mockito.mock(UserJpaRepository.class);
         RoleJpaRepository roleJpaRepository = Mockito.mock(RoleJpaRepository.class);
-        adapter = new UserPersistenceAdapter(userJpaRepository, roleJpaRepository);
+        adapter = new UserPersistenceAdapter(userJpaRepository, roleJpaRepository, Mockito.mock(TrashQuerySupport.class));
         when(userJpaRepository.save(any(UserJpaEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 

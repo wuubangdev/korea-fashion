@@ -51,6 +51,16 @@ public class CategoryService implements CategoryUseCase {
     }
 
     @Override
+    public void restore(Long id) {
+        port.restoreById(id);
+    }
+
+    @Override
+    public void restoreAll(List<Long> ids) {
+        port.restoreAllById(ids);
+    }
+
+    @Override
     public void hardDelete(Long id) {
         port.hardDeleteById(id);
     }
@@ -70,5 +80,11 @@ public class CategoryService implements CategoryUseCase {
     @Transactional(readOnly = true)
     public PageResult<Category> list(String search, PageQuery pageQuery) {
         return port.findAll(search, pageQuery);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Category> trash(String search, PageQuery pageQuery) {
+        return port.findDeleted(search, pageQuery);
     }
 }

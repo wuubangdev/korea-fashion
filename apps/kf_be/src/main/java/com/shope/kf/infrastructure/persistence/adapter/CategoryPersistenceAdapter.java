@@ -18,9 +18,11 @@ import java.util.Optional;
 public class CategoryPersistenceAdapter implements CategoryPersistencePort {
 
     private final CategoryJpaRepository repo;
+    private final TrashQuerySupport trashQuerySupport;
 
-    public CategoryPersistenceAdapter(CategoryJpaRepository repo) {
+    public CategoryPersistenceAdapter(CategoryJpaRepository repo, TrashQuerySupport trashQuerySupport) {
         this.repo = repo;
+        this.trashQuerySupport = trashQuerySupport;
     }
 
     @Override
@@ -59,6 +61,16 @@ public class CategoryPersistenceAdapter implements CategoryPersistencePort {
     }
 
     @Override
+    public void restoreById(Long id) {
+        trashQuerySupport.restore(CategoryJpaEntity.class, id);
+    }
+
+    @Override
+    public void restoreAllById(List<Long> ids) {
+        trashQuerySupport.restoreAll(CategoryJpaEntity.class, ids);
+    }
+
+    @Override
     public void hardDeleteById(Long id) {
         repo.hardDeleteById(id);
     }
@@ -78,5 +90,10 @@ public class CategoryPersistenceAdapter implements CategoryPersistencePort {
                 ? repo.findAll(pageable)
                 : repo.searchByKeyword(search.trim(), pageable);
         return PageMapper.toResult(page, CategoryMapper::toDomain);
+    }
+
+    @Override
+    public PageResult<Category> findDeleted(String search, PageQuery pageQuery) {
+        return trashQuerySupport.listDeleted(CategoryJpaEntity.class, search, pageQuery).map(CategoryMapper::toDomain);
     }
 }

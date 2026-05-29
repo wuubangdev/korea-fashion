@@ -13,7 +13,7 @@ export function StatCard({ title, value, description }: StatCardProps) {
         <CardTitle className="text-sm font-medium text-slate-600">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-semibold text-slate-950">{value}</div>
+        <div className="text-2xl font-semibold text-emerald-800">{value}</div>
         <p className="mt-1 text-sm text-slate-500">{description}</p>
       </CardContent>
     </Card>

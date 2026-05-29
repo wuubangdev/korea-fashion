@@ -1,11 +1,11 @@
 import Link from "next/link";
+import { AlertTriangle, ClipboardList, Package, ReceiptText, UsersRound } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { SeedDataButton } from "@/components/SeedDataButton";
 import { StatCard } from "@/components/StatCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { adminResourceGroupLabels, adminResourceGroups, adminResources } from "@/config/adminResources";
 import {
   Card,
   CardContent,
@@ -31,36 +31,40 @@ const stats = [
     description: "Đơn đã giao thành công trong 7 ngày",
   },
   {
-    title: "Sản phẩm sắp hết",
+    title: "Sắp hết hàng",
     value: "11",
     description: "Cần kiểm tra tồn kho và biến thể",
   },
 ];
 
-const managementAreas = [
+const priorityTasks = [
   {
     href: "/admin/resources/orders",
-    title: "Đơn hàng",
-    description: "Duyệt đơn, gán shipper, cập nhật thanh toán và trạng thái giao hàng.",
-    badge: "Ưu tiên",
+    icon: ReceiptText,
+    title: "Xử lý đơn hàng",
+    description: "Duyệt đơn mới, cập nhật thanh toán và trạng thái giao hàng.",
+    badge: "8 việc",
   },
   {
     href: "/admin/resources/products",
-    title: "Sản phẩm",
-    description: "Quản lý giá bán, mô tả, hình ảnh, thương hiệu và xuất xứ.",
-    badge: "Danh mục",
-  },
-  {
-    href: "/admin/resources/categories",
-    title: "Danh mục",
-    description: "Sắp xếp nhóm hàng, bộ sưu tập và cấu trúc hiển thị ngoài cửa hàng.",
-    badge: "Cửa hàng",
+    icon: Package,
+    title: "Kiểm tra tồn kho",
+    description: "Cập nhật SKU sắp hết, giá bán và trạng thái hiển thị.",
+    badge: "11 SKU",
   },
   {
     href: "/admin/resources/users",
-    title: "Người dùng",
-    description: "Kiểm tra tài khoản, vai trò quản trị và thông tin khách hàng.",
-    badge: "Truy cập",
+    icon: UsersRound,
+    title: "Tài khoản mới",
+    description: "Kiểm tra khách hàng, vai trò và quyền truy cập.",
+    badge: "5 user",
+  },
+  {
+    href: "/admin/resources/audit-logs",
+    icon: ClipboardList,
+    title: "Nhật ký hệ thống",
+    description: "Theo dõi các thao tác quản trị gần đây.",
+    badge: "Hệ thống",
   },
 ];
 
@@ -82,13 +86,16 @@ export default function AdminPage() {
     <AppShell>
       <PageHeader
         title="Tổng quan"
-        description="Tổng quan vận hành cho nền tảng thương mại điện tử Korea Fashion."
+        description="Những việc cần xử lý trước trong ngày, gom lại để màn hình admin dễ nhìn hơn."
         action={
-          <div className="flex flex-wrap gap-3">
-            <SeedDataButton />
+          <div className="flex flex-wrap justify-end gap-2">
             <Link href="/admin/resources/orders">
-              <Button>Xử lý đơn hàng</Button>
+              <Button>
+                <ReceiptText className="h-4 w-4" />
+                Xử lý đơn
+              </Button>
             </Link>
+            <SeedDataButton />
           </div>
         }
       />
@@ -99,90 +106,54 @@ export default function AdminPage() {
         ))}
       </section>
 
-      <section className="mt-6">
+      <section className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Card>
           <CardHeader>
-            <CardTitle>Tất cả endpoint quản trị</CardTitle>
+            <CardTitle>Việc ưu tiên</CardTitle>
             <CardDescription>
-              Danh sách resource được map từ các controller BE để admin truy cập nhanh.
+              Chỉ giữ các lối vào hay dùng nhất. Các chức năng còn lại nằm trong sidebar.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-5">
-            {adminResourceGroups.map((group) => {
-              const resources = adminResources.filter((resource) => resource.group === group);
+          <CardContent className="grid gap-3 md:grid-cols-2">
+            {priorityTasks.map((task) => {
+              const Icon = task.icon;
 
               return (
-                <div key={group}>
-                  <div className="mb-2 flex items-center gap-2">
-                    <h2 className="text-sm font-semibold text-slate-950">{adminResourceGroupLabels[group]}</h2>
-                    <Badge>{resources.length}</Badge>
+                <Link
+                  key={task.href}
+                  href={task.href}
+                  className="rounded-md border border-stone-200 bg-white p-4 transition hover:border-stone-300 hover:bg-stone-50"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-9 w-9 place-items-center rounded-md bg-emerald-50 text-emerald-700">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <h2 className="text-sm font-semibold text-slate-950">{task.title}</h2>
+                    </div>
+                    <Badge>{task.badge}</Badge>
                   </div>
-                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                    {resources.map((resource) => (
-                      <Link
-                        key={resource.slug}
-                        href={`/admin/resources/${resource.slug}`}
-                        className="rounded-md border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:bg-slate-50"
-                      >
-                        <div className="text-sm font-medium text-slate-950">{resource.label}</div>
-                        <div className="mt-1 truncate text-xs text-slate-500">{resource.path}</div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{task.description}</p>
+                </Link>
               );
             })}
           </CardContent>
         </Card>
-      </section>
-
-      <section className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Cần quản trị</CardTitle>
-            <CardDescription>
-              Các khu vực chính để vận hành shop, xử lý đơn và cập nhật dữ liệu.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-2">
-            {managementAreas.map((area) => (
-              <Link
-                key={area.href}
-                href={area.href}
-                className="rounded-md border border-slate-200 bg-white p-4 transition hover:border-slate-300 hover:bg-slate-50"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <h2 className="text-sm font-semibold text-slate-950">
-                    {area.title}
-                  </h2>
-                  <Badge>{area.badge}</Badge>
-                </div>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {area.description}
-                </p>
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Tồn kho cần chú ý</CardTitle>
-            <CardDescription>
-              Sản phẩm có số lượng thấp nên được nhập thêm hoặc ẩn khỏi shop.
-            </CardDescription>
+            <CardTitle>Cần chú ý</CardTitle>
+            <CardDescription>Mặt hàng tồn kho thấp nên xử lý trước khi tiếp tục bán.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {stockAlerts.map((item) => (
                 <div
                   key={item.sku}
-                  className="flex items-center justify-between gap-4 rounded-md border border-slate-200 p-3"
+                  className="flex items-center justify-between gap-4 rounded-md border border-stone-200 p-3"
                 >
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-medium text-slate-950">
-                      {item.name}
-                    </div>
+                    <div className="truncate text-sm font-medium text-slate-950">{item.name}</div>
                     <div className="mt-1 text-xs text-slate-500">{item.sku}</div>
                   </div>
                   <Badge variant="warning">{item.stock} còn</Badge>
@@ -197,14 +168,12 @@ export default function AdminPage() {
         <Card>
           <CardHeader>
             <CardTitle>Đơn hàng gần đây</CardTitle>
-            <CardDescription>
-              Theo dõi nhanh các đơn mới nhất trước khi vào trang xử lý chi tiết.
-            </CardDescription>
+            <CardDescription>Theo dõi nhanh trước khi vào trang xử lý chi tiết.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-hidden rounded-md border border-slate-200">
+            <div className="overflow-hidden rounded-md border border-stone-200">
               <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                <thead className="bg-stone-50 text-xs uppercase text-slate-500">
                   <tr>
                     <th className="px-4 py-3 font-medium">Mã đơn</th>
                     <th className="px-4 py-3 font-medium">Khách hàng</th>
@@ -212,12 +181,10 @@ export default function AdminPage() {
                     <th className="px-4 py-3 font-medium">Trạng thái</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200 bg-white">
+                <tbody className="divide-y divide-stone-100 bg-white">
                   {recentOrders.map((order) => (
-                    <tr key={order.code}>
-                      <td className="px-4 py-3 font-medium text-slate-950">
-                        {order.code}
-                      </td>
+                    <tr key={order.code} className="hover:bg-stone-50/70">
+                      <td className="px-4 py-3 font-medium text-slate-950">{order.code}</td>
                       <td className="px-4 py-3 text-slate-600">{order.customer}</td>
                       <td className="px-4 py-3 text-slate-600">{order.total}</td>
                       <td className="px-4 py-3">
@@ -235,17 +202,21 @@ export default function AdminPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Công việc hôm nay</CardTitle>
-            <CardDescription>
-              Checklist vận hành để giữ shop ổn định trong ngày.
-            </CardDescription>
+            <CardTitle>Checklist hôm nay</CardTitle>
+            <CardDescription>Những việc lặp lại hằng ngày để giữ shop ổn định.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-sm text-slate-700">
               <Task label="Xác nhận đơn mới" value="8 việc" tone="amber" />
-              <Task label="Cập nhật sản phẩm sắp hết" value="11 SKU" tone="rose" />
+              <Task label="Cập nhật hàng sắp hết" value="11 SKU" tone="rose" />
               <Task label="Kiểm tra tài khoản mới" value="5 user" tone="slate" />
               <Task label="Đối soát doanh thu" value="18.4M" tone="emerald" />
+            </div>
+            <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>Hãy ưu tiên các mục có nhãn vàng hoặc đỏ trước khi thao tác với dữ liệu phụ.</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -267,11 +238,11 @@ function Task({
     amber: "bg-amber-50 text-amber-700",
     emerald: "bg-emerald-50 text-emerald-700",
     rose: "bg-rose-50 text-rose-700",
-    slate: "bg-slate-100 text-slate-700",
+    slate: "bg-stone-100 text-slate-700",
   };
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 p-3">
+    <div className="flex items-center justify-between gap-3 rounded-md border border-stone-200 p-3">
       <span>{label}</span>
       <span className={`rounded-md px-2 py-1 text-xs font-medium ${tones[tone]}`}>
         {value}

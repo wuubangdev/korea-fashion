@@ -21,9 +21,11 @@ import java.util.Optional;
 public class ProductPersistenceAdapter implements ProductPersistencePort {
 
     private final ProductJpaRepository repo;
+    private final TrashQuerySupport trashQuerySupport;
 
-    public ProductPersistenceAdapter(ProductJpaRepository repo) {
+    public ProductPersistenceAdapter(ProductJpaRepository repo, TrashQuerySupport trashQuerySupport) {
         this.repo = repo;
+        this.trashQuerySupport = trashQuerySupport;
     }
 
     @Override
@@ -61,6 +63,16 @@ public class ProductPersistenceAdapter implements ProductPersistencePort {
     }
 
     @Override
+    public void restoreById(Long id) {
+        trashQuerySupport.restore(ProductJpaEntity.class, id);
+    }
+
+    @Override
+    public void restoreAllById(List<Long> ids) {
+        trashQuerySupport.restoreAll(ProductJpaEntity.class, ids);
+    }
+
+    @Override
     public void hardDeleteById(Long id) {
         repo.hardDeleteById(id);
     }
@@ -78,6 +90,11 @@ public class ProductPersistenceAdapter implements ProductPersistencePort {
         var pageable = PageMapper.toPageable(pageQuery);
         Page<ProductJpaEntity> page = (search == null || search.isBlank()) ? repo.findAll(pageable) : repo.findByNameContainingIgnoreCase(search, pageable);
         return PageMapper.toResult(page, ProductMapper::toDomain);
+    }
+
+    @Override
+    public PageResult<Product> findDeleted(String search, PageQuery pageQuery) {
+        return trashQuerySupport.listDeleted(ProductJpaEntity.class, search, pageQuery).map(ProductMapper::toDomain);
     }
 
     @Override

@@ -31,7 +31,7 @@ class CategoryPersistenceAdapterTest {
     @BeforeEach
     void setUp() {
         categoryJpaRepository = Mockito.mock(CategoryJpaRepository.class);
-        adapter = new CategoryPersistenceAdapter(categoryJpaRepository);
+        adapter = new CategoryPersistenceAdapter(categoryJpaRepository, Mockito.mock(TrashQuerySupport.class));
         when(categoryJpaRepository.save(any(CategoryJpaEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 

@@ -51,6 +51,17 @@ public class OrderController {
     }
 
     @com.shope.kf.infrastructure.security.RequireAuth
+    @GetMapping("/trash")
+    public ResponseEntity<PageResult<OrderResponse>> trash(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "deletedAt,desc") String sort
+    ) {
+        return ResponseEntity.ok(orderUseCase.trash(search, PageQuery.of(page, size, sort)).map(OrderApiMapper::toResponse));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponse> get(@PathVariable Long id) {
         Order o = orderUseCase.findById(id);
@@ -101,6 +112,20 @@ public class OrderController {
     public ResponseEntity<ApiResponse<Void>> deleteAll(@RequestBody List<Long> ids) {
         orderUseCase.deleteAll(ids);
         return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<ApiResponse<Void>> restore(@PathVariable Long id) {
+        orderUseCase.restore(id);
+        return ResponseEntity.ok(ApiResponse.ok("Restored successfully", null));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth
+    @PostMapping("/trash/restore/bulk")
+    public ResponseEntity<ApiResponse<Void>> restoreAll(@RequestBody List<Long> ids) {
+        orderUseCase.restoreAll(ids);
+        return ResponseEntity.ok(ApiResponse.ok("Restored successfully", null));
     }
 
     @com.shope.kf.infrastructure.security.RequireAuth(roles = {RoleConstants.ADMIN})

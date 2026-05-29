@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 public abstract class CrudController<T, ID> {
     private final GenericCrudUseCase<T, ID> useCase;
@@ -70,6 +71,16 @@ public abstract class CrudController<T, ID> {
         return ResponseEntity.ok(useCase.list(search, PageQuery.of(page, size, sort)));
     }
 
+    @GetMapping("/trash")
+    public ResponseEntity<PageResult<T>> trash(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "deletedAt,desc") String sort
+    ) {
+        return ResponseEntity.ok(useCase.listDeleted(search, PageQuery.of(page, size, sort)));
+    }
+
     @Operation(summary = "Chi tiết resource", description = "Lấy một resource theo ID.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Tìm thấy resource"),
@@ -119,6 +130,22 @@ public abstract class CrudController<T, ID> {
             throw new AppException(ErrorCode.NOT_FOUND, "Resource not found");
         }
         return ResponseEntity.ok(com.shope.kf.infrastructure.api.dto.response.ApiResponse.ok("Deleted successfully", null));
+    }
+
+    @RequireAuth
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<com.shope.kf.infrastructure.api.dto.response.ApiResponse<Void>> restore(@Parameter(description = "ID resource", example = "1") @PathVariable String id) {
+        if (!useCase.restore(parseId(id))) {
+            throw new AppException(ErrorCode.NOT_FOUND, "Deleted resource not found");
+        }
+        return ResponseEntity.ok(com.shope.kf.infrastructure.api.dto.response.ApiResponse.ok("Restored successfully", null));
+    }
+
+    @RequireAuth
+    @PostMapping("/trash/restore/bulk")
+    public ResponseEntity<com.shope.kf.infrastructure.api.dto.response.ApiResponse<Void>> restoreAll(@RequestBody List<ID> ids) {
+        useCase.restoreAll(ids);
+        return ResponseEntity.ok(com.shope.kf.infrastructure.api.dto.response.ApiResponse.ok("Restored successfully", null));
     }
 
     @Operation(

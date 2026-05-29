@@ -17,9 +17,11 @@ import java.util.List;
 public class OrderPersistenceAdapter implements OrderPersistencePort {
 
     private final OrderJpaRepository repo;
+    private final TrashQuerySupport trashQuerySupport;
 
-    public OrderPersistenceAdapter(OrderJpaRepository repo) {
+    public OrderPersistenceAdapter(OrderJpaRepository repo, TrashQuerySupport trashQuerySupport) {
         this.repo = repo;
+        this.trashQuerySupport = trashQuerySupport;
     }
 
     @Override
@@ -57,6 +59,16 @@ public class OrderPersistenceAdapter implements OrderPersistencePort {
     }
 
     @Override
+    public void restoreById(Long id) {
+        trashQuerySupport.restore(OrderJpaEntity.class, id);
+    }
+
+    @Override
+    public void restoreAllById(List<Long> ids) {
+        trashQuerySupport.restoreAll(OrderJpaEntity.class, ids);
+    }
+
+    @Override
     public void hardDeleteById(Long id) {
         repo.hardDeleteItemsByOrderId(id);
         repo.hardDeleteById(id);
@@ -76,6 +88,11 @@ public class OrderPersistenceAdapter implements OrderPersistencePort {
         var pageable = PageMapper.toPageable(pageQuery);
         Page<OrderJpaEntity> page = (search == null || search.isBlank()) ? repo.findAll(pageable) : repo.findByStatusContainingIgnoreCase(search, pageable);
         return PageMapper.toResult(page, OrderMapper::toDomain);
+    }
+
+    @Override
+    public PageResult<Order> findDeleted(String search, PageQuery pageQuery) {
+        return trashQuerySupport.listDeleted(OrderJpaEntity.class, search, pageQuery).map(OrderMapper::toDomain);
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.shope.kf.application.port.in.GenericCrudUseCase;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.List;
 
 @Transactional
 public class GenericCrudService<T, ID> implements GenericCrudUseCase<T, ID> {
@@ -35,6 +36,12 @@ public class GenericCrudService<T, ID> implements GenericCrudUseCase<T, ID> {
 
     @Override
     @Transactional(readOnly = true)
+    public PageResult<T> listDeleted(String search, PageQuery pageQuery) {
+        return delegate.listDeleted(search, pageQuery);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<T> findById(ID id) {
         return delegate.findById(id);
     }
@@ -48,6 +55,16 @@ public class GenericCrudService<T, ID> implements GenericCrudUseCase<T, ID> {
     @Override
     public boolean delete(ID id) {
         return delegate.delete(id);
+    }
+
+    @Override
+    public boolean restore(ID id) {
+        return delegate.restore(id);
+    }
+
+    @Override
+    public int restoreAll(List<ID> ids) {
+        return delegate.restoreAll(ids);
     }
 
     @Override

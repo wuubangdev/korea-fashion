@@ -56,6 +56,16 @@ public class ProductService implements ProductUseCase {
     }
 
     @Override
+    public void restore(Long id) {
+        port.restoreById(id);
+    }
+
+    @Override
+    public void restoreAll(List<Long> ids) {
+        port.restoreAllById(ids);
+    }
+
+    @Override
     public void hardDelete(Long id) {
         port.hardDeleteById(id);
     }
@@ -75,6 +85,12 @@ public class ProductService implements ProductUseCase {
     @Transactional(readOnly = true)
     public PageResult<Product> list(String search, PageQuery pageQuery) {
         return port.findAll(search, pageQuery);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Product> trash(String search, PageQuery pageQuery) {
+        return port.findDeleted(search, pageQuery);
     }
 
     @Override

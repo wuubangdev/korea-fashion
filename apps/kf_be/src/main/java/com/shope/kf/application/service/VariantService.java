@@ -54,6 +54,16 @@ public class VariantService implements VariantUseCase {
     }
 
     @Override
+    public void restore(Long id) {
+        port.restoreById(id);
+    }
+
+    @Override
+    public void restoreAll(List<Long> ids) {
+        port.restoreAllById(ids);
+    }
+
+    @Override
     public void hardDelete(Long id) {
         port.hardDeleteById(id);
     }
@@ -73,6 +83,12 @@ public class VariantService implements VariantUseCase {
     @Transactional(readOnly = true)
     public PageResult<Variant> list(String search, PageQuery pageQuery) {
         return port.findAll(search, pageQuery);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Variant> trash(String search, PageQuery pageQuery) {
+        return port.findDeleted(search, pageQuery);
     }
 
     @Override

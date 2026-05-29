@@ -10,24 +10,24 @@ const categories = [
   {
     code: "outerwear",
     name: "Outerwear",
-    description: "Ao khoac, blazer va trench coat phong cach Han Quoc.",
+    description: "Áo khoác, blazer và trench coat phong cách Hàn Quốc.",
   },
   {
     code: "daily",
     name: "Daily essentials",
-    description: "Cac item de mac hang ngay va de phoi do.",
+    description: "Các item dễ mặc hằng ngày và dễ phối đồ.",
   },
   {
     code: "accessories",
     name: "Accessories",
-    description: "Tui, mu, kinh va phu kien hoan thien outfit.",
+    description: "Túi, mũ, kính và phụ kiện hoàn thiện outfit.",
   },
 ];
 
 const products = [
   {
     name: "Seoul cropped blazer",
-    description: "Blazer dang ngan, form gon, phu hop phoi cung chan vay hoac quan suong.",
+    description: "Blazer dáng ngắn, form gọn, phù hợp phối cùng chân váy hoặc quần suông.",
     imageUrl:
       "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
     price: 1290000,
@@ -36,7 +36,7 @@ const products = [
   },
   {
     name: "Minimal knit cardigan",
-    description: "Cardigan len mong, mem, de layer cho outfit hang ngay.",
+    description: "Cardigan len mỏng, mềm, dễ layer cho outfit hằng ngày.",
     imageUrl:
       "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80",
     price: 790000,
@@ -45,7 +45,7 @@ const products = [
   },
   {
     name: "Soft pleated skirt",
-    description: "Chan vay xep ly mem, len form nhe va de phoi cung ao knit.",
+    description: "Chân váy xếp ly mềm, lên form nhẹ và dễ phối cùng áo knit.",
     imageUrl:
       "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80",
     price: 620000,
@@ -54,7 +54,7 @@ const products = [
   },
   {
     name: "Relaxed wide-leg pants",
-    description: "Quan ong rong lung cao, chat lieu dung form cho di lam va xuong pho.",
+    description: "Quần ống rộng lưng cao, chất liệu đứng form cho đi làm và xuống phố.",
     imageUrl:
       "https://images.unsplash.com/photo-1506629905607-d405d7d3b0d2?auto=format&fit=crop&w=900&q=80",
     price: 880000,

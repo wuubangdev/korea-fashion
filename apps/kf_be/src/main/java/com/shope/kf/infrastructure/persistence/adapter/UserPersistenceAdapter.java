@@ -20,10 +20,12 @@ public class UserPersistenceAdapter implements UserPersistencePort {
 
 	private final UserJpaRepository userJpaRepository;
 	private final RoleJpaRepository roleJpaRepository;
+	private final TrashQuerySupport trashQuerySupport;
 
-	public UserPersistenceAdapter(UserJpaRepository userJpaRepository, RoleJpaRepository roleJpaRepository) {
+	public UserPersistenceAdapter(UserJpaRepository userJpaRepository, RoleJpaRepository roleJpaRepository, TrashQuerySupport trashQuerySupport) {
 		this.userJpaRepository = userJpaRepository;
 		this.roleJpaRepository = roleJpaRepository;
+		this.trashQuerySupport = trashQuerySupport;
 	}
 
 	@Override
@@ -67,6 +69,16 @@ public class UserPersistenceAdapter implements UserPersistencePort {
 	}
 
 	@Override
+	public void restoreById(Long id) {
+		trashQuerySupport.restore(UserJpaEntity.class, id);
+	}
+
+	@Override
+	public void restoreAllById(List<Long> ids) {
+		trashQuerySupport.restoreAll(UserJpaEntity.class, ids);
+	}
+
+	@Override
 	public void hardDeleteById(Long id) {
 		userJpaRepository.hardDeleteRolesByUserId(id);
 		userJpaRepository.hardDeleteById(id);
@@ -88,5 +100,10 @@ public class UserPersistenceAdapter implements UserPersistencePort {
 				? userJpaRepository.findAll(pageable)
 				: userJpaRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(search, search, pageable);
 		return PageMapper.toResult(page, UserMapper::toDomain);
+	}
+
+	@Override
+	public PageResult<User> findDeleted(String search, PageQuery pageQuery) {
+		return trashQuerySupport.listDeleted(UserJpaEntity.class, search, pageQuery).map(UserMapper::toDomain);
 	}
 }

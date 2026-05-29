@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 
@@ -26,7 +27,7 @@ export function Pagination({
   const canGoNext = page + 1 < totalPages;
 
   return (
-    <div className="mt-4 flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mt-4 flex flex-col gap-3 rounded-md border border-stone-200 bg-[#fffdf8] p-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-slate-600">
         Tổng <span className="font-medium text-slate-950">{totalElements}</span>{" "}
         bản ghi, trang{" "}
@@ -56,6 +57,7 @@ export function Pagination({
           variant="outline"
           size="sm"
         >
+          <ChevronLeft className="h-4 w-4" />
           Trước
         </Button>
         <Button
@@ -65,6 +67,7 @@ export function Pagination({
           size="sm"
         >
           Sau
+          <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
     </div>

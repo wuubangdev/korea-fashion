@@ -12,8 +12,11 @@ public interface VariantPersistencePort {
     Optional<Variant> findById(Long id);
     void deleteById(Long id);
     void deleteAllById(List<Long> ids);
+    void restoreById(Long id);
+    void restoreAllById(List<Long> ids);
     void hardDeleteById(Long id);
     void hardDeleteAllById(List<Long> ids);
     PageResult<Variant> findAll(String search, PageQuery pageQuery);
+    PageResult<Variant> findDeleted(String search, PageQuery pageQuery);
     PageResult<Variant> findByProduct(Long productId, PageQuery pageQuery);
 }

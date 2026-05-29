@@ -14,9 +14,12 @@ public interface OrderUseCase {
     Order updateShippingStatus(Long id, String shippingStatus);
     void delete(Long id);
     void deleteAll(List<Long> ids);
+    void restore(Long id);
+    void restoreAll(List<Long> ids);
     void hardDelete(Long id);
     void hardDeleteAll(List<Long> ids);
     Order findById(Long id);
     PageResult<Order> list(String search, PageQuery pageQuery);
+    PageResult<Order> trash(String search, PageQuery pageQuery);
     PageResult<Order> listByShipper(String shipperId, PageQuery pageQuery);
 }

@@ -49,6 +49,16 @@ public class UserController {
         return ResponseEntity.ok(userUseCase.list(search, PageQuery.of(page, size, sort)).map(UserApiMapper::toResponse));
     }
 
+    @GetMapping("/trash")
+    public ResponseEntity<PageResult<UserResponse>> trash(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "deletedAt,desc") String sort
+    ) {
+        return ResponseEntity.ok(userUseCase.trash(search, PageQuery.of(page, size, sort)).map(UserApiMapper::toResponse));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> get(@PathVariable Long id) {
         return ResponseEntity.ok(UserApiMapper.toResponse(userUseCase.findById(id)));
@@ -70,6 +80,18 @@ public class UserController {
     public ResponseEntity<ApiResponse<Void>> deleteAll(@RequestBody List<Long> ids) {
         userUseCase.deleteAll(ids);
         return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
+    }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<ApiResponse<Void>> restore(@PathVariable Long id) {
+        userUseCase.restore(id);
+        return ResponseEntity.ok(ApiResponse.ok("Restored successfully", null));
+    }
+
+    @PostMapping("/trash/restore/bulk")
+    public ResponseEntity<ApiResponse<Void>> restoreAll(@RequestBody List<Long> ids) {
+        userUseCase.restoreAll(ids);
+        return ResponseEntity.ok(ApiResponse.ok("Restored successfully", null));
     }
 
     @RequireAuth(roles = {RoleConstants.ADMIN})

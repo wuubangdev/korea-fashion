@@ -18,9 +18,11 @@ import java.util.Optional;
 public class VariantPersistenceAdapter implements VariantPersistencePort {
 
     private final VariantJpaRepository repo;
+    private final TrashQuerySupport trashQuerySupport;
 
-    public VariantPersistenceAdapter(VariantJpaRepository repo) {
+    public VariantPersistenceAdapter(VariantJpaRepository repo, TrashQuerySupport trashQuerySupport) {
         this.repo = repo;
+        this.trashQuerySupport = trashQuerySupport;
     }
 
     @Override
@@ -58,6 +60,16 @@ public class VariantPersistenceAdapter implements VariantPersistencePort {
     }
 
     @Override
+    public void restoreById(Long id) {
+        trashQuerySupport.restore(VariantJpaEntity.class, id);
+    }
+
+    @Override
+    public void restoreAllById(List<Long> ids) {
+        trashQuerySupport.restoreAll(VariantJpaEntity.class, ids);
+    }
+
+    @Override
     public void hardDeleteById(Long id) {
         repo.hardDeleteById(id);
     }
@@ -75,6 +87,11 @@ public class VariantPersistenceAdapter implements VariantPersistencePort {
         var pageable = PageMapper.toPageable(pageQuery);
         Page<VariantJpaEntity> page = (search == null || search.isBlank()) ? repo.findAll(pageable) : repo.findBySkuContainingIgnoreCase(search, pageable);
         return PageMapper.toResult(page, VariantMapper::toDomain);
+    }
+
+    @Override
+    public PageResult<Variant> findDeleted(String search, PageQuery pageQuery) {
+        return trashQuerySupport.listDeleted(VariantJpaEntity.class, search, pageQuery).map(VariantMapper::toDomain);
     }
 
     @Override

@@ -50,6 +50,16 @@ public class VariantController {
         return ResponseEntity.ok(variantUseCase.list(search, PageQuery.of(page, size, sort)).map(VariantApiMapper::toResponse));
     }
 
+    @GetMapping("/trash")
+    public ResponseEntity<PageResult<VariantResponse>> trash(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "deletedAt,desc") String sort
+    ) {
+        return ResponseEntity.ok(variantUseCase.trash(search, PageQuery.of(page, size, sort)).map(VariantApiMapper::toResponse));
+    }
+
     @GetMapping("/product/{productId}")
     public ResponseEntity<PageResult<VariantResponse>> listByProduct(@PathVariable Long productId,
                                                                      @RequestParam(defaultValue = "0") int page,
@@ -81,6 +91,18 @@ public class VariantController {
     public ResponseEntity<ApiResponse<Void>> deleteAll(@RequestBody List<Long> ids) {
         variantUseCase.deleteAll(ids);
         return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
+    }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<ApiResponse<Void>> restore(@PathVariable Long id) {
+        variantUseCase.restore(id);
+        return ResponseEntity.ok(ApiResponse.ok("Restored successfully", null));
+    }
+
+    @PostMapping("/trash/restore/bulk")
+    public ResponseEntity<ApiResponse<Void>> restoreAll(@RequestBody List<Long> ids) {
+        variantUseCase.restoreAll(ids);
+        return ResponseEntity.ok(ApiResponse.ok("Restored successfully", null));
     }
 
     @RequireAuth(roles = {RoleConstants.ADMIN})

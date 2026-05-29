@@ -12,8 +12,11 @@ public interface OrderPersistencePort {
     Optional<Order> findById(Long id);
     void deleteById(Long id);
     void deleteAllById(List<Long> ids);
+    void restoreById(Long id);
+    void restoreAllById(List<Long> ids);
     void hardDeleteById(Long id);
     void hardDeleteAllById(List<Long> ids);
     PageResult<Order> findAll(String search, PageQuery pageQuery);
+    PageResult<Order> findDeleted(String search, PageQuery pageQuery);
     PageResult<Order> findByShipperId(String shipperId, PageQuery pageQuery);
 }

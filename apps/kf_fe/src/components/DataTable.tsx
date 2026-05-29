@@ -25,10 +25,10 @@ export function DataTable<T>({
   isLoading = false,
 }: DataTableProps<T>) {
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-md border border-stone-200 bg-white">
       <div className="overflow-x-auto">
         <Table>
-          <thead className="bg-slate-100">
+          <thead className="bg-stone-50">
             <tr>
               {columns.map((column) => (
                 <TableHead
@@ -40,7 +40,7 @@ export function DataTable<T>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-stone-100">
             {isLoading ? (
               <tr>
                 <td
@@ -63,7 +63,7 @@ export function DataTable<T>({
             ) : null}
             {!isLoading
               ? data.map((item, index) => (
-                  <tr key={getRowKey(item, index)} className="hover:bg-slate-50">
+                  <tr key={getRowKey(item, index)} className="hover:bg-stone-50/70">
                     {columns.map((column) => (
                       <TableCell
                         key={column.key}

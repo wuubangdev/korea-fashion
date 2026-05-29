@@ -1,5 +1,6 @@
 "use client";
 
+import { Filter, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 
@@ -37,22 +38,26 @@ export function DataToolbar({
   onFilterChange,
 }: DataToolbarProps) {
   return (
-    <div className="mb-4 grid gap-3 rounded-lg border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_180px]">
-      <label className="block">
+    <div className="mb-4 grid gap-3 rounded-md border border-stone-200 bg-[#fffdf8] p-3 md:grid-cols-[minmax(0,1fr)_180px_180px]">
+      <label className="relative block">
         <span className="sr-only">Tìm kiếm</span>
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Tìm kiếm..."
+          placeholder="Tìm theo tên, mã, email..."
+          className="pl-9"
         />
       </label>
 
       {filterOptions.length > 0 ? (
-        <label className="block">
+        <label className="relative block">
           <span className="sr-only">{filterLabel}</span>
+          <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Select
             value={filterValue}
             onChange={(event) => onFilterChange?.(event.target.value)}
+            className="pl-9"
           >
             <option value="">{filterLabel}</option>
             {filterOptions.map((option) => (

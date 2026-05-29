@@ -13,7 +13,10 @@ public interface UserPersistencePort {
     Optional<User> findByUsername(String username);
     void deleteById(Long id);
     void deleteAllById(List<Long> ids);
+    void restoreById(Long id);
+    void restoreAllById(List<Long> ids);
     void hardDeleteById(Long id);
     void hardDeleteAllById(List<Long> ids);
     PageResult<User> findAll(String search, PageQuery pageQuery);
+    PageResult<User> findDeleted(String search, PageQuery pageQuery);
 }

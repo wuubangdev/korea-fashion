@@ -18,9 +18,13 @@ import java.util.Optional;
 public class GenericJpaCrudAdapter<T, ID, R extends JpaRepository<T, ID> & JpaSpecificationExecutor<T>>
         implements GenericCrudUseCase<T, ID> {
     private final R repository;
+    private final Class<T> entityClass;
+    private final TrashQuerySupport trashQuerySupport;
 
-    public GenericJpaCrudAdapter(R repository) {
+    public GenericJpaCrudAdapter(R repository, Class<T> entityClass, TrashQuerySupport trashQuerySupport) {
         this.repository = repository;
+        this.entityClass = entityClass;
+        this.trashQuerySupport = trashQuerySupport;
     }
 
     @Override
@@ -35,6 +39,11 @@ public class GenericJpaCrudAdapter<T, ID, R extends JpaRepository<T, ID> & JpaSp
                 ? repository.findAll(pageable)
                 : repository.findAll(containsText(search), pageable);
         return PageMapper.toResult(page, item -> item);
+    }
+
+    @Override
+    public PageResult<T> listDeleted(String search, PageQuery pageQuery) {
+        return trashQuerySupport.listDeleted(entityClass, search, pageQuery);
     }
 
     @Override
@@ -72,7 +81,20 @@ public class GenericJpaCrudAdapter<T, ID, R extends JpaRepository<T, ID> & JpaSp
     }
 
     @Override
+    public boolean restore(ID id) {
+        return trashQuerySupport.restore(entityClass, id);
+    }
+
+    @Override
+    public int restoreAll(List<ID> ids) {
+        return trashQuerySupport.restoreAll(entityClass, ids);
+    }
+
+    @Override
     public boolean hardDelete(ID id) {
+        if (BaseJpaEntity.class.isAssignableFrom(entityClass)) {
+            return trashQuerySupport.hardDelete(entityClass, id);
+        }
         try {
             repository.deleteById(id);
             return true;

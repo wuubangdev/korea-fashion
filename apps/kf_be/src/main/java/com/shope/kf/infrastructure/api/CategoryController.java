@@ -50,6 +50,16 @@ public class CategoryController {
         return ResponseEntity.ok(categoryUseCase.list(search, PageQuery.of(page, size, sort)).map(CategoryApiMapper::toResponse));
     }
 
+    @GetMapping("/trash")
+    public ResponseEntity<PageResult<CategoryResponse>> trash(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "deletedAt,desc") String sort
+    ) {
+        return ResponseEntity.ok(categoryUseCase.trash(search, PageQuery.of(page, size, sort)).map(CategoryApiMapper::toResponse));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<CategoryResponse> get(@PathVariable Long id) {
         Category c = categoryUseCase.findById(id);
@@ -76,6 +86,20 @@ public class CategoryController {
     public ResponseEntity<ApiResponse<Void>> deleteAll(@RequestBody List<Long> ids) {
         categoryUseCase.deleteAll(ids);
         return ResponseEntity.ok(ApiResponse.ok("Deleted successfully", null));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<ApiResponse<Void>> restore(@PathVariable Long id) {
+        categoryUseCase.restore(id);
+        return ResponseEntity.ok(ApiResponse.ok("Restored successfully", null));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth
+    @PostMapping("/trash/restore/bulk")
+    public ResponseEntity<ApiResponse<Void>> restoreAll(@RequestBody List<Long> ids) {
+        categoryUseCase.restoreAll(ids);
+        return ResponseEntity.ok(ApiResponse.ok("Restored successfully", null));
     }
 
     @com.shope.kf.infrastructure.security.RequireAuth(roles = {RoleConstants.ADMIN})
