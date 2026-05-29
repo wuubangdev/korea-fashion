@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,8 +24,8 @@ export function HomeHero() {
 
       <div className="page-enter relative mx-auto grid min-h-[620px] max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,540px)_1fr] lg:px-8">
         <div className="pb-4 lg:pb-0">
-          <Badge className="hero-text-wiggle bg-white/15 text-white ring-1 ring-white/20">Bộ sưu tập 2026</Badge>
-          <h1 className="hero-text-wiggle mt-5 max-w-xl text-4xl font-semibold leading-tight tracking-normal sm:text-6xl">
+          <Badge className="bg-white/15 text-white ring-1 ring-white/20">Bộ sưu tập 2026</Badge>
+          <h1 className="mt-5 max-w-xl text-4xl font-semibold leading-tight tracking-normal sm:text-6xl">
             {settings.siteName}
           </h1>
           <p className="mt-5 max-w-lg text-base leading-7 text-white/75 sm:text-lg">
@@ -52,27 +52,32 @@ export function HomeHero() {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-[1fr_0.72fr]">
-          <div
-            className="hero-float-slow hero-pan soft-shine min-h-[440px] rounded-lg bg-stone-800 shadow-2xl shadow-black/40 ring-1 ring-white/10"
-            style={{
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=1400&q=85')",
-              backgroundSize: "cover",
-            }}
-          />
-          <div className="grid gap-4">
+        <div className="relative grid gap-4 sm:grid-cols-[1fr_0.72fr]">
+          <div className="pointer-events-none absolute -right-4 top-10 hidden h-28 w-28 rounded-full border border-white/10 bg-white/5 blur-[1px] lg:block" />
+          <div className="soft-shine h-[440px] overflow-hidden rounded-lg bg-stone-800 shadow-2xl shadow-black/40 ring-1 ring-white/10 transition duration-500 hover:shadow-black/55">
             <div
-              className="hero-float-fast hero-pan soft-shine min-h-[210px] rounded-lg bg-stone-800 shadow-xl shadow-black/25 ring-1 ring-white/10"
+              className="hero-slide-vertical w-full"
               style={{
                 backgroundImage:
-                  "url('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=85')",
-                backgroundSize: "cover",
+                  "url('https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=1400&q=85')",
+                backgroundPosition: "center",
               }}
             />
-            <div className="hero-float-fast rounded-lg border border-white/10 bg-white/10 p-4 shadow-xl shadow-black/20 backdrop-blur">
-              <Sparkles className="h-5 w-5 text-rose-200" />
-              <div className="mt-3 text-sm font-semibold">Gợi ý hôm nay</div>
+          </div>
+          <div className="grid gap-4">
+            <div className="soft-shine min-h-[210px] overflow-hidden rounded-lg bg-stone-800 shadow-xl shadow-black/25 ring-1 ring-white/10 transition duration-500 hover:shadow-black/40">
+              <div className="flex h-full min-h-[210px] w-full">
+                <div
+                  className="hero-slide-horizontal h-full min-h-[210px] shrink-0 bg-cover bg-center"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(90deg, transparent 0 48%, rgba(12,10,9,0.18) 50%, transparent 52%), url('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=85'), url('https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=85')",
+                  }}
+                />
+              </div>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-white/10 p-4 shadow-xl shadow-black/20 backdrop-blur transition duration-500 hover:border-white/20 hover:bg-white/15">
+              <div className="text-sm font-semibold">Gợi ý hôm nay</div>
               <p className="mt-1 text-sm leading-6 text-white/70">
                 Cardigan mỏng, chân váy xếp ly và túi mini cho outfit nhẹ nhàng.
               </p>
