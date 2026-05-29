@@ -47,5 +47,7 @@ public class MediaAssetJpaEntity extends BaseJpaEntity {
     private String mediaType;
 
     private Long sizeBytes;
+
+    @Column(name = "external_asset")
     private Boolean external;
 }

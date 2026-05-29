@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
 
 @Component
-@ConditionalOnProperty(name = "kf.media.schema-initializer.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "kf.media.schema-initializer.enabled", havingValue = "true")
 public class MediaAssetSchemaInitializer {
     private final JdbcTemplate jdbcTemplate;
 
@@ -35,7 +35,7 @@ public class MediaAssetSchemaInitializer {
                     content_type varchar(120),
                     media_type varchar(20),
                     size_bytes bigint,
-                    external boolean,
+                    external_asset boolean,
                     primary key (id)
                 ) engine=InnoDB
                 """);
