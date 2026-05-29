@@ -42,11 +42,11 @@ export function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <article className="group overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <article className="card-enter hover-lift group overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm shadow-stone-950/5">
       <div className="relative">
-        <Link href={`/products/${product.id}`} className="block overflow-hidden">
+        <Link href={`/products/${product.id}`} className="block overflow-hidden bg-stone-100">
           <div
-            className="aspect-[4/5] bg-stone-100 transition duration-300 group-hover:scale-[1.02]"
+            className="soft-shine aspect-[4/5] transition duration-700 ease-out group-hover:scale-[1.045]"
             style={{
               backgroundImage: product.imageUrl ? `url('${product.imageUrl}')` : undefined,
               backgroundPosition: "center",
@@ -60,7 +60,7 @@ export function ProductCard({ product }: { product: Product }) {
           {product.origin ? <Badge className="bg-stone-900 text-white">{product.origin}</Badge> : null}
         </div>
         <button
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-md bg-white/90 text-stone-700 shadow-sm transition hover:bg-white hover:text-rose-700 disabled:opacity-60"
+          className="icon-hover absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-md bg-white/95 text-stone-700 shadow-sm backdrop-blur hover:bg-white hover:text-rose-700 disabled:opacity-60"
           aria-label="Thêm vào yêu thích"
           disabled={isWishlistSaving}
           onClick={handleWishlist}
@@ -71,27 +71,29 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
       <div className="p-4">
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase text-stone-500">{product.brand || "Korea Fashion"}</p>
-          <Link href={`/products/${product.id}`} className="mt-1 line-clamp-1 block text-sm font-semibold text-stone-950">
+          <p className="truncate text-xs font-semibold uppercase tracking-wide text-stone-500">{product.brand || "Korea Fashion"}</p>
+          <Link href={`/products/${product.id}`} className="mt-1 line-clamp-2 min-h-10 block text-sm font-semibold leading-5 text-stone-950 transition hover:text-emerald-800">
             {product.name}
           </Link>
         </div>
         <div className="mt-2">
           <ProductRating rating={product.ratingAverage} count={product.reviewCount} />
         </div>
-        <div className="mt-4 flex items-end justify-between gap-3">
+        <div className="mt-4 border-t border-stone-100 pt-4">
           <div className="min-w-0">
-            <div className="font-semibold text-stone-950">{formatMoney(product.price)}</div>
+            <div className="text-base font-semibold text-stone-950">{formatMoney(product.price)}</div>
             {discountPercent > 0 ? (
-              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                 <span className="text-stone-400 line-through">{formatMoney(compareAtPrice)}</span>
                 <span className="font-medium text-rose-700">Tiết kiệm {formatMoney(compareAtPrice - price)}</span>
               </div>
-            ) : null}
+            ) : (
+              <p className="mt-1 text-xs text-stone-500">Sẵn sàng giao hàng</p>
+            )}
           </div>
-          <Button size="sm" onClick={() => cart.add(product)}>
+          <Button className="mt-4 w-full transition hover:-translate-y-0.5" size="sm" onClick={() => cart.add(product)}>
             <ShoppingBag aria-hidden className="h-4 w-4" />
-            Thêm
+            Thêm vào giỏ
           </Button>
         </div>
       </div>

@@ -101,7 +101,7 @@ export function StoreHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/90 shadow-sm shadow-stone-950/5 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-3" onClick={() => setIsOpen(false)}>
           {settings.mainLogoUrl ? (
@@ -116,18 +116,18 @@ export function StoreHeader() {
           ) : null}
           <span className="min-w-0">
             <span className="block truncate text-lg font-semibold tracking-normal text-stone-950">{settings.siteName}</span>
-            <span className="hidden truncate text-xs font-medium uppercase text-rose-700 sm:block">Thời trang Seoul hằng ngày</span>
+            <span className="hidden truncate text-xs font-medium uppercase text-rose-700 sm:block">Seoul everyday wear</span>
           </span>
         </Link>
 
         <nav className="hidden items-center gap-5 text-sm font-medium text-stone-600 md:flex">
           <div className="group relative">
-            <Link href="/products" className="inline-flex items-center gap-1 py-2 hover:text-stone-950">
+            <Link href="/products" className="link-hover inline-flex items-center gap-1 py-2 transition hover:text-stone-950">
               Sản phẩm
-              <ChevronDown aria-hidden className="h-4 w-4" />
+              <ChevronDown aria-hidden className="h-4 w-4 transition group-hover:rotate-180 group-focus-within:rotate-180" />
             </Link>
-            <div className="dropdown-panel invisible absolute left-0 top-full w-64 translate-y-2 scale-[0.98] rounded-md border border-stone-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-100">
-              <Link href="/products" className="block rounded-md px-3 py-2 text-stone-700 hover:bg-stone-100 hover:text-stone-950">
+            <div className="dropdown-panel invisible absolute left-0 top-full w-64 translate-y-3 scale-[0.96] rounded-md border border-stone-200 bg-white/95 p-2 opacity-0 shadow-xl shadow-stone-950/10 backdrop-blur transition group-hover:visible group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-100">
+              <Link href="/products" className="dropdown-item block rounded-md px-3 py-2 text-stone-700 hover:bg-stone-100 hover:text-stone-950">
                 Tất cả sản phẩm
               </Link>
               {categories.length ? (
@@ -135,7 +135,7 @@ export function StoreHeader() {
                   <Link
                     key={category.id}
                     href={getCategoryHref(category)}
-                    className="block rounded-md px-3 py-2 text-stone-700 hover:bg-stone-100 hover:text-stone-950"
+                    className="dropdown-item block rounded-md px-3 py-2 text-stone-700 hover:bg-stone-100 hover:text-stone-950"
                   >
                     {category.name}
                   </Link>
@@ -147,17 +147,17 @@ export function StoreHeader() {
           </div>
 
           <div className="group relative">
-            <Link href="/products" className="inline-flex items-center gap-1 py-2 hover:text-stone-950">
+            <Link href="/products" className="link-hover inline-flex items-center gap-1 py-2 transition hover:text-stone-950">
               Thương hiệu
-              <ChevronDown aria-hidden className="h-4 w-4" />
+              <ChevronDown aria-hidden className="h-4 w-4 transition group-hover:rotate-180 group-focus-within:rotate-180" />
             </Link>
-            <div className="dropdown-panel invisible absolute left-0 top-full w-60 translate-y-2 scale-[0.98] rounded-md border border-stone-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-100">
+            <div className="dropdown-panel invisible absolute left-0 top-full w-60 translate-y-3 scale-[0.96] rounded-md border border-stone-200 bg-white/95 p-2 opacity-0 shadow-xl shadow-stone-950/10 backdrop-blur transition group-hover:visible group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-100">
               {brands.length ? (
                 brands.map((brand) => (
                   <Link
                     key={brand}
                     href={getBrandHref(brand)}
-                    className="block rounded-md px-3 py-2 text-stone-700 hover:bg-stone-100 hover:text-stone-950"
+                    className="dropdown-item block rounded-md px-3 py-2 text-stone-700 hover:bg-stone-100 hover:text-stone-950"
                   >
                     {brand}
                   </Link>
@@ -169,7 +169,7 @@ export function StoreHeader() {
           </div>
 
           {staticNavItems.map((item) => (
-            <Link key={item.href} href={item.href} className="hover:text-stone-950">
+            <Link key={item.href} href={item.href} className="link-hover transition hover:text-stone-950">
               {item.label}
             </Link>
           ))}
@@ -187,21 +187,21 @@ export function StoreHeader() {
                   {getInitials(accountName)}
                 </span>
               </Button>
-              <div className="dropdown-panel invisible absolute right-0 top-full w-56 translate-y-2 scale-[0.98] rounded-md border border-stone-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-100">
+              <div className="dropdown-panel invisible absolute right-0 top-full w-56 translate-y-3 scale-[0.96] rounded-md border border-stone-200 bg-white/95 p-2 opacity-0 shadow-xl shadow-stone-950/10 backdrop-blur transition group-hover:visible group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-100">
                 <div className="border-b border-stone-100 px-3 py-2">
                   <p className="truncate text-sm font-semibold text-stone-950">{accountName}</p>
                   <p className="mt-0.5 text-xs text-stone-500">Đang đăng nhập</p>
                 </div>
-                <Link href="/profile" className="mt-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 hover:text-stone-950">
+                <Link href="/profile" className="dropdown-item mt-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 hover:text-stone-950">
                   <UserRound aria-hidden className="h-4 w-4" />
                   Thông tin tài khoản
                 </Link>
-                <Link href="/wishlist" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 hover:text-stone-950">
+                <Link href="/wishlist" className="dropdown-item flex items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 hover:text-stone-950">
                   <Heart aria-hidden className="h-4 w-4" />
                   Danh sách yêu thích
                 </Link>
                 <button
-                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-100 hover:text-stone-950"
+                  className="dropdown-item flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-100 hover:text-stone-950"
                   type="button"
                   onClick={handleLogout}
                 >
@@ -241,7 +241,7 @@ export function StoreHeader() {
       </div>
 
       {isOpen ? (
-        <div className="border-t border-stone-200 bg-white px-4 py-3 md:hidden">
+        <div className="animate-in border-t border-stone-200 bg-white px-4 py-3 shadow-lg shadow-stone-950/5 md:hidden">
           <nav className="mx-auto grid max-w-7xl gap-1 text-sm font-medium text-stone-700">
             <Link href="/products" className="rounded-md px-3 py-2 hover:bg-stone-100" onClick={() => setIsOpen(false)}>
               Tất cả sản phẩm

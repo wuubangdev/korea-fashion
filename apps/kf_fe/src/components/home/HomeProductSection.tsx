@@ -29,7 +29,7 @@ export function HomeProductSection({ description, query = {}, title, tone = "whi
   const totalPages = products.data?.totalPages ?? 1;
 
   return (
-    <section className={`${tone === "muted" ? "bg-stone-50" : "bg-white"} py-12`}>
+    <section className={`scroll-reveal ${tone === "muted" ? "bg-stone-50" : "bg-white"} py-12`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
@@ -55,7 +55,7 @@ export function HomeProductSection({ description, query = {}, title, tone = "whi
                 <div className="h-full w-1/3 animate-loading-bar bg-emerald-600" />
               </div>
             ) : null}
-            <div className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-4 ${products.isLoading ? "opacity-75" : ""}`}>
+            <div className={`stagger-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-4 ${products.isLoading ? "opacity-75" : ""}`}>
               {items.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}

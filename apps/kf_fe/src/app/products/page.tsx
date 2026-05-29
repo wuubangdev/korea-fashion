@@ -4,8 +4,8 @@ import { PackageSearch, RotateCcw } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
-import { ProductPagination } from "@/components/ProductPagination";
 import { ProductFilters, type ProductFilterValues } from "@/components/ProductFilters";
+import { ProductPagination } from "@/components/ProductPagination";
 import { StoreFooter } from "@/components/StoreFooter";
 import { StoreHeader } from "@/components/StoreHeader";
 import { Button } from "@/components/ui/button";
@@ -133,14 +133,14 @@ function ProductsContent() {
   return (
     <main className="min-h-screen bg-stone-50 text-stone-950">
       <StoreHeader />
-      <section className="border-b border-stone-200 bg-white">
+      <section className="page-enter border-b border-stone-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <p className="text-sm font-medium uppercase text-rose-700">Cửa hàng</p>
           <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <h1 className="text-3xl font-semibold tracking-normal">Sản phẩm</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600">
-                Lọc nhanh theo danh mục, brand, xuất xứ, mức giá và cách sắp xếp để tìm item phù hợp.
+                Lọc nhanh theo danh mục, thương hiệu, xuất xứ, mức giá và cách sắp xếp để tìm item phù hợp.
               </p>
             </div>
             <Button variant="outline" onClick={products.revalidate}>
@@ -151,8 +151,8 @@ function ProductsContent() {
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[340px_1fr] lg:px-8">
-        <aside>
+      <div className="page-enter mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[320px_1fr] lg:px-8 xl:grid-cols-[340px_1fr]">
+        <aside className="card-enter">
           <ProductFilters
             brand={brand}
             brands={brands}
@@ -213,7 +213,7 @@ function ProductsContent() {
                   <div className="h-full w-1/3 animate-loading-bar bg-emerald-600" />
                 </div>
               ) : null}
-              <div className={`grid gap-4 sm:grid-cols-2 xl:grid-cols-3 ${products.isLoading ? "opacity-75" : ""}`}>
+              <div className={`stagger-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-3 ${products.isLoading ? "opacity-75" : ""}`}>
                 {filteredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}

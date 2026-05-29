@@ -1,6 +1,7 @@
 "use client";
 
 import { Filter, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -53,28 +54,37 @@ export function ProductFilters({
     maxPrice ? { key: "maxPrice", label: `Giá tối đa: ${Number(maxPrice).toLocaleString("vi-VN")}đ` } : null,
   ].filter(Boolean) as Array<{ key: keyof ProductFilterValues; label: string }>;
 
+  const hasActiveFilters = activeFilters.length > 0;
+
   return (
-    <Card className="sticky top-20 overflow-hidden border-stone-200 shadow-sm">
-      <CardHeader className="border-b border-stone-200 bg-white p-5">
-        <CardTitle className="flex items-center justify-between gap-3 text-lg">
+    <Card className="sticky top-20 overflow-hidden border-stone-200 bg-white shadow-md shadow-stone-950/5">
+      <CardHeader className="border-b border-stone-200 bg-stone-950 p-5 text-white">
+        <CardTitle className="flex items-center justify-between gap-3 text-base text-white">
           <span className="flex items-center gap-2">
-            <SlidersHorizontal className="h-5 w-5" />
+            <span className="grid h-9 w-9 place-items-center rounded-md bg-white/10">
+              <SlidersHorizontal className="h-4 w-4" />
+            </span>
             Bộ lọc
           </span>
-          <Button size="sm" variant="ghost" onClick={onReset}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-white/80 hover:bg-white/10 hover:text-white"
+            onClick={onReset}
+          >
             <RotateCcw className="h-4 w-4" />
-            Reset
+            Đặt lại
           </Button>
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-5 bg-white p-5">
-        <label className="block text-sm font-medium text-stone-700">
+      <CardContent className="space-y-5 p-5">
+        <label className="block text-sm font-semibold text-stone-800">
           Tìm kiếm
           <div className="relative mt-2">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
             <Input
-              className="h-11 pl-9"
+              className="h-11 rounded-lg border-stone-300 pl-9"
               onChange={(event) => onUpdate({ search: event.target.value })}
               placeholder="Tên sản phẩm, SKU..."
               value={search}
@@ -83,9 +93,8 @@ export function ProductFilters({
         </label>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-          <label className="block text-sm font-medium text-stone-700">
-            Danh mục
-            <Select className="mt-2 h-11" onChange={(event) => onUpdate({ categoryId: event.target.value })} value={categoryId}>
+          <FilterField label="Danh mục">
+            <Select className="h-11 rounded-lg" onChange={(event) => onUpdate({ categoryId: event.target.value })} value={categoryId}>
               <option value="">Tất cả danh mục</option>
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
@@ -93,11 +102,10 @@ export function ProductFilters({
                 </option>
               ))}
             </Select>
-          </label>
+          </FilterField>
 
-          <label className="block text-sm font-medium text-stone-700">
-            Thương hiệu
-            <Select className="mt-2 h-11" onChange={(event) => onUpdate({ brand: event.target.value })} value={brand}>
+          <FilterField label="Thương hiệu">
+            <Select className="h-11 rounded-lg" onChange={(event) => onUpdate({ brand: event.target.value })} value={brand}>
               <option value="">Tất cả thương hiệu</option>
               {brands.map((item) => (
                 <option key={item} value={item}>
@@ -105,11 +113,10 @@ export function ProductFilters({
                 </option>
               ))}
             </Select>
-          </label>
+          </FilterField>
 
-          <label className="block text-sm font-medium text-stone-700">
-            Xuất xứ
-            <Select className="mt-2 h-11" onChange={(event) => onUpdate({ origin: event.target.value })} value={origin}>
+          <FilterField label="Xuất xứ">
+            <Select className="h-11 rounded-lg" onChange={(event) => onUpdate({ origin: event.target.value })} value={origin}>
               <option value="">Tất cả xuất xứ</option>
               {origins.map((item) => (
                 <option key={item} value={item}>
@@ -117,56 +124,66 @@ export function ProductFilters({
                 </option>
               ))}
             </Select>
-          </label>
+          </FilterField>
 
-          <label className="block text-sm font-medium text-stone-700">
-            Giá tối đa
+          <FilterField label="Giá tối đa">
             <Input
-              className="mt-2 h-11"
+              className="h-11 rounded-lg"
               min={0}
               onChange={(event) => onUpdate({ maxPrice: event.target.value })}
               placeholder="1.000.000"
               type="number"
               value={maxPrice}
             />
-          </label>
+          </FilterField>
 
-          <label className="block text-sm font-medium text-stone-700">
-            Sắp xếp
-            <Select className="mt-2 h-11" onChange={(event) => onUpdate({ sort: event.target.value })} value={sort}>
+          <FilterField label="Sắp xếp">
+            <Select className="h-11 rounded-lg" onChange={(event) => onUpdate({ sort: event.target.value })} value={sort}>
               {sortOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
             </Select>
-          </label>
+          </FilterField>
         </div>
 
-        <div className="rounded-md border border-stone-200 bg-stone-50 p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-stone-950">
-            <Filter className="h-4 w-4" />
-            Đang áp dụng
+        <div className="rounded-lg border border-stone-200 bg-stone-50 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-stone-950">
+              <Filter className="h-4 w-4 text-emerald-700" />
+              Đang áp dụng
+            </div>
+            {hasActiveFilters ? <span className="text-xs font-medium text-stone-500">{activeFilters.length} bộ lọc</span> : null}
           </div>
-          {activeFilters.length ? (
+          {hasActiveFilters ? (
             <div className="mt-3 flex flex-wrap gap-2">
               {activeFilters.map((item) => (
                 <button
                   key={item.key}
-                  className="inline-flex items-center gap-1 rounded-md bg-white px-2.5 py-1.5 text-xs font-medium text-stone-700 shadow-sm ring-1 ring-stone-200 hover:bg-stone-100"
+                  className="inline-flex max-w-full items-center gap-1 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-700 shadow-sm transition hover:border-stone-300 hover:bg-stone-100"
                   type="button"
                   onClick={() => onUpdate({ [item.key]: "" })}
                 >
-                  {item.label}
-                  <X className="h-3 w-3" />
+                  <span className="truncate">{item.label}</span>
+                  <X className="h-3.5 w-3.5 shrink-0 text-stone-400" />
                 </button>
               ))}
             </div>
           ) : (
-            <p className="mt-2 text-sm text-stone-500">Chưa chọn bộ lọc.</p>
+            <p className="mt-2 text-sm leading-6 text-stone-500">Chưa chọn bộ lọc. Bắt đầu bằng từ khóa, danh mục hoặc khoảng giá.</p>
           )}
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function FilterField({ children, label }: { children: ReactNode; label: string }) {
+  return (
+    <label className="block text-sm font-semibold text-stone-800">
+      {label}
+      <div className="mt-2">{children}</div>
+    </label>
   );
 }

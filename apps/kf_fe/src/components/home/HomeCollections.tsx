@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 const collections = [
@@ -25,7 +26,7 @@ const collections = [
 
 export function HomeCollections() {
   return (
-    <section className="border-y border-stone-200 bg-stone-50 py-12">
+    <section className="scroll-reveal border-y border-stone-200 bg-stone-50 py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
@@ -33,19 +34,24 @@ export function HomeCollections() {
             <h2 className="mt-2 text-3xl font-semibold tracking-normal">Phong cách nổi bật</h2>
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="stagger-grid grid gap-4 md:grid-cols-3">
           {collections.map((collection) => (
-            <Link key={collection.title} href={collection.href} className="group overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
-              <div
-                className="aspect-[4/3] bg-stone-100 transition duration-300 group-hover:scale-[1.02]"
-                style={{
-                  backgroundImage: `url('${collection.image}')`,
-                  backgroundPosition: "center",
-                  backgroundSize: "cover",
-                }}
-              />
+            <Link key={collection.title} href={collection.href} className="hover-lift group overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm shadow-stone-950/5">
+              <div className="overflow-hidden">
+                <div
+                  className="soft-shine aspect-[4/3] bg-stone-100 transition duration-700 ease-out group-hover:scale-[1.055]"
+                  style={{
+                    backgroundImage: `url('${collection.image}')`,
+                    backgroundPosition: "center",
+                    backgroundSize: "cover",
+                  }}
+                />
+              </div>
               <div className="p-4">
-                <div className="font-semibold text-stone-950">{collection.title}</div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="font-semibold text-stone-950 transition group-hover:text-emerald-800">{collection.title}</div>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-stone-400 transition duration-200 group-hover:translate-x-1 group-hover:text-emerald-700" />
+                </div>
                 <p className="mt-1 text-sm leading-6 text-stone-600">{collection.text}</p>
               </div>
             </Link>

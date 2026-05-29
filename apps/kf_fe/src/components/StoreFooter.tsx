@@ -40,21 +40,21 @@ export function StoreFooter() {
           <div>
             <div className="text-sm font-semibold uppercase text-white/60">Liên kết</div>
             <div className="mt-3 grid gap-2 text-sm text-white/75">
-              <Link href="/products" className="hover:text-white">
+              <Link href="/products" className="link-hover w-fit hover:text-white">
                 Sản phẩm
               </Link>
-              <Link href="/cart" className="hover:text-white">
+              <Link href="/cart" className="link-hover w-fit hover:text-white">
                 Giỏ hàng
               </Link>
-              <Link href="/profile" className="hover:text-white">
+              <Link href="/profile" className="link-hover w-fit hover:text-white">
                 Tài khoản
               </Link>
-              <Link href="/policies" className="hover:text-white">
+              <Link href="/policies" className="link-hover w-fit hover:text-white">
                 Nội quy & chính sách
               </Link>
-            <Link href="/contact" className="hover:text-white">
-              Liên hệ
-            </Link>
+              <Link href="/contact" className="link-hover w-fit hover:text-white">
+                Liên hệ
+              </Link>
             </div>
           </div>
           <div>
@@ -98,7 +98,7 @@ function SocialLink({ href, icon: Icon, label }: { href: string; icon: LucideIco
       target="_blank"
       rel="noreferrer"
       aria-label={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/75 transition hover:bg-white hover:text-white hover:text-stone-950"
+      className="icon-hover flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/75 hover:bg-white hover:text-stone-950"
     >
       <Icon className="h-4 w-4" />
     </a>
