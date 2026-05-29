@@ -2,8 +2,6 @@
 
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export function HomeHero() {
@@ -24,28 +22,37 @@ export function HomeHero() {
 
       <div className="page-enter relative mx-auto grid min-h-[620px] max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,540px)_1fr] lg:px-8">
         <div className="pb-4 lg:pb-0">
-          <Badge className="bg-white/15 text-white ring-1 ring-white/20">Bộ sưu tập 2026</Badge>
-          <h1 className="mt-5 max-w-xl text-4xl font-semibold leading-tight tracking-normal sm:text-6xl">
-            {settings.siteName}
+          <div className="inline-flex items-center gap-3 rounded-full border border-white/16 bg-white/10 px-3 py-2 text-sm font-medium text-white/82 shadow-lg shadow-black/10 backdrop-blur">
+            <span className="h-2 w-2 rounded-full bg-rose-300" />
+            Bộ sưu tập 2026
+            <span className="h-4 w-px bg-white/18" />
+            Seoul everyday wear
+          </div>
+          <h1 className="mt-6 max-w-2xl text-5xl font-semibold leading-[0.98] tracking-normal sm:text-7xl">
+            Korean fashion cho nhịp sống hằng ngày.
           </h1>
-          <p className="mt-5 max-w-lg text-base leading-7 text-white/75 sm:text-lg">
+          <p className="mt-6 max-w-xl text-base leading-7 text-white/72 sm:text-lg">
             {settings.siteDescription ||
               "Thời trang Hàn Quốc tối giản, dễ phối và phù hợp cho lịch trình hằng ngày: đi học, đi làm, cà phê hoặc dạo phố."}
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/products" className="group">
-              <Button className="bg-white text-slate-950 shadow-lg shadow-white/10 hover:bg-slate-100 hover:shadow-white/20">
-                Xem sản phẩm
-                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-              </Button>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link
+              href="/products"
+              className="group inline-flex h-12 items-center gap-3 rounded-full bg-white px-5 pl-6 text-sm font-semibold text-stone-950 shadow-xl shadow-white/10 transition hover:-translate-y-0.5 hover:bg-rose-50 hover:shadow-white/20"
+            >
+              Xem sản phẩm
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-stone-950 text-white transition group-hover:translate-x-0.5">
+                <ArrowRight className="h-4 w-4" />
+              </span>
             </Link>
-            <Link href="/cart">
-              <Button variant="outline" className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white">
-                Giỏ hàng
-              </Button>
+            <Link
+              href="/cart"
+              className="inline-flex h-12 items-center rounded-full border border-white/28 bg-white/8 px-5 text-sm font-semibold text-white shadow-lg shadow-black/10 backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/14"
+            >
+              Giỏ hàng
             </Link>
           </div>
-          <div className="mt-10 grid max-w-md grid-cols-3 gap-3 text-sm">
+          <div className="mt-10 grid max-w-xl grid-cols-3 overflow-hidden rounded-lg border border-white/12 bg-white/10 text-sm shadow-xl shadow-black/10 backdrop-blur">
             <Metric value="120+" label="mẫu mới" />
             <Metric value="24h" label="xử lý đơn" />
             <Metric value="7 ngày" label="đổi size" />
@@ -91,9 +98,9 @@ export function HomeHero() {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/10 p-3 shadow-lg shadow-black/10 backdrop-blur transition duration-200 hover:-translate-y-1 hover:border-white/20 hover:bg-white/15 hover:shadow-black/20">
-      <div className="text-lg font-semibold">{value}</div>
-      <div className="mt-1 text-xs text-white/65">{label}</div>
+    <div className="border-r border-white/10 p-4 last:border-r-0">
+      <div className="text-xl font-semibold">{value}</div>
+      <div className="mt-1 text-xs font-medium uppercase text-white/52">{label}</div>
     </div>
   );
 }

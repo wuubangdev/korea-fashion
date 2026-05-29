@@ -195,7 +195,11 @@ export default function ContactPage() {
               <div className="flex flex-col gap-3 border-t border-stone-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs leading-5 text-stone-500">Thông tin chỉ dùng để xử lý yêu cầu hỗ trợ và không chia sẻ cho bên thứ ba.</p>
                 <Button className="w-full sm:w-fit" disabled={isSubmitting} type="submit">
-                  <Send className="h-4 w-4" />
+                  {isSubmitting ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/35 border-t-white" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
                   {isSubmitting ? "Đang gửi..." : "Gửi liên hệ"}
                 </Button>
               </div>

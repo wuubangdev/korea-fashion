@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronDown, Heart, LogOut, Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { SafeImage } from "@/components/SafeImage";
@@ -106,16 +105,6 @@ export function StoreHeader() {
     <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/90 shadow-sm shadow-stone-950/5 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-3" onClick={() => setIsOpen(false)}>
-          {settings.mainLogoUrl ? (
-            <Image
-              unoptimized
-              className="h-10 w-10 rounded-md object-contain"
-              src={settings.mainLogoUrl}
-              alt={settings.siteName}
-              width={40}
-              height={40}
-            />
-          ) : null}
           <span className="min-w-0">
             <span className="block truncate text-lg font-semibold tracking-normal text-stone-950">{settings.siteName}</span>
             <span className="hidden truncate text-xs font-medium uppercase text-rose-700 sm:block">Seoul everyday wear</span>

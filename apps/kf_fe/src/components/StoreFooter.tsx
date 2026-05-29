@@ -65,6 +65,12 @@ export function StoreFooter() {
             </div>
           </div>
         </div>
+        <div className="border-t border-white/10">
+          <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+            <p>© {new Date().getFullYear()} {settings.siteName}. All rights reserved.</p>
+            <p>Designed for Korean everyday wear.</p>
+          </div>
+        </div>
       </footer>
       <StorefrontFloatingActions />
     </>

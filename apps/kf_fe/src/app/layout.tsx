@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
+import { generateSeoMetadata } from "@/components/SeoMetadata";
 import { ToastProvider } from "@/components/ToastProvider";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Korea Fashion Admin",
-  description: "Admin frontend for Korea Fashion",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return generateSeoMetadata();
+}
 
 export default function RootLayout({
   children,

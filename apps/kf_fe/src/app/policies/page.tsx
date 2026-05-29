@@ -1,4 +1,4 @@
-import { ChevronDown, ClipboardCheck, HelpCircle, LockKeyhole, RotateCcw, ShieldCheck, Truck } from "lucide-react";
+import { ArrowRight, ChevronDown, ClipboardCheck, HelpCircle, LockKeyhole, RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import Link from "next/link";
 import { StoreFooter } from "@/components/StoreFooter";
 import { StoreHeader } from "@/components/StoreHeader";
@@ -104,14 +104,38 @@ export default function PoliciesPage() {
         </div>
       </section>
 
-      <section className="border-b border-stone-200 bg-white">
-        <div className="mx-auto grid max-w-7xl gap-3 px-4 py-4 sm:px-6 md:grid-cols-4 lg:px-8">
-          {policySections.map((section) => (
-            <a key={section.anchor} href={`#${section.anchor}`} className="group rounded-md border border-stone-200 bg-white px-4 py-3 transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-sm">
-              <div className="text-xs font-semibold text-rose-700">{section.kicker}</div>
-              <div className="mt-1 text-sm font-semibold text-stone-950 group-hover:text-emerald-800">{section.title}</div>
-            </a>
-          ))}
+      <section className="border-b border-stone-200 bg-[#fbfaf7]">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-xl shadow-stone-950/5">
+            <div className="grid divide-y divide-stone-200 md:grid-cols-4 md:divide-x md:divide-y-0">
+              {policySections.map((section) => {
+                const Icon = section.icon;
+
+                return (
+                  <a
+                    key={section.anchor}
+                    href={`#${section.anchor}`}
+                    className="group relative min-h-[172px] p-4 transition hover:bg-stone-50"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="grid h-11 w-11 place-items-center rounded-md bg-stone-950 text-white shadow-sm transition group-hover:-translate-y-0.5 group-hover:bg-rose-700">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span className="text-xs font-semibold text-stone-300">{section.kicker}</span>
+                    </div>
+                    <div className="mt-6">
+                      <div className="flex items-center justify-between gap-3">
+                        <h2 className="text-base font-semibold text-stone-950">{section.title}</h2>
+                        <ArrowRight className="h-4 w-4 shrink-0 text-stone-300 transition group-hover:translate-x-1 group-hover:text-rose-700" />
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-stone-600">{section.summary}</p>
+                    </div>
+                    <div className="absolute bottom-0 left-4 right-4 h-0.5 origin-left scale-x-0 bg-rose-700 transition duration-300 group-hover:scale-x-100" />
+                  </a>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </section>
 

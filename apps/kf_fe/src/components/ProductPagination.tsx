@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 
 type ProductPaginationProps = {
@@ -33,20 +32,23 @@ export function ProductPagination({
   const canGoNext = page + 1 < safeTotalPages;
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-stone-200 bg-white px-3 py-3 shadow-sm shadow-stone-950/5 sm:flex-row sm:items-center sm:justify-between">
-      <div className="text-sm text-stone-600">
-        <span className="font-semibold text-stone-950">{fromIndex}-{toIndex}</span>
-        <span> trong </span>
-        <span className="font-semibold text-stone-950">{totalElements}</span>
-        <span> sản phẩm</span>
+    <div className="flex flex-col gap-3 rounded-full border border-stone-200 bg-white/82 px-3 py-2 shadow-lg shadow-stone-950/5 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:pl-5">
+      <div className="flex items-center gap-2 text-sm text-stone-600">
+        <span className="h-2 w-2 rounded-full bg-rose-600" />
+        <span>
+          <span className="font-semibold text-stone-950">{fromIndex}-{toIndex}</span>
+          <span> / </span>
+          <span className="font-semibold text-stone-950">{totalElements}</span>
+          <span> sản phẩm</span>
+        </span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         {showSize && setSize ? (
-          <label className="flex items-center gap-2 text-sm text-stone-600">
+          <label className="flex items-center gap-2 rounded-full bg-stone-100 py-1 pl-3 pr-1 text-sm text-stone-600">
             <span className="hidden sm:inline">Hiển thị</span>
             <Select
-              className="h-9 w-20 rounded-md"
+              className="h-8 w-[72px] rounded-full border-stone-200 bg-white px-3"
               value={String(size)}
               onChange={(event) => {
                 setSize(Number(event.target.value));
@@ -62,28 +64,28 @@ export function ProductPagination({
           </label>
         ) : null}
 
-        <div className="inline-flex items-center gap-1 rounded-md border border-stone-200 bg-stone-50 p-1">
-          <Button
+        <div className="inline-flex items-center gap-1 rounded-full bg-stone-100 p-1">
+          <button
             aria-label="Trang trước"
-            className="h-8 w-8 rounded px-0 shadow-none"
-            variant="ghost"
+            className="grid h-8 w-8 place-items-center rounded-full text-stone-600 transition hover:bg-white hover:text-stone-950 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:shadow-none"
             disabled={!canGoPrevious}
             onClick={() => setPage(Math.max(page - 1, 0))}
+            type="button"
           >
             <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="min-w-24 px-2 text-center text-sm font-medium text-stone-700">
-            {currentPage} / {safeTotalPages}
+          </button>
+          <div className="min-w-20 rounded-full bg-white px-3 py-1.5 text-center text-sm font-semibold text-stone-800 shadow-sm">
+            {currentPage}<span className="mx-1 text-stone-300">/</span>{safeTotalPages}
           </div>
-          <Button
+          <button
             aria-label="Trang sau"
-            className="h-8 w-8 rounded px-0 shadow-none"
-            variant="ghost"
+            className="grid h-8 w-8 place-items-center rounded-full text-stone-600 transition hover:bg-white hover:text-stone-950 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:shadow-none"
             disabled={!canGoNext}
             onClick={() => setPage(Math.min(page + 1, safeTotalPages - 1))}
+            type="button"
           >
             <ChevronRight className="h-4 w-4" />
-          </Button>
+          </button>
         </div>
       </div>
     </div>

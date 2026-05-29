@@ -27,9 +27,11 @@ export default function ProductDetailPage() {
 
         {currentProduct ? (
           <>
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_430px]">
-              <ProductGallery product={currentProduct} />
-              <ProductInfoPanel product={currentProduct} />
+            <div className="rounded-lg border border-stone-200 bg-white p-3 shadow-xl shadow-stone-950/5 sm:p-4">
+              <div className="grid items-start gap-4 lg:grid-cols-2">
+                <ProductGallery product={currentProduct} />
+                <ProductInfoPanel product={currentProduct} />
+              </div>
             </div>
             <SuggestedProductsCarousel productId={params.id} />
             <ProductReviews product={currentProduct} />
