@@ -209,6 +209,22 @@ export type Payment = {
   status?: string;
 };
 
+export type MediaAsset = {
+  id: number;
+  folder?: string;
+  name?: string;
+  originalFilename?: string;
+  url: string;
+  storagePath?: string;
+  contentType?: string;
+  mediaType?: "IMAGE" | "VIDEO" | "OTHER" | string;
+  sizeBytes?: number;
+  external?: boolean;
+  createdAt?: string;
+  deletedAt?: string;
+  updatedAt?: string;
+};
+
 export type CreateOrderPayload = {
   deliveryAddress: string;
   note?: string;

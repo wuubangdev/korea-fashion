@@ -108,6 +108,22 @@ public class TrashQuerySupport {
         return deleted > 0;
     }
 
+    public <T> T findByIdIncludingDeleted(Class<T> entityClass, Object id) {
+        if (!supportsTrash(entityClass)) {
+            return null;
+        }
+
+        @SuppressWarnings("unchecked")
+        List<T> result = entityManager.createNativeQuery(
+                        "select * from " + tableName(entityClass) + " where " + idColumn(entityClass) + " = :id",
+                        entityClass
+                )
+                .setParameter("id", id)
+                .setMaxResults(1)
+                .getResultList();
+        return result.isEmpty() ? null : result.get(0);
+    }
+
     private boolean supportsTrash(Class<?> entityClass) {
         return BaseJpaEntity.class.isAssignableFrom(entityClass);
     }
