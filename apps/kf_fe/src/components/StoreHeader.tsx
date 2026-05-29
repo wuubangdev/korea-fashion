@@ -4,11 +4,13 @@ import { ChevronDown, Heart, LogOut, Menu, Search, ShoppingBag, UserRound, X } f
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { SafeImage } from "@/components/SafeImage";
 import { Button } from "@/components/ui/button";
 import { useApiResource } from "@/hooks/useApiResource";
 import { useCart } from "@/hooks/useCart";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { AUTH_TOKEN_KEY, AUTH_USER_KEY, clearAuthSession } from "@/lib/auth";
+import { formatMoney } from "@/lib/format";
 import type { Category, PageResult, Product } from "@/types/api";
 
 type Collection<T> = PageResult<T> | T[] | null;
@@ -218,16 +220,20 @@ export function StoreHeader() {
             </Link>
           )}
 
-          <Link href="/cart" className="relative">
-            <Button variant="outline" size="icon" aria-label={`Giỏ hàng có ${cart.count} sản phẩm`}>
-              <ShoppingBag aria-hidden className="h-4 w-4" />
-            </Button>
-            {cart.count > 0 ? (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-semibold leading-none text-white">
-                {cart.count > 99 ? "99+" : cart.count}
-              </span>
-            ) : null}
-          </Link>
+          <div className="group relative">
+            <Link href="/cart" className="relative block">
+              <Button variant="outline" size="icon" aria-label={`Giỏ hàng có ${cart.count} sản phẩm`}>
+                <ShoppingBag aria-hidden className="h-4 w-4" />
+              </Button>
+              {cart.count > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-semibold leading-none text-white">
+                  {cart.count > 99 ? "99+" : cart.count}
+                </span>
+              ) : null}
+            </Link>
+            <MiniCart />
+          </div>
+
           <Button
             className="md:hidden"
             variant="ghost"
@@ -280,5 +286,70 @@ export function StoreHeader() {
         </div>
       ) : null}
     </header>
+  );
+}
+
+function MiniCart() {
+  const cart = useCart();
+  const visibleItems = cart.items;
+
+  return (
+    <div className="dropdown-panel invisible absolute right-0 top-full z-50 mt-2 w-[min(360px,calc(100vw-2rem))] translate-y-3 scale-[0.96] overflow-hidden rounded-lg border border-stone-200 bg-white/98 opacity-0 shadow-2xl shadow-stone-950/15 backdrop-blur transition group-hover:visible group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-100">
+      <div className="flex items-center justify-between gap-3 border-b border-stone-100 px-4 py-3">
+        <div>
+          <div className="text-sm font-semibold text-stone-950">Giỏ hàng</div>
+          <div className="mt-0.5 text-xs text-stone-500">{cart.count} sản phẩm</div>
+        </div>
+        <Link href="/cart" className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">
+          Xem giỏ
+        </Link>
+      </div>
+
+      {visibleItems.length ? (
+        <>
+          <div className="max-h-80 overflow-y-auto p-2">
+            {visibleItems.map((item) => (
+              <Link
+                key={item.product.id}
+                href={`/products/${item.product.id}`}
+                className="grid grid-cols-[56px_1fr] gap-3 rounded-md p-2 transition hover:bg-stone-50"
+              >
+                <SafeImage
+                  alt={item.product.name}
+                  className="h-14 w-14 rounded-md"
+                  sizes="56px"
+                  src={item.product.imageUrl}
+                />
+                <span className="min-w-0">
+                  <span className="line-clamp-1 block text-sm font-semibold text-stone-950">{item.product.name}</span>
+                  <span className="mt-1 flex items-center justify-between gap-2 text-xs text-stone-500">
+                    <span>x{item.quantity}</span>
+                    <span className="font-semibold text-stone-800">{formatMoney(Number(item.product.price ?? 0) * item.quantity)}</span>
+                  </span>
+                </span>
+              </Link>
+            ))}
+          </div>
+          <div className="border-t border-stone-100 p-3">
+            <div className="mb-3 flex items-center justify-between text-sm">
+              <span className="text-stone-500">Tạm tính</span>
+              <span className="font-semibold text-stone-950">{formatMoney(cart.total)}</span>
+            </div>
+            <Button asChild className="w-full">
+              <Link href="/checkout">Thanh toán</Link>
+            </Button>
+          </div>
+        </>
+      ) : (
+        <div className="p-6 text-center">
+          <ShoppingBag className="mx-auto h-8 w-8 text-stone-300" />
+          <p className="mt-3 text-sm font-semibold text-stone-950">Giỏ hàng đang trống</p>
+          <p className="mt-1 text-sm leading-6 text-stone-500">Thêm sản phẩm yêu thích để xem nhanh tại đây.</p>
+          <Button asChild className="mt-4" variant="outline">
+            <Link href="/products">Xem sản phẩm</Link>
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
