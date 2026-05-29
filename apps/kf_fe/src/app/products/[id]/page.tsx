@@ -33,7 +33,7 @@ export default function ProductDetailPage() {
                 <ProductInfoPanel product={currentProduct} />
               </div>
             </div>
-            <SuggestedProductsCarousel productId={params.id} />
+            <SuggestedProductsCarousel product={currentProduct} />
             <ProductReviews product={currentProduct} />
           </>
         ) : (

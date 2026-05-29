@@ -20,11 +20,13 @@ import { findAdminResource } from "@/config/adminResources";
 import { getAdminResourceLabel } from "@/config/adminResourceDisplay";
 import { apiFetch, buildUrl, mediaApi } from "@/lib/api";
 import { formatDate, formatMoney } from "@/lib/format";
+import { useApiResource } from "@/hooks/useApiResource";
 import { usePaginatedResource } from "@/hooks/usePaginatedResource";
-import type { MediaAsset } from "@/types/api";
+import type { Category, MediaAsset, PageResult } from "@/types/api";
 
 type AdminRow = Record<string, unknown>;
 type EditorMode = "create" | "edit";
+type EditorFieldScope = "basic" | "full";
 type FieldKind = "array" | "boolean" | "date" | "json" | "number" | "text";
 type EditorField = {
   key: string;
@@ -32,10 +34,16 @@ type EditorField = {
   value: string;
 };
 type EditorState = {
+  basicKeys: string[];
   currentStep: number;
+  fieldKinds: Record<string, FieldKind>;
+  fieldScope: EditorFieldScope;
   fields: EditorField[];
+  fullKeys: string[];
   id?: string | number;
+  initialValues: Record<string, string>;
   mode: EditorMode;
+  resourceSlug: string;
 };
 
 const fallbackColumns = ["id", "name", "title", "code", "status", "active", "createdAt"];
@@ -62,6 +70,16 @@ const createFieldHints: Record<string, string[]> = {
   suppliers: ["name", "phone", "email", "active"],
   users: ["username", "email", "password", "roles"],
   variants: ["productId", "sku", "sizeId", "colorId", "price", "stockQuantity"],
+};
+
+const editFieldHints: Record<string, string[]> = {
+  ...createFieldHints,
+  "contact-messages": ["status", "adminNote"],
+  orders: ["status", "paymentStatus", "fulfillmentStatus", "shippingStatus", "shipperId", "note"],
+  payments: ["status", "method", "paidAt"],
+  products: ["name", "sku", "brand", "categoryId", "price", "stockQuantity", "status", "description", "imageUrl"],
+  reviews: ["status", "adminReply"],
+  users: ["username", "email", "roles"],
 };
 
 export default function AdminResourcePage() {
@@ -232,34 +250,62 @@ function ResourceTable({
 
   function openCreate() {
     const sampleKeys = data.data.content.flatMap((item) => Object.keys(item));
-    const keys = getCreateFields(resource.slug, resource.preferredColumns, sampleKeys);
+    const basicKeys = getCreateFields(resource.slug, resource.preferredColumns, sampleKeys);
+    const fullKeys = getFullCreateFields(resource.slug, resource.preferredColumns, sampleKeys);
+    const fieldKinds = getFieldKinds(fullKeys);
 
     setEditor({
+      basicKeys,
       currentStep: 0,
-      fields: keys.map((key) => ({
-        key,
-        kind: inferFieldKind(key),
-        value: "",
-      })),
+      fieldKinds,
+      fieldScope: "basic",
+      fields: buildEditorFields(basicKeys, {}, {}, fieldKinds),
+      fullKeys,
+      initialValues: {},
       mode: "create",
+      resourceSlug: resource.slug,
     });
     setActionError(null);
   }
 
   function openEdit(item: AdminRow, id: string | number) {
     const editable = stripReadOnlyFields(item);
+    const basicKeys = getEditFields(resource.slug, editable);
+    const fullKeys = getFullEditFields(editable);
+    const initialValues = stringifyFieldValues(editable);
+    const fieldKinds = getFieldKinds(fullKeys, editable);
 
     setEditor({
+      basicKeys,
       currentStep: 0,
-      fields: Object.keys(editable).map((key) => ({
-        key,
-        kind: inferFieldKind(key, editable[key]),
-        value: stringifyFieldValue(editable[key]),
-      })),
+      fieldKinds,
+      fieldScope: "basic",
+      fields: buildEditorFields(basicKeys, {}, initialValues, fieldKinds),
+      fullKeys,
       id,
+      initialValues,
       mode: "edit",
+      resourceSlug: resource.slug,
     });
     setActionError(null);
+  }
+
+  function switchEditorFieldScope(scope: EditorFieldScope) {
+    setEditor((current) => {
+      if (!current || current.fieldScope === scope) {
+        return current;
+      }
+
+      const currentValues = Object.fromEntries(current.fields.map((field) => [field.key, field.value])) as Record<string, string>;
+      const keys = scope === "basic" ? current.basicKeys : current.fullKeys;
+
+      return {
+        ...current,
+        currentStep: 0,
+        fieldScope: scope,
+        fields: buildEditorFields(keys, currentValues, current.initialValues, current.fieldKinds),
+      };
+    });
   }
 
   async function mutate({
@@ -530,6 +576,26 @@ function ResourceTable({
               <p className="mt-1 text-sm text-slate-500">
                 Điền thông tin theo bảng bên dưới. Các trường phức tạp vẫn có thể nhập bằng JSON.
               </p>
+              <div className="mt-3 inline-flex rounded-md border border-stone-300 bg-stone-50 p-1">
+                <button
+                  className={`rounded px-3 py-1.5 text-sm font-medium transition ${
+                    editor.fieldScope === "basic" ? "bg-white text-slate-950 shadow-sm" : "text-slate-600 hover:text-slate-950"
+                  }`}
+                  type="button"
+                  onClick={() => switchEditorFieldScope("basic")}
+                >
+                  Basic
+                </button>
+                <button
+                  className={`rounded px-3 py-1.5 text-sm font-medium transition ${
+                    editor.fieldScope === "full" ? "bg-white text-slate-950 shadow-sm" : "text-slate-600 hover:text-slate-950"
+                  }`}
+                  type="button"
+                  onClick={() => switchEditorFieldScope("full")}
+                >
+                  Full
+                </button>
+              </div>
             </div>
             <div className="max-h-[calc(92vh-130px)] overflow-y-auto p-4">
               <EditorForm editor={editor} onChange={setEditor} />
@@ -619,6 +685,7 @@ function EditorForm({
                 <td className="px-4 py-3">
                   <FieldControl
                     field={field}
+                    resourceSlug={editor.resourceSlug}
                     onChange={(value) =>
                       onChange((current) =>
                         current
@@ -644,15 +711,22 @@ function EditorForm({
 
 function FieldControl({
   field,
+  resourceSlug,
   onChange,
 }: {
   field: EditorField;
+  resourceSlug: string;
   onChange: (value: string) => void;
 }) {
   const [isUploading, setIsUploading] = useState(false);
   const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
-  const enumOptions = getEnumOptions(field.key);
+  const enumOptions = getEnumOptions(field.key, resourceSlug);
+  const categoryResource = useApiResource<PageResult<Category>>({
+    enabled: isCategoryReferenceField(field.key),
+    path: "/api/categories",
+    query: { page: 0, size: 100, sort: "displayOrder,asc" },
+  });
 
   useEffect(() => {
     if (!isMediaField(field.key)) {
@@ -705,6 +779,70 @@ function FieldControl({
     );
   }
 
+  if (enumOptions.length > 0 && field.kind === "array") {
+    const selectedValues = parseEnumArrayValue(field.value);
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {enumOptions.map((option) => {
+          const checked = selectedValues.includes(option.value);
+
+          return (
+            <label
+              key={option.value}
+              className={`inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm transition ${
+                checked
+                  ? "border-emerald-700 bg-emerald-50 text-emerald-800"
+                  : "border-stone-300 bg-white text-slate-700 hover:bg-stone-50"
+              }`}
+            >
+              <input
+                checked={checked}
+                className="h-4 w-4 accent-emerald-700"
+                type="checkbox"
+                onChange={(event) => {
+                  const nextValues = event.target.checked
+                    ? unique([...selectedValues, option.value])
+                    : selectedValues.filter((value) => value !== option.value);
+                  onChange(JSON.stringify(nextValues));
+                }}
+              />
+              {option.label}
+            </label>
+          );
+        })}
+      </div>
+    );
+  }
+
+  if (enumOptions.length > 0) {
+    return (
+      <Select value={field.value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">Chua chon</option>
+        {enumOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </Select>
+    );
+  }
+
+  if (isCategoryReferenceField(field.key)) {
+    const categories = categoryResource.data?.content ?? [];
+
+    return (
+      <Select value={field.value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">{categoryResource.isLoading ? "Dang tai danh muc..." : "Chon danh muc"}</option>
+        {categories.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.name}
+          </option>
+        ))}
+      </Select>
+    );
+  }
+
   if (field.kind === "array" || field.kind === "json") {
     return (
       <textarea
@@ -717,7 +855,7 @@ function FieldControl({
     );
   }
 
-  if (enumOptions.length > 0) {
+  if (false && enumOptions.length > 0) {
     return (
       <Select value={field.value} onChange={(event) => onChange(event.target.value)}>
         <option value="">Chưa chọn</option>
@@ -840,6 +978,23 @@ function unique(values: string[]) {
   return Array.from(new Set(values));
 }
 
+function parseEnumArrayValue(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return trimmed
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+}
+
 function chunk<T>(values: T[], size: number) {
   const chunks: T[][] = [];
   for (let index = 0; index < values.length; index += size) {
@@ -849,13 +1004,60 @@ function chunk<T>(values: T[], size: number) {
 }
 
 function getCreateFields(slug: string, preferredColumns: string[] | undefined, sampleKeys: string[]) {
-  const fields = unique([
+  const hintedFields = createFieldHints[slug];
+  const fields = unique(hintedFields ?? preferredColumns ?? sampleKeys).filter((key) => !readonlyFields.has(key));
+
+  return fields.length ? fields : ["name", "code", "active"];
+}
+
+function getFullCreateFields(slug: string, preferredColumns: string[] | undefined, sampleKeys: string[]) {
+  return unique([
     ...(createFieldHints[slug] ?? []),
     ...(preferredColumns ?? []),
     ...sampleKeys,
   ]).filter((key) => !readonlyFields.has(key));
+}
 
-  return fields.length ? fields : ["name", "code", "active"];
+function getEditFields(slug: string, editable: AdminRow) {
+  const keys = Object.keys(editable);
+  const hintedFields = editFieldHints[slug] ?? createFieldHints[slug];
+
+  if (!hintedFields) {
+    return keys.filter((key) => !readonlyFields.has(key)).slice(0, fieldsPerStep);
+  }
+
+  return hintedFields.filter((key) => key in editable && !readonlyFields.has(key));
+}
+
+function getFullEditFields(editable: AdminRow) {
+  return Object.keys(editable).filter((key) => !readonlyFields.has(key));
+}
+
+function getFieldKinds(keys: string[], values?: AdminRow) {
+  return keys.reduce<Record<string, FieldKind>>((result, key) => {
+    result[key] = inferFieldKind(key, values?.[key]);
+    return result;
+  }, {});
+}
+
+function stringifyFieldValues(values: AdminRow) {
+  return Object.entries(values).reduce<Record<string, string>>((result, [key, value]) => {
+    result[key] = stringifyFieldValue(value);
+    return result;
+  }, {});
+}
+
+function buildEditorFields(
+  keys: string[],
+  currentValues: Record<string, string>,
+  initialValues: Record<string, string>,
+  fieldKinds: Record<string, FieldKind>,
+) {
+  return keys.map((key) => ({
+    key,
+    kind: fieldKinds[key] ?? inferFieldKind(key),
+    value: currentValues[key] ?? initialValues[key] ?? "",
+  }));
 }
 
 function buildRequestBody(editor: EditorState) {
@@ -864,14 +1066,14 @@ function buildRequestBody(editor: EditorState) {
       return body;
     }
 
-    body[field.key] = parseFieldValue(field);
+    body[field.key] = parseFieldValue(field, editor.resourceSlug);
     return body;
   }, {});
 }
 
 function validateEditor(editor: EditorState) {
   const firstError = editor.fields
-    .map(validateField)
+    .map((field) => validateField(field, editor.resourceSlug))
     .find((error): error is string => Boolean(error));
 
   if (firstError) {
@@ -879,7 +1081,7 @@ function validateEditor(editor: EditorState) {
   }
 }
 
-function validateField(field: EditorField) {
+function validateField(field: EditorField, resourceSlug: string) {
   const value = field.value.trim();
   if (isRequiredField(field) && value === "") {
     return `${humanize(field.key)} là trường bắt buộc.`;
@@ -891,6 +1093,10 @@ function validateField(field: EditorField) {
 
   if (field.kind === "number" && Number.isNaN(Number(value))) {
     return `${humanize(field.key)} phải là số.`;
+  }
+
+  if (field.kind === "array" && getEnumOptions(field.key, resourceSlug).length > 0) {
+    return null;
   }
 
   if (field.kind === "array" || field.kind === "json") {
@@ -921,7 +1127,7 @@ function isEditorFinalStep(editor: EditorState) {
   return editor.currentStep + 1 >= totalSteps;
 }
 
-function parseFieldValue(field: EditorField) {
+function parseFieldValue(field: EditorField, resourceSlug: string) {
   const value = field.value.trim();
 
   if (value === "") {
@@ -938,6 +1144,10 @@ function parseFieldValue(field: EditorField) {
       throw new Error(`${humanize(field.key)} phải là số.`);
     }
     return numberValue;
+  }
+
+  if (field.kind === "array" && getEnumOptions(field.key, resourceSlug).length > 0) {
+    return parseEnumArrayValue(value);
   }
 
   if (field.kind === "array" || field.kind === "json") {
@@ -1124,36 +1334,55 @@ function isUrl(value: string) {
   return /^https?:\/\//i.test(value);
 }
 
-function getEnumOptions(key: string) {
+function isCategoryReferenceField(key: string) {
+  return /^(categoryId|parentId)$/i.test(key);
+}
+
+function getEnumOptions(key: string, resourceSlug?: string) {
   const normalized = key.toLowerCase();
 
-  if (normalized === "status" || normalized.endsWith("status")) {
-    return options([
-      "ACTIVE",
-      "INACTIVE",
-      "DRAFT",
-      "PUBLISHED",
-      "ARCHIVED",
-      "NEW",
-      "IN_PROGRESS",
-      "RESOLVED",
-      "SPAM",
-      "PENDING",
-      "PROCESSING",
-      "APPROVED",
-      "REJECTED",
-      "PAID",
-      "UNPAID",
-      "SHIPPING",
-      "DELIVERED",
-      "COMPLETED",
-      "CANCELLED",
-      "RETURNED",
-    ]);
+  if (normalized === "paymentstatus") {
+    return options(["UNPAID", "PENDING", "PAID", "FAILED", "REFUNDED", "CANCELLED"]);
+  }
+
+  if (normalized === "fulfillmentstatus") {
+    return options(["UNFULFILLED", "PROCESSING", "FULFILLED", "SHIPPING", "SHIPPED", "DELIVERED", "CANCELLED", "RETURNED"]);
+  }
+
+  if (normalized === "shippingstatus") {
+    return options(["PENDING", "ASSIGNED", "SHIPPING", "DELIVERED", "FAILED", "CANCELLED"]);
+  }
+
+  if (normalized === "status") {
+    return getStatusOptionsForResource(resourceSlug);
+  }
+
+  if (normalized.endsWith("status")) {
+    return options(["ACTIVE", "INACTIVE"]);
+  }
+
+  if (normalized === "mediatype") {
+    return options(["IMAGE", "VIDEO", "OTHER"]);
+  }
+
+  if (normalized === "discounttype") {
+    return options(["PERCENT", "FIXED"]);
+  }
+
+  if (normalized === "relationtype") {
+    return options(["RELATED", "UPSELL", "CROSS_SELL"]);
+  }
+
+  if (normalized === "referencetype") {
+    return options(["ORDER", "RETURN", "PURCHASE_RECEIPT", "MANUAL"]);
+  }
+
+  if (normalized === "method") {
+    return options(["COD", "BANK_TRANSFER", "MOMO", "VNPAY", "ZALOPAY", "CASH", "CARD"]);
   }
 
   if (normalized === "type" || normalized.endsWith("type")) {
-    return options(["PERCENT", "FIXED", "PUBLIC", "PRIVATE", "NORMAL", "FEATURED", "SALE", "RELATED", "UPSELL", "CROSS_SELL"]);
+    return options(["PERCENT", "FIXED", "PUBLIC", "PRIVATE", "NORMAL", "FEATURED", "SALE", "RELATED", "UPSELL", "CROSS_SELL", "RETURN", "SHIPPING", "PAYMENT", "ORDER"]);
   }
 
   if (normalized === "gender") {
@@ -1168,16 +1397,12 @@ function getEnumOptions(key: string) {
     return options(["HOME_HERO", "HOME_TOP", "HOME_MIDDLE", "HOME_BOTTOM", "PRODUCT_LIST", "PRODUCT_DETAIL"]);
   }
 
-  if (normalized === "discounttype") {
-    return options(["PERCENT", "FIXED"]);
-  }
-
   if (normalized === "tier") {
     return options(["BRONZE", "SILVER", "GOLD", "PLATINUM", "DIAMOND"]);
   }
 
   if (normalized === "role" || normalized === "roles") {
-    return options(["USER", "ADMIN", "SHIPPER", "STAFF"]);
+    return options(["ROLE_CUSTOMER", "ROLE_ADMIN", "ROLE_STAFF", "ROLE_SHIPPER"]);
   }
 
   if (normalized === "origin") {
@@ -1185,6 +1410,37 @@ function getEnumOptions(key: string) {
   }
 
   return [];
+}
+
+function getStatusOptionsForResource(resourceSlug?: string) {
+  switch (resourceSlug) {
+    case "products":
+      return options(["DRAFT", "ACTIVE", "INACTIVE", "PUBLISHED"]);
+    case "orders":
+      return options(["NEW", "PENDING", "PROCESSING", "SHIPPING", "COMPLETED", "CANCELLED", "FAILED", "RETURNED"]);
+    case "payments":
+    case "payment-transactions":
+      return options(["UNPAID", "PENDING", "PAID", "FAILED", "REFUNDED", "CANCELLED"]);
+    case "shipments":
+    case "shipment-events":
+      return options(["PENDING", "ASSIGNED", "SHIPPING", "DELIVERED", "FAILED", "CANCELLED"]);
+    case "contact-messages":
+      return options(["NEW", "IN_PROGRESS", "RESOLVED", "SPAM"]);
+    case "blog-posts":
+    case "pages":
+      return options(["DRAFT", "ACTIVE", "INACTIVE", "PUBLISHED", "ARCHIVED"]);
+    case "reviews":
+      return options(["PENDING", "APPROVED", "REJECTED", "SPAM"]);
+    case "carts":
+      return options(["ACTIVE", "COMPLETED", "CANCELLED"]);
+    case "purchase-receipts":
+    case "return-requests":
+    case "exchange-orders":
+    case "refunds":
+      return options(["PENDING", "APPROVED", "REJECTED", "PROCESSING", "COMPLETED", "CANCELLED"]);
+    default:
+      return options(["ACTIVE", "INACTIVE", "DRAFT", "PUBLISHED", "ARCHIVED"]);
+  }
 }
 
 function options(values: string[]) {

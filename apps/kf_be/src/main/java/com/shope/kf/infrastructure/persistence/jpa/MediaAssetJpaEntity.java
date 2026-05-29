@@ -15,7 +15,7 @@ import lombok.EqualsAndHashCode;
         name = "media_assets",
         indexes = {
                 @Index(name = "idx_media_assets_folder", columnList = "folder"),
-                @Index(name = "idx_media_assets_media_type", columnList = "mediaType")
+                @Index(name = "idx_media_assets_media_type", columnList = "media_type")
         }
 )
 @Data
@@ -43,7 +43,7 @@ public class MediaAssetJpaEntity extends BaseJpaEntity {
     @Column(length = 120)
     private String contentType;
 
-    @Column(length = 20)
+    @Column(name = "media_type", length = 20)
     private String mediaType;
 
     private Long sizeBytes;

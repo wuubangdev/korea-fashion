@@ -23,7 +23,9 @@ export type Product = {
   imageUrl?: string;
   price?: number | string;
   brand?: string;
+  brandId?: string;
   origin?: string;
+  categoryId?: number;
   sku?: string;
   slug?: string;
   material?: string;

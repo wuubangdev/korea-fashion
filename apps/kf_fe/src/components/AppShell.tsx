@@ -10,10 +10,12 @@ import {
   Home,
   ImageIcon,
   Menu,
+  MessageSquareText,
   Package,
   PanelLeftClose,
   PanelLeftOpen,
   ReceiptText,
+  SlidersHorizontal,
   Settings,
   ShoppingBag,
   UsersRound,
@@ -27,7 +29,9 @@ const primaryNav = [
   { href: "/admin/resources/orders", icon: ReceiptText, label: "Đơn hàng", meta: "Xử lý việc cần làm" },
   { href: "/admin/resources/products", icon: Package, label: "Sản phẩm", meta: "Giá, tồn kho, hình ảnh" },
   { href: "/admin/resources/categories", icon: ShoppingBag, label: "Danh mục", meta: "Nhóm hàng và menu" },
+  { href: "/admin/resources/contact-messages", icon: MessageSquareText, label: "Liên hệ", meta: "Form và tin nhắn" },
   { href: "/admin/media", icon: ImageIcon, label: "Media", meta: "Ảnh, video, thư mục" },
+  { href: "/admin/site-settings", icon: SlidersHorizontal, label: "Cấu hình website", meta: "SEO, logo, social" },
   { href: "/admin/resources/users", icon: UsersRound, label: "Khách hàng", meta: "Tài khoản và vai trò" },
 ];
 
@@ -76,7 +80,7 @@ const adminNavResourceOrder: Record<string, string[]> = {
     "reviews",
     "review-images",
   ],
-  Content: ["contact-messages", "site-settings", "banners", "menus", "menu-items", "pages", "blog-posts", "faqs", "store-policies"],
+  Content: ["contact-messages", "banners", "menus", "menu-items", "pages", "blog-posts", "faqs", "store-policies"],
   System: ["audit-logs"],
 };
 
@@ -158,7 +162,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               ) : null}
               <button
                 aria-label={isSidebarCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
-                className="hidden h-9 w-9 items-center justify-center rounded-md border border-stone-200 bg-white text-slate-600 transition hover:-translate-y-0.5 hover:border-stone-300 hover:text-slate-950 hover:shadow-sm lg:inline-flex"
+                className="hidden"
                 type="button"
                 onClick={() => setIsSidebarCollapsed((value) => !value)}
               >
@@ -253,21 +257,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </details>
           </nav>
 
-          <div className={`mt-6 rounded-md border border-stone-200 bg-white p-3 lg:mt-auto ${isSidebarCollapsed ? "lg:hidden" : ""}`}>
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Hệ thống
-            </div>
-            <div className="mt-2 space-y-2 text-sm text-slate-700">
-              <div className="flex items-center justify-between gap-3">
-                <span>API</span>
-                <span className="font-medium text-emerald-700">Hoạt động</span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span>Phiên</span>
-                <span className="font-medium text-slate-950">JWT</span>
-              </div>
-            </div>
-          </div>
         </div>
       </aside>
 

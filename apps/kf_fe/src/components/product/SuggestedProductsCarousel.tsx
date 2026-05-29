@@ -4,13 +4,31 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useApiResource } from "@/hooks/useApiResource";
-import type { Product } from "@/types/api";
+import type { PageResult, Product } from "@/types/api";
 
-export function SuggestedProductsCarousel({ productId }: { productId: string }) {
-  const related = useApiResource<Product[]>({
-    path: `/api/storefront/products/${productId}/related`,
+export function SuggestedProductsCarousel({ product }: { product: Product }) {
+  const relatedProducts = useApiResource<PageResult<Product> | Product[]>({
+    path: `/api/storefront/products/${product.slug || product.id}/related`,
+    query: { size: 12 },
   });
-  const products = related.data ?? [];
+  const categoryProducts = useApiResource<PageResult<Product>>({
+    enabled: Boolean(product.categoryId),
+    path: "/api/storefront/products",
+    query: { categoryId: product.categoryId, page: 0, size: 12, sort: "id,desc" },
+  });
+  const brandProducts = useApiResource<PageResult<Product>>({
+    enabled: Boolean(product.brand?.trim()),
+    path: "/api/storefront/products",
+    query: { brand: product.brand, page: 0, size: 12, sort: "id,desc" },
+  });
+
+  const products = mergeSuggestedProducts({
+    brandProducts: getProducts(brandProducts.data),
+    categoryProducts: getProducts(categoryProducts.data),
+    currentProductId: product.id,
+    relatedProducts: getProducts(relatedProducts.data),
+  });
+  const isLoading = relatedProducts.isLoading || categoryProducts.isLoading || brandProducts.isLoading;
 
   const scroll = (direction: "left" | "right") => {
     const element = document.getElementById("suggested-products");
@@ -34,7 +52,7 @@ export function SuggestedProductsCarousel({ productId }: { productId: string }) 
         </div>
       </div>
 
-      {related.isLoading ? (
+      {isLoading ? (
         <div className="flex gap-4 overflow-hidden">
           {Array.from({ length: 4 }).map((_, index) => (
             <div key={index} className="h-96 min-w-[260px] animate-pulse rounded-lg bg-stone-200" />
@@ -55,4 +73,38 @@ export function SuggestedProductsCarousel({ productId }: { productId: string }) 
       )}
     </section>
   );
+}
+
+function mergeSuggestedProducts({
+  brandProducts,
+  categoryProducts,
+  currentProductId,
+  relatedProducts,
+}: {
+  brandProducts: Product[];
+  categoryProducts: Product[];
+  currentProductId: number;
+  relatedProducts: Product[];
+}) {
+  const seen = new Set<number>([currentProductId]);
+  const result: Product[] = [];
+
+  [...categoryProducts, ...brandProducts, ...relatedProducts].forEach((item) => {
+    if (seen.has(item.id)) {
+      return;
+    }
+
+    seen.add(item.id);
+    result.push(item);
+  });
+
+  return result.slice(0, 12);
+}
+
+function getProducts(data?: PageResult<Product> | Product[] | null) {
+  if (!data) {
+    return [];
+  }
+
+  return Array.isArray(data) ? data : data.content;
 }
