@@ -29,6 +29,6 @@ export function useSiteSettings() {
 
   return {
     ...settings,
-    settings: settings.data ?? fallbackSiteSettings,
+    settings: { ...fallbackSiteSettings, ...(settings.data ?? {}) },
   };
 }

@@ -19,8 +19,11 @@ services:
       SPRINGDOC_SWAGGER_UI_URLS_PRIMARY_NAME: ${SPRINGDOC_SWAGGER_UI_URLS_PRIMARY_NAME:-02-admin-private}
       APP_JWT_SECRET: ${APP_JWT_SECRET:?APP_JWT_SECRET is required}
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-*}
+      KF_MEDIA_STORAGE_DIR: ${KF_MEDIA_STORAGE_DIR:-/app/uploads}
     ports:
       - "${BACKEND_PORT:-3398}:8080"
+    volumes:
+      - ./uploads:/app/uploads
 
   frontend:
     build:

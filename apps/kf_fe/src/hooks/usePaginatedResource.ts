@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getPage } from "@/lib/api";
+import { getCachedValue, invalidateApiCache, setCachedValue } from "@/lib/api/cache";
 import type { PageQuery, PageResult } from "@/types/api";
 
 type UsePaginatedResourceOptions = {
@@ -43,10 +44,12 @@ export function usePaginatedResource<T>({
     () => ({ page, size, search, sort, filters }),
     [filters, page, search, size, sort],
   );
+  const cacheKey = useMemo(() => `${path}?${JSON.stringify(query)}`, [path, query]);
 
   const refresh = useCallback(() => {
+    invalidateApiCache(path);
     setRefreshKey((current) => current + 1);
-  }, []);
+  }, [path]);
 
   const setSearch = useCallback((value: string) => {
     setPage(0);
@@ -68,6 +71,18 @@ export function usePaginatedResource<T>({
 
   useEffect(() => {
     const controller = new AbortController();
+    const cached = getCachedValue<PageResult<T>>(cacheKey);
+
+    if (cached) {
+      queueMicrotask(() => {
+        if (!controller.signal.aborted) {
+          setData(cached);
+          setError(null);
+          setIsLoading(false);
+        }
+      });
+      return () => controller.abort();
+    }
 
     queueMicrotask(() => {
       if (!controller.signal.aborted) {
@@ -77,14 +92,16 @@ export function usePaginatedResource<T>({
     });
 
     getPage<T>(path, query, { signal: controller.signal })
-      .then(setData)
+      .then((result) => {
+        setCachedValue(cacheKey, result);
+        setData(result);
+      })
       .catch((err: unknown) => {
         if (err instanceof DOMException && err.name === "AbortError") {
           return;
         }
 
         setError(err instanceof Error ? err.message : "Không thể tải dữ liệu");
-        setData(emptyPage<T>(page, size));
       })
       .finally(() => {
         if (!controller.signal.aborted) {
@@ -93,7 +110,7 @@ export function usePaginatedResource<T>({
       });
 
     return () => controller.abort();
-  }, [page, path, query, refreshKey, size]);
+  }, [cacheKey, page, path, query, refreshKey, size]);
 
   return {
     data,

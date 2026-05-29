@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { Copy, Edit3, ExternalLink, MoreHorizontal, Plus, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -17,9 +17,10 @@ import { Loader } from "@/components/ui/loader";
 import { Select } from "@/components/ui/select";
 import { findAdminResource } from "@/config/adminResources";
 import { getAdminResourceLabel } from "@/config/adminResourceDisplay";
-import { apiFetch, buildUrl } from "@/lib/api";
+import { apiFetch, buildUrl, mediaApi } from "@/lib/api";
 import { formatDate, formatMoney } from "@/lib/format";
 import { usePaginatedResource } from "@/hooks/usePaginatedResource";
+import type { MediaAsset } from "@/types/api";
 
 type AdminRow = Record<string, unknown>;
 type EditorMode = "create" | "edit";
@@ -106,6 +107,7 @@ function ResourceTable({
   const allVisibleSelected = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length;
   const apiUrl = buildUrl(resource.path, data.query);
   const resourceLabel = getAdminResourceLabel(resource.slug, resource.label);
+  const editorAtFinalStep = editor ? isEditorFinalStep(editor) : false;
 
   const columns = useMemo<Column<AdminRow>[]>(() => {
     const sampleKeys = data.data.content.flatMap((item) => Object.keys(item));
@@ -183,7 +185,7 @@ function ResourceTable({
                     <MoreHorizontal className="h-4 w-4" />
                     <span className="sr-only">Thao tác khác</span>
                   </summary>
-                  <div className="absolute right-0 z-20 mt-2 w-44 rounded-md border border-stone-200 bg-white p-1 shadow-lg">
+                  <div className="details-dropdown dropdown-panel absolute right-0 z-20 mt-2 w-44 rounded-md border border-stone-200 bg-white p-1 shadow-lg">
                     {actions.copy ? (
                       <button
                         className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-stone-50"
@@ -300,6 +302,7 @@ function ResourceTable({
 
     let body: Record<string, unknown>;
     try {
+      validateEditor(editor);
       body = buildRequestBody(editor);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Dữ liệu không hợp lệ";
@@ -429,7 +432,7 @@ function ResourceTable({
                 <MoreHorizontal className="h-4 w-4" />
                 Khác
               </summary>
-              <div className="absolute right-0 z-20 mt-2 w-48 rounded-md border border-stone-200 bg-white p-1 shadow-lg">
+              <div className="details-dropdown dropdown-panel absolute right-0 z-20 mt-2 w-48 rounded-md border border-stone-200 bg-white p-1 shadow-lg">
                 {resource.slug === "products" ? (
                   <Link
                     href="/products"
@@ -536,7 +539,7 @@ function ResourceTable({
               <Button disabled={isMutating} variant="outline" onClick={() => setEditor(null)}>
                 Hủy
               </Button>
-              <Button disabled={isMutating} onClick={saveEditor}>
+              <Button disabled={isMutating || !editorAtFinalStep} onClick={saveEditor}>
                 {isMutating ? "Đang lưu..." : "Lưu"}
               </Button>
               </div>
@@ -577,11 +580,11 @@ function EditorForm({
   return (
     <div>
       {steps.length > 1 ? (
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-4 grid gap-2 rounded-md border border-stone-200 bg-stone-50 p-2 sm:grid-cols-2 lg:grid-cols-3">
           {steps.map((step, index) => (
             <button
               key={index}
-              className={`rounded-md border px-3 py-1.5 text-sm font-medium transition ${
+              className={`rounded-md border px-3 py-2 text-left text-sm font-medium transition ${
                 index === editor.currentStep
                   ? "border-emerald-700 bg-emerald-50 text-emerald-800"
                   : "border-stone-200 bg-white text-slate-600 hover:bg-stone-50"
@@ -644,6 +647,52 @@ function FieldControl({
   field: EditorField;
   onChange: (value: string) => void;
 }) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
+  const [isLoadingMedia, setIsLoadingMedia] = useState(false);
+  const enumOptions = getEnumOptions(field.key);
+
+  useEffect(() => {
+    if (!isMediaField(field.key)) {
+      return;
+    }
+
+    let cancelled = false;
+    queueMicrotask(() => {
+      setIsLoadingMedia(true);
+      mediaApi.list({ page: 0, size: 80, sort: "id,desc" })
+        .then((result) => {
+          if (!cancelled) {
+            setMediaAssets(result.content);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setIsLoadingMedia(false);
+          }
+        });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [field.key]);
+
+  async function uploadMedia(file: File | undefined) {
+    if (!file) {
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const folder = mediaFolderForField(field.key);
+      const media = await mediaApi.upload(file, folder);
+      onChange(media.url);
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
   if (field.kind === "boolean") {
     return (
       <Select value={field.value} onChange={(event) => onChange(event.target.value)}>
@@ -666,12 +715,72 @@ function FieldControl({
     );
   }
 
-  return (
+  if (enumOptions.length > 0) {
+    return (
+      <Select value={field.value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">Chưa chọn</option>
+        {enumOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </Select>
+    );
+  }
+
+  const input = (
     <Input
       type={field.kind === "number" ? "number" : field.kind === "date" ? "datetime-local" : "text"}
       value={field.value}
       onChange={(event) => onChange(event.target.value)}
     />
+  );
+
+  if (!isMediaField(field.key)) {
+    return input;
+  }
+
+  return (
+    <div className="grid gap-2">
+      {input}
+      <div className="flex flex-wrap items-center gap-2">
+        <Select
+          className="h-9 w-60"
+          value=""
+          disabled={isLoadingMedia}
+          onChange={(event) => {
+            if (event.target.value) {
+              onChange(event.target.value);
+            }
+          }}
+        >
+          <option value="">{isLoadingMedia ? "Đang tải media..." : "Chọn media đã upload"}</option>
+          {mediaAssets.map((item) => (
+            <option key={item.id} value={item.url}>
+              {item.folder || "general"} / {item.name || item.originalFilename || item.url}
+            </option>
+          ))}
+        </Select>
+        <label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-stone-300 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-stone-50">
+          {isUploading ? "Đang upload..." : "Upload ảnh/video"}
+          <input
+            className="sr-only"
+            type="file"
+            accept="image/*,video/*"
+            disabled={isUploading}
+            onChange={(event) => uploadMedia(event.target.files?.[0])}
+          />
+        </label>
+        <span className="text-xs text-slate-500">Hoặc dán link media đã upload ở nơi khác.</span>
+      </div>
+      {field.value ? (
+        isVideoUrl(field.value) ? (
+          <video className="mt-1 max-h-40 rounded-md border border-stone-200 bg-black" src={field.value} controls />
+        ) : (
+          <img className="mt-1 max-h-40 rounded-md border border-stone-200 object-contain" src={field.value} alt="" />
+        )
+      ) : null}
+    </div>
   );
 }
 
@@ -756,6 +865,58 @@ function buildRequestBody(editor: EditorState) {
     body[field.key] = parseFieldValue(field);
     return body;
   }, {});
+}
+
+function validateEditor(editor: EditorState) {
+  const firstError = editor.fields
+    .map(validateField)
+    .find((error): error is string => Boolean(error));
+
+  if (firstError) {
+    throw new Error(firstError);
+  }
+}
+
+function validateField(field: EditorField) {
+  const value = field.value.trim();
+  if (isRequiredField(field) && value === "") {
+    return `${humanize(field.key)} là trường bắt buộc.`;
+  }
+
+  if (value === "") {
+    return null;
+  }
+
+  if (field.kind === "number" && Number.isNaN(Number(value))) {
+    return `${humanize(field.key)} phải là số.`;
+  }
+
+  if (field.kind === "array" || field.kind === "json") {
+    try {
+      JSON.parse(value);
+    } catch {
+      return `${humanize(field.key)} phải là JSON hợp lệ.`;
+    }
+  }
+
+  if (/email/i.test(field.key) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    return `${humanize(field.key)} chưa đúng định dạng email.`;
+  }
+
+  if (/(url|imageUrl|logoUrl)$/i.test(field.key) && !/^https?:\/\/|^\//i.test(value)) {
+    return `${humanize(field.key)} phải là URL hợp lệ.`;
+  }
+
+  return null;
+}
+
+function isRequiredField(field: EditorField) {
+  return /^(name|title|code|username|email|password|productId|price|sku|siteName)$/i.test(field.key);
+}
+
+function isEditorFinalStep(editor: EditorState) {
+  const totalSteps = Math.max(1, Math.ceil(editor.fields.length / fieldsPerStep));
+  return editor.currentStep + 1 >= totalSteps;
 }
 
 function parseFieldValue(field: EditorField) {
@@ -959,4 +1120,92 @@ function isStatusKey(key: string) {
 
 function isUrl(value: string) {
   return /^https?:\/\//i.test(value);
+}
+
+function getEnumOptions(key: string) {
+  const normalized = key.toLowerCase();
+
+  if (normalized === "status" || normalized.endsWith("status")) {
+    return options([
+      "ACTIVE",
+      "INACTIVE",
+      "DRAFT",
+      "PUBLISHED",
+      "ARCHIVED",
+      "NEW",
+      "PENDING",
+      "PROCESSING",
+      "APPROVED",
+      "REJECTED",
+      "PAID",
+      "UNPAID",
+      "SHIPPING",
+      "DELIVERED",
+      "COMPLETED",
+      "CANCELLED",
+      "RETURNED",
+    ]);
+  }
+
+  if (normalized === "type" || normalized.endsWith("type")) {
+    return options(["PERCENT", "FIXED", "PUBLIC", "PRIVATE", "NORMAL", "FEATURED", "SALE", "RELATED", "UPSELL", "CROSS_SELL"]);
+  }
+
+  if (normalized === "gender") {
+    return options(["UNISEX", "WOMEN", "MEN", "KIDS"]);
+  }
+
+  if (normalized === "season") {
+    return options(["SPRING", "SUMMER", "AUTUMN", "WINTER", "ALL_SEASON"]);
+  }
+
+  if (normalized === "placement") {
+    return options(["HOME_HERO", "HOME_TOP", "HOME_MIDDLE", "HOME_BOTTOM", "PRODUCT_LIST", "PRODUCT_DETAIL"]);
+  }
+
+  if (normalized === "discounttype") {
+    return options(["PERCENT", "FIXED"]);
+  }
+
+  if (normalized === "tier") {
+    return options(["BRONZE", "SILVER", "GOLD", "PLATINUM", "DIAMOND"]);
+  }
+
+  if (normalized === "role" || normalized === "roles") {
+    return options(["USER", "ADMIN", "SHIPPER", "STAFF"]);
+  }
+
+  if (normalized === "origin") {
+    return options(["Korea", "Vietnam", "China", "Japan", "Thailand"]);
+  }
+
+  return [];
+}
+
+function options(values: string[]) {
+  return values.map((value) => ({ label: humanize(value), value }));
+}
+
+function isMediaField(key: string) {
+  return /(image|video|media|logo|thumbnail|avatar).*url$/i.test(key) || /(imageUrl|videoUrl|logoUrl|thumbnailUrl|avatarUrl)$/i.test(key);
+}
+
+function mediaFolderForField(key: string) {
+  if (/video/i.test(key)) {
+    return "videos";
+  }
+  if (/logo/i.test(key)) {
+    return "logos";
+  }
+  if (/banner/i.test(key)) {
+    return "banners";
+  }
+  if (/avatar/i.test(key)) {
+    return "avatars";
+  }
+  return "images";
+}
+
+function isVideoUrl(value: string) {
+  return /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(value);
 }

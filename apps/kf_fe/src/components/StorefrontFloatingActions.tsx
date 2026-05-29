@@ -1,13 +1,14 @@
 "use client";
 
-import { ArrowUp, Globe, MessageCircle, Phone, Send } from "lucide-react";
+import { ArrowUp, MessageCircle, Phone, Send } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 type FloatingAction = {
   href: string;
-  icon: typeof MessageCircle;
+  icon: LucideIcon;
   label: string;
 };
 
@@ -28,15 +29,12 @@ export function StorefrontFloatingActions() {
   const actions: FloatingAction[] = [
     settings.messengerUrl ? { href: settings.messengerUrl, icon: MessageCircle, label: "Messenger" } : null,
     settings.zaloUrl ? { href: settings.zaloUrl, icon: Send, label: "Zalo" } : null,
-    settings.facebookUrl ? { href: settings.facebookUrl, icon: Globe, label: "Facebook" } : null,
-    settings.instagramUrl ? { href: settings.instagramUrl, icon: Globe, label: "Instagram" } : null,
-    settings.youtubeUrl ? { href: settings.youtubeUrl, icon: Globe, label: "Youtube" } : null,
     settings.hotline ? { href: `tel:${settings.hotline.replace(/\s/g, "")}`, icon: Phone, label: settings.hotline } : null,
   ].filter(Boolean) as FloatingAction[];
 
   return (
     <div className="fixed bottom-5 right-4 z-50 flex flex-col items-end gap-2">
-      {actions.slice(0, 5).map((action) => {
+      {actions.slice(0, 5).map((action, index) => {
         const Icon = action.icon;
         return (
           <a
@@ -45,12 +43,13 @@ export function StorefrontFloatingActions() {
             target={action.href.startsWith("http") ? "_blank" : undefined}
             rel={action.href.startsWith("http") ? "noreferrer" : undefined}
             className="group flex items-center gap-2"
+            style={{ animationDelay: `${index * 60}ms` }}
             aria-label={action.label}
           >
-            <span className="pointer-events-none translate-x-2 rounded-md bg-stone-950 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-sm transition group-hover:translate-x-0 group-hover:opacity-100">
+            <span className="pointer-events-none translate-x-2 rounded-md bg-stone-950 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-sm transition duration-200 group-hover:translate-x-0 group-hover:opacity-100">
               {action.label}
             </span>
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-stone-950 text-white shadow-lg ring-1 ring-white/20 transition hover:bg-rose-700">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-stone-950 text-white shadow-lg ring-1 ring-white/20 transition duration-200 hover:-translate-y-0.5 hover:bg-rose-700">
               <Icon className="h-5 w-5" />
             </span>
           </a>
@@ -62,7 +61,7 @@ export function StorefrontFloatingActions() {
           size="icon"
           variant="outline"
           aria-label="Lên đầu trang"
-          className="h-11 w-11 rounded-full bg-white shadow-lg"
+          className="h-11 w-11 rounded-full bg-white shadow-lg transition hover:-translate-y-0.5"
           onClick={() => window.scrollTo({ behavior: "smooth", top: 0 })}
         >
           <ArrowUp className="h-4 w-4" />

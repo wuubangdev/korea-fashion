@@ -126,7 +126,7 @@ export function StoreHeader() {
               Sản phẩm
               <ChevronDown aria-hidden className="h-4 w-4" />
             </Link>
-            <div className="invisible absolute left-0 top-full w-64 translate-y-2 rounded-md border border-stone-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+            <div className="dropdown-panel invisible absolute left-0 top-full w-64 translate-y-2 scale-[0.98] rounded-md border border-stone-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-100">
               <Link href="/products" className="block rounded-md px-3 py-2 text-stone-700 hover:bg-stone-100 hover:text-stone-950">
                 Tất cả sản phẩm
               </Link>
@@ -151,7 +151,7 @@ export function StoreHeader() {
               Thương hiệu
               <ChevronDown aria-hidden className="h-4 w-4" />
             </Link>
-            <div className="invisible absolute left-0 top-full w-60 translate-y-2 rounded-md border border-stone-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+            <div className="dropdown-panel invisible absolute left-0 top-full w-60 translate-y-2 scale-[0.98] rounded-md border border-stone-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-100">
               {brands.length ? (
                 brands.map((brand) => (
                   <Link
@@ -187,7 +187,7 @@ export function StoreHeader() {
                   {getInitials(accountName)}
                 </span>
               </Button>
-              <div className="invisible absolute right-0 top-full w-56 translate-y-2 rounded-md border border-stone-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+              <div className="dropdown-panel invisible absolute right-0 top-full w-56 translate-y-2 scale-[0.98] rounded-md border border-stone-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-100">
                 <div className="border-b border-stone-100 px-3 py-2">
                   <p className="truncate text-sm font-semibold text-stone-950">{accountName}</p>
                   <p className="mt-0.5 text-xs text-stone-500">Đang đăng nhập</p>

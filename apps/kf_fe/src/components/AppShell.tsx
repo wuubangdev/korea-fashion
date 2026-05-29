@@ -15,6 +15,7 @@ import { adminResourceGroupLabels, adminResourceGroups, adminResources } from "@
 import { getAdminGroupLabel, getAdminResourceLabel } from "@/config/adminResourceDisplay";
 
 const primaryNav = [
+  { href: "/admin/media", icon: Package, label: "Media", meta: "Ảnh, video, thư mục" },
   { href: "/admin", icon: Home, label: "Tổng quan", meta: "Sức khỏe cửa hàng" },
   { href: "/admin/resources/orders", icon: ReceiptText, label: "Đơn hàng", meta: "Xử lý việc cần làm" },
   { href: "/admin/resources/products", icon: Package, label: "Sản phẩm", meta: "Giá, tồn kho, hình ảnh" },

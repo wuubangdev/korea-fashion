@@ -1,4 +1,5 @@
 import type { PageQuery, PageResult } from "@/types/api";
+import { invalidateApiCache } from "@/lib/api/cache";
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
@@ -84,11 +85,12 @@ export async function apiFetch<T>(
 ) {
   const token = options?.token ?? getStoredToken();
   const hasBody = options?.body !== undefined;
+  const isFormData = typeof FormData !== "undefined" && options?.body instanceof FormData;
   const response = await fetch(buildUrl(path, query), {
-    body: hasBody ? JSON.stringify(options.body) : undefined,
+    body: hasBody ? (isFormData ? options.body as BodyInit : JSON.stringify(options.body)) : undefined,
     headers: {
       Accept: "application/json",
-      ...(hasBody ? { "Content-Type": "application/json" } : {}),
+      ...(hasBody && !isFormData ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
@@ -102,10 +104,17 @@ export async function apiFetch<T>(
   }
 
   if (response.status === 204) {
+    if ((options?.method ?? (hasBody ? "POST" : "GET")) !== "GET") {
+      invalidateApiCache();
+    }
     return undefined as T;
   }
 
-  return unwrapApiResponse<T>(await response.json());
+  const result = unwrapApiResponse<T>(await response.json());
+  if ((options?.method ?? (hasBody ? "POST" : "GET")) !== "GET") {
+    invalidateApiCache();
+  }
+  return result;
 }
 
 export async function apiGet<T>(

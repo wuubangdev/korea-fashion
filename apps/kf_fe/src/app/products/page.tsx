@@ -187,7 +187,7 @@ function ProductsContent() {
             </div>
           ) : null}
 
-          {products.isLoading ? (
+          {products.isLoading && filteredProducts.length === 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (
                 <div key={index} className="h-96 animate-pulse rounded-lg bg-stone-200" />
@@ -207,10 +207,17 @@ function ProductsContent() {
               </div>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+            <div className="relative">
+              {products.isLoading ? (
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-1 overflow-hidden rounded-full bg-emerald-50">
+                  <div className="h-full w-1/3 animate-loading-bar bg-emerald-600" />
+                </div>
+              ) : null}
+              <div className={`grid gap-4 sm:grid-cols-2 xl:grid-cols-3 ${products.isLoading ? "opacity-75" : ""}`}>
+                {filteredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
             </div>
           )}
 

@@ -41,6 +41,38 @@ button:disabled,
   animation: fade-in 180ms ease-out;
 }
 
+.scroll-reveal {
+  animation: fade-in 420ms ease-out both;
+  animation-timeline: view();
+  animation-range: entry 0% cover 28%;
+}
+
+.dropdown-panel {
+  transform-origin: top;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease,
+    visibility 160ms ease;
+}
+
+.group[open] > .details-dropdown,
+.group:hover > .details-dropdown,
+.group:focus-within > .details-dropdown {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.details-dropdown {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+}
+
+.animate-loading-bar {
+  animation: loading-bar 900ms ease-in-out infinite;
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -50,5 +82,15 @@ button:disabled,
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes loading-bar {
+  from {
+    transform: translateX(-120%);
+  }
+
+  to {
+    transform: translateX(320%);
   }
 }

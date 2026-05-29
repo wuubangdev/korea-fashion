@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { getCachedValue, invalidateApiCache, setCachedValue } from "@/lib/api/cache";
 
 type UseApiResourceOptions = {
   enabled?: boolean;
@@ -21,10 +22,12 @@ export function useApiResource<TData>({
   const [isLoading, setIsLoading] = useState(enabled);
   const [refreshKey, setRefreshKey] = useState(0);
   const queryKey = useMemo(() => JSON.stringify(query ?? {}), [query]);
+  const cacheKey = useMemo(() => `${path}?${queryKey}`, [path, queryKey]);
 
   const revalidate = useCallback(() => {
+    invalidateApiCache(path);
     setRefreshKey((current) => current + 1);
-  }, []);
+  }, [path]);
 
   useEffect(() => {
     if (!enabled) {
@@ -32,6 +35,18 @@ export function useApiResource<TData>({
     }
 
     const controller = new AbortController();
+    const cached = getCachedValue<TData>(cacheKey);
+
+    if (cached) {
+      queueMicrotask(() => {
+        if (!controller.signal.aborted) {
+          setData(cached);
+          setError(null);
+          setIsLoading(false);
+        }
+      });
+      return () => controller.abort();
+    }
 
     queueMicrotask(() => {
       if (!controller.signal.aborted) {
@@ -45,14 +60,16 @@ export function useApiResource<TData>({
       signal: controller.signal,
       token,
     })
-      .then(setData)
+      .then((result) => {
+        setCachedValue(cacheKey, result);
+        setData(result);
+      })
       .catch((err: unknown) => {
         if (err instanceof DOMException && err.name === "AbortError") {
           return;
         }
 
         setError(err instanceof Error ? err.message : "Không thể tải dữ liệu");
-        setData(null);
       })
       .finally(() => {
         if (!controller.signal.aborted) {
@@ -61,7 +78,7 @@ export function useApiResource<TData>({
       });
 
     return () => controller.abort();
-  }, [enabled, path, queryKey, refreshKey, token]);
+  }, [cacheKey, enabled, path, queryKey, refreshKey, token]);
 
   return { data, error, isLoading, revalidate };
 }
