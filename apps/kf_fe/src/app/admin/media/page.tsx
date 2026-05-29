@@ -91,6 +91,18 @@ export default function AdminMediaPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
+  const selectedFilePreviews = useMemo(
+    () => selectedFiles.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    [selectedFiles],
+  );
+
+  useEffect(
+    () => () => {
+      selectedFilePreviews.forEach((item) => URL.revokeObjectURL(item.url));
+    },
+    [selectedFilePreviews],
+  );
+
   async function createFolder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!newFolder.trim()) {
@@ -322,9 +334,33 @@ export default function AdminMediaPage() {
             Hoặc tạo thư mục mới khi upload
             <Input className="mt-1" value={uploadNewFolder} placeholder="lookbook/drop-1" onChange={(event) => setUploadNewFolder(event.target.value)} />
           </label>
-          <label className="mt-3 flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-stone-300 bg-stone-50 p-4 text-center text-sm text-stone-600 hover:bg-stone-100">
-            <Upload className="mb-2 h-5 w-5" />
+          <label className="mt-3 block cursor-pointer rounded-md border border-dashed border-stone-300 bg-stone-50 p-3 text-sm text-stone-600 hover:bg-stone-100">
+            {selectedFilePreviews.length ? (
+              <div className="grid max-h-80 gap-3 overflow-y-auto sm:grid-cols-2">
+                {selectedFilePreviews.map(({ file, url }) => (
+                  <div key={`${file.name}-${file.size}-${file.lastModified}`} className="overflow-hidden rounded-md border border-stone-200 bg-white">
+                    <div className="grid aspect-video place-items-center bg-stone-100">
+                      {file.type.startsWith("video/") ? (
+                        <video className="h-full w-full object-cover" src={url} muted controls />
+                      ) : file.type.startsWith("image/") ? (
+                        <img className="h-full w-full object-cover" src={url} alt={file.name} />
+                      ) : (
+                        <Upload className="h-6 w-6 text-stone-400" />
+                      )}
+                    </div>
+                    <div className="p-2">
+                      <div className="truncate text-xs font-medium text-stone-800">{file.name}</div>
+                      <div className="mt-1 text-xs text-stone-500">{formatFileSize(file.size)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex min-h-32 flex-col items-center justify-center text-center">
+                <Upload className="mb-2 h-5 w-5" />
             Chọn hoặc kéo thả file
+              </div>
+            )}
             <input
               className="sr-only"
               type="file"
@@ -333,15 +369,6 @@ export default function AdminMediaPage() {
               onChange={(event) => setSelectedFiles(Array.from(event.target.files ?? []))}
             />
           </label>
-          {selectedFiles.length ? (
-            <div className="mt-2 max-h-28 overflow-auto rounded-md bg-stone-50 p-2 text-xs text-stone-600">
-              {selectedFiles.map((file) => (
-                <div key={`${file.name}-${file.size}`} className="truncate">
-                  {file.name}
-                </div>
-              ))}
-            </div>
-          ) : null}
           <div className="mt-4 flex justify-end gap-2">
             <Button variant="outline" onClick={() => setModal(null)}>
               Hủy
@@ -563,4 +590,16 @@ function Modal({
 
 function displayName(item: MediaAsset) {
   return item.name || item.originalFilename || item.url;
+}
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }

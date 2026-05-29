@@ -110,7 +110,7 @@ export async function apiFetch<T>(
     return undefined as T;
   }
 
-  const result = unwrapApiResponse<T>(await response.json());
+  const result = unwrapApiResponse<T>(await readResponseBody(response));
   if ((options?.method ?? (hasBody ? "POST" : "GET")) !== "GET") {
     invalidateApiCache();
   }
@@ -140,6 +140,15 @@ async function readError(response: Response) {
   } catch {
     return `Request failed (${response.status})`;
   }
+}
+
+async function readResponseBody(response: Response) {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    return response.json();
+  }
+
+  return response.text();
 }
 
 function unwrapApiResponse<T>(body: unknown) {

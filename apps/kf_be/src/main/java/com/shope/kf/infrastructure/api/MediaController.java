@@ -67,9 +67,13 @@ public class MediaController {
             @RequestParam(defaultValue = "id,desc") String sort
     ) {
         var pageable = PageMapper.toPageable(PageQuery.of(page, size, sort));
-        var result = StringUtils.hasText(folder)
+        boolean hasFolder = StringUtils.hasText(folder);
+        boolean hasSearch = StringUtils.hasText(search);
+        var result = hasFolder && hasSearch
+                ? repository.searchInFolder(folder, search, pageable)
+                : hasFolder
                 ? repository.findByFolder(folder, pageable)
-                : StringUtils.hasText(search)
+                : hasSearch
                 ? repository.findByFolderContainingIgnoreCaseOrNameContainingIgnoreCaseOrOriginalFilenameContainingIgnoreCase(search, search, search, pageable)
                 : repository.findAll(pageable);
         return ResponseEntity.ok(PageMapper.toResult(result, item -> item));
@@ -93,7 +97,7 @@ public class MediaController {
     }
 
     @PostMapping("/folders")
-    public ResponseEntity<String> createFolder(@Valid @RequestBody FolderRequest request) {
+    public ResponseEntity<FolderResponse> createFolder(@Valid @RequestBody FolderRequest request) {
         String folder = sanitizeFolder(request.folder());
         Path targetFolder = storageDir.resolve(folder).normalize();
         if (!targetFolder.startsWith(storageDir)) {
@@ -106,7 +110,7 @@ public class MediaController {
             throw new AppException(ErrorCode.INTERNAL_ERROR, "Cannot create folder");
         }
 
-        return ResponseEntity.ok(folder);
+        return ResponseEntity.ok(new FolderResponse(folder));
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -287,6 +291,11 @@ public class MediaController {
 
     public record FolderRequest(
             @NotBlank String folder
+    ) {
+    }
+
+    public record FolderResponse(
+            String folder
     ) {
     }
 

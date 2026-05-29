@@ -6,6 +6,7 @@ services:
     image: kor-fashion-backend:prod
     container_name: kf_backend
     restart: unless-stopped
+    user: root
     environment:
       SPRING_APPLICATION_NAME: kf
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:?SPRING_DATASOURCE_URL is required}

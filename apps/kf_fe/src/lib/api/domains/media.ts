@@ -13,9 +13,14 @@ export type UpdateMediaPayload = {
   url?: string;
 };
 
+type CreateFolderResponse = {
+  folder: string;
+};
+
 export const mediaApi = {
   createFolder: (folder: string, options?: RequestOptions) =>
-    apiFetch<string>("/api/media/folders", undefined, { ...options, body: { folder }, method: "POST" }),
+    apiFetch<CreateFolderResponse>("/api/media/folders", undefined, { ...options, body: { folder }, method: "POST" })
+      .then((result) => result.folder),
   createLink: (body: CreateMediaLinkPayload, options?: RequestOptions) =>
     apiFetch<MediaAsset>("/api/media/link", undefined, { ...options, body, method: "POST" }),
   delete: (id: number, options?: RequestOptions) =>
