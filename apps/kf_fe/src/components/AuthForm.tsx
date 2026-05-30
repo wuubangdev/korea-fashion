@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { saveAuthSession } from "@/lib/auth";
+import { hasAdminAccessToken } from "@/lib/authRoles";
 import type { AuthRequest, AuthResponse } from "@/types/api";
 
 export type AuthMode = "login" | "register";
@@ -82,7 +83,7 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps) {
       });
 
       saveAuthSession(result);
-      router.push(isRegister ? getSafeNextPath() : getSafeNextPath(result));
+      router.push(getSafeNextPath(result));
     } catch {
       // Error state is handled by useApiMutation.
     }
@@ -252,26 +253,15 @@ function validateRegister({ email, password, username }: AuthRequest) {
 
 function getSafeNextPath(auth?: AuthResponse) {
   const nextPath = new URLSearchParams(window.location.search).get("next");
+  const hasAdminAccess = auth ? hasAdminAccessToken(auth.token) : false;
 
   if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//")) {
-    return auth && hasAdminRole(auth.token) ? "/admin" : "/profile";
+    return hasAdminAccess ? "/admin" : "/profile";
+  }
+
+  if (nextPath.startsWith("/admin") && !hasAdminAccess) {
+    return "/profile";
   }
 
   return nextPath;
-}
-
-function hasAdminRole(token: string) {
-  const [, payload] = token.split(".");
-  if (!payload) {
-    return false;
-  }
-
-  try {
-    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
-    const parsed = JSON.parse(window.atob(padded)) as { roles?: string[] };
-    return parsed.roles?.some((role) => role === "ADMIN" || role === "ROLE_ADMIN") ?? false;
-  } catch {
-    return false;
-  }
 }
