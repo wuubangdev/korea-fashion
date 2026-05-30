@@ -25,6 +25,7 @@ export function ProductCard({ product }: { product: Product }) {
     compareAtPrice > price && price > 0
       ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
       : 0;
+  const productPath = `/products/${product.slug || product.id}`;
 
   const handleWishlist = async () => {
     const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
@@ -45,7 +46,7 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <article className="card-enter hover-lift group overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm shadow-stone-950/5">
       <div className="relative">
-        <Link href={`/products/${product.id}`} className="block overflow-hidden bg-stone-100">
+        <Link href={productPath} className="block overflow-hidden bg-stone-100">
           <SafeImage
             alt={product.name}
             className="soft-shine aspect-[4/5] transition duration-700 ease-out group-hover:scale-[1.045]"
@@ -71,7 +72,7 @@ export function ProductCard({ product }: { product: Product }) {
       <div className="p-4">
         <div className="min-w-0">
           <p className="truncate text-xs font-semibold uppercase tracking-wide text-stone-500">{product.brand || "Korea Fashion"}</p>
-          <Link href={`/products/${product.id}`} className="mt-1 line-clamp-2 min-h-10 block text-sm font-semibold leading-5 text-stone-950 transition hover:text-emerald-800">
+          <Link href={productPath} className="mt-1 line-clamp-2 min-h-10 block text-sm font-semibold leading-5 text-stone-950 transition hover:text-emerald-800">
             {product.name}
           </Link>
         </div>

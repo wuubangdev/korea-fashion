@@ -12,7 +12,17 @@ const fallbackSeoSettings: SiteSetting = {
   seoThumbnailUrl: "/korea-fashion-logo.svg",
 };
 
-function getPublicSiteUrl(settings?: SiteSetting) {
+export type SeoMetadataInput = {
+  canonicalPath?: string;
+  description?: string;
+  imageAlt?: string;
+  imageUrl?: string;
+  keywords?: string | string[];
+  title?: string;
+  type?: "website" | "article";
+};
+
+export function getPublicSiteUrl(settings?: SiteSetting) {
   const rawUrl =
     settings?.canonicalUrl ||
     process.env.NEXT_PUBLIC_SITE_URL ||
@@ -28,7 +38,7 @@ function getPublicSiteUrl(settings?: SiteSetting) {
   }
 }
 
-function toAbsoluteUrl(value: string | undefined, baseUrl: URL) {
+export function toAbsoluteUrl(value: string | undefined, baseUrl: URL) {
   if (!value) {
     return undefined;
   }
@@ -40,14 +50,15 @@ function toAbsoluteUrl(value: string | undefined, baseUrl: URL) {
   }
 }
 
-function parseKeywords(value: string | undefined) {
-  return value
-    ?.split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
+function parseKeywords(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value.map((item) => item.trim()).filter(Boolean);
+  }
+
+  return value?.split(",").map((item) => item.trim()).filter(Boolean);
 }
 
-async function getSeoSettings() {
+export async function getSeoSettings() {
   try {
     const settings = await storefrontApi.siteSettings({
       next: { revalidate: 300, tags: ["site-settings"] },
@@ -59,21 +70,26 @@ async function getSeoSettings() {
   }
 }
 
-export async function generateSeoMetadata(): Promise<Metadata> {
+export async function generateSeoMetadata(input: SeoMetadataInput = {}): Promise<Metadata> {
   const settings = await getSeoSettings();
   const baseUrl = getPublicSiteUrl(settings);
-  const title = settings.seoTitle || settings.siteName || fallbackSeoSettings.siteName;
+  const title = input.title || settings.seoTitle || settings.siteName || fallbackSeoSettings.siteName;
   const description =
+    input.description ||
     settings.seoDescription ||
     settings.siteDescription ||
     fallbackSeoSettings.seoDescription ||
     "";
   const thumbnailUrl =
+    toAbsoluteUrl(input.imageUrl, baseUrl) ||
     toAbsoluteUrl(settings.seoThumbnailUrl, baseUrl) ||
     toAbsoluteUrl(settings.mainLogoUrl, baseUrl);
-  const canonicalUrl = toAbsoluteUrl(settings.canonicalUrl, baseUrl) || baseUrl.toString();
+  const canonicalUrl =
+    toAbsoluteUrl(input.canonicalPath, baseUrl) ||
+    toAbsoluteUrl(settings.canonicalUrl, baseUrl) ||
+    baseUrl.toString();
   const image = thumbnailUrl
-    ? [{ url: thumbnailUrl, width: 1200, height: 630, alt: title }]
+    ? [{ url: thumbnailUrl, width: 1200, height: 630, alt: input.imageAlt || title }]
     : undefined;
 
   return {
@@ -82,7 +98,7 @@ export async function generateSeoMetadata(): Promise<Metadata> {
       canonical: canonicalUrl,
     },
     description,
-    keywords: parseKeywords(settings.seoKeywords),
+    keywords: parseKeywords(input.keywords ?? settings.seoKeywords),
     metadataBase: baseUrl,
     openGraph: {
       description,
@@ -90,7 +106,7 @@ export async function generateSeoMetadata(): Promise<Metadata> {
       locale: "vi_VN",
       siteName: settings.siteName,
       title,
-      type: "website",
+      type: input.type ?? "website",
       url: canonicalUrl,
     },
     robots: {
