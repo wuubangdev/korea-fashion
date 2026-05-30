@@ -12,6 +12,7 @@ import com.shope.kf.infrastructure.api.dto.response.ApiResponse;
 import com.shope.kf.infrastructure.api.mapper.ProductApiMapper;
 import com.shope.kf.infrastructure.persistence.jpa.ReviewJpaEntity;
 import com.shope.kf.infrastructure.persistence.jpa.mapper.PageMapper;
+import com.shope.kf.infrastructure.persistence.repository.ReviewImageJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.ReviewJpaRepository;
 import com.shope.kf.infrastructure.security.RoleConstants;
 import org.springframework.http.ResponseEntity;
@@ -26,10 +27,12 @@ public class ProductController {
 
     private final ProductUseCase productUseCase;
     private final ReviewJpaRepository reviewRepository;
+    private final ReviewImageJpaRepository reviewImageRepository;
 
-    public ProductController(ProductUseCase productUseCase, ReviewJpaRepository reviewRepository) {
+    public ProductController(ProductUseCase productUseCase, ReviewJpaRepository reviewRepository, ReviewImageJpaRepository reviewImageRepository) {
         this.productUseCase = productUseCase;
         this.reviewRepository = reviewRepository;
+        this.reviewImageRepository = reviewImageRepository;
     }
 
     @com.shope.kf.infrastructure.security.RequireAuth
@@ -98,8 +101,13 @@ public class ProductController {
     ) {
         return ResponseEntity.ok(PageMapper.toResult(
                 reviewRepository.findByProductIdAndStatusIgnoreCase(id, "APPROVED", PageMapper.toPageable(PageQuery.of(page, size, sort))),
-                review -> review
+                this::withImages
         ));
+    }
+
+    private ReviewJpaEntity withImages(ReviewJpaEntity review) {
+        review.setImages(reviewImageRepository.findByReviewIdAndActiveTrueOrderByDisplayOrderAscIdAsc(review.getId()));
+        return review;
     }
 
     @com.shope.kf.infrastructure.security.RequireAuth

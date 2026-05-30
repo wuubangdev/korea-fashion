@@ -82,7 +82,7 @@ export const adminResources: AdminResource[] = [
   { slug: "site-settings", label: "Cấu hình website", path: "/api/site-settings", group: "Content", description: "Logo, SEO, liên hệ và cấu hình cửa hàng.", preferredColumns: ["id", "siteName", "hotline", "email", "canonicalUrl"] },
   { slug: "store-policies", label: "Chính sách", path: "/api/store-policies", group: "Content", description: "Chính sách cửa hàng.", preferredColumns: ["id", "title", "slug", "active"] },
 
-  { slug: "users", label: "Người dùng", path: "/api/users", group: "Accounts", description: "Tài khoản và vai trò.", preferredColumns: ["id", "username", "email", "roles"] },
+  { slug: "users", label: "Người dùng", path: "/api/users", group: "Accounts", description: "Tài khoản và vai trò.", preferredColumns: ["id", "username", "fullName", "email", "phone", "roles"] },
   { slug: "admins", label: "Quản trị viên", path: "/api/admins", group: "Accounts", description: "Tài khoản quản trị.", preferredColumns: ["id", "username", "email", "active"] },
   { slug: "members", label: "Thành viên", path: "/api/members", group: "Accounts", description: "Hồ sơ khách hàng thành viên.", preferredColumns: ["id", "userId", "name", "phone", "tier"] },
   { slug: "guest-customers", label: "Khách vãng lai", path: "/api/guest-customers", group: "Accounts", description: "Thông tin khách không đăng nhập.", preferredColumns: ["id", "name", "phone", "email"] },

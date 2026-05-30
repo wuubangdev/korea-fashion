@@ -45,6 +45,13 @@ public class UserService implements UserUseCase {
         User existing = findById(id);
         existing.setUsername(user.getUsername() == null ? existing.getUsername() : user.getUsername());
         existing.setEmail(user.getEmail() == null ? existing.getEmail() : user.getEmail());
+        existing.setFullName(user.getFullName() == null ? existing.getFullName() : user.getFullName());
+        existing.setPhone(user.getPhone() == null ? existing.getPhone() : user.getPhone());
+        existing.setAddress(user.getAddress() == null ? existing.getAddress() : user.getAddress());
+        existing.setCity(user.getCity() == null ? existing.getCity() : user.getCity());
+        existing.setDistrict(user.getDistrict() == null ? existing.getDistrict() : user.getDistrict());
+        existing.setWard(user.getWard() == null ? existing.getWard() : user.getWard());
+        existing.setAvatarUrl(user.getAvatarUrl() == null ? existing.getAvatarUrl() : user.getAvatarUrl());
         existing.setRoles(user.getRoles() == null ? existing.getRoles() : user.getRoles());
         if (user.getPassword() != null && !user.getPassword().isBlank()) {
             existing.setPassword(passwordHasher.hash(user.getPassword()));

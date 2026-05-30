@@ -10,4 +10,6 @@ public interface ReviewJpaRepository extends JpaRepository<ReviewJpaEntity, Stri
     Page<ReviewJpaEntity> findByProductIdAndStatusIgnoreCase(Long productId, String status, Pageable pageable);
 
     Page<ReviewJpaEntity> findByUserId(Long userId, Pageable pageable);
+
+    Page<ReviewJpaEntity> findByProductIdAndStatusIgnoreCaseAndParentReviewIdIsNull(Long productId, String status, Pageable pageable);
 }

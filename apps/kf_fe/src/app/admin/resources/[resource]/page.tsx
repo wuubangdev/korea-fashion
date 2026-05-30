@@ -68,7 +68,7 @@ const createFieldHints: Record<string, string[]> = {
   sizes: ["name", "code", "displayOrder"],
   "site-settings": ["siteName", "hotline", "email", "canonicalUrl"],
   suppliers: ["name", "phone", "email", "active"],
-  users: ["username", "email", "password", "roles"],
+  users: ["username", "email", "password", "fullName", "phone", "address", "city", "district", "ward", "avatarUrl", "roles"],
   variants: ["productId", "sku", "sizeId", "colorId", "price", "stockQuantity"],
 };
 
@@ -79,7 +79,7 @@ const editFieldHints: Record<string, string[]> = {
   payments: ["status", "method", "paidAt"],
   products: ["name", "sku", "brand", "categoryId", "price", "stockQuantity", "status", "description", "imageUrl"],
   reviews: ["status", "adminReply"],
-  users: ["username", "email", "roles"],
+  users: ["username", "email", "fullName", "phone", "address", "city", "district", "ward", "avatarUrl", "roles"],
 };
 
 export default function AdminResourcePage() {

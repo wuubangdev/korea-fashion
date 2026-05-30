@@ -25,6 +25,27 @@ public class UserJpaEntity extends BaseJpaEntity {
     @Column(unique = true)
     private String email;
 
+    @Column(length = 120)
+    private String fullName;
+
+    @Column(length = 30)
+    private String phone;
+
+    @Column(length = 500)
+    private String address;
+
+    @Column(length = 120)
+    private String city;
+
+    @Column(length = 120)
+    private String district;
+
+    @Column(length = 120)
+    private String ward;
+
+    @Column(length = 500)
+    private String avatarUrl;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),

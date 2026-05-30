@@ -18,6 +18,13 @@ public final class UserApiMapper {
                 .username(request.getUsername())
                 .password(request.getPassword())
                 .email(request.getEmail())
+                .fullName(request.getFullName())
+                .phone(request.getPhone())
+                .address(request.getAddress())
+                .city(request.getCity())
+                .district(request.getDistrict())
+                .ward(request.getWard())
+                .avatarUrl(request.getAvatarUrl())
                 .roles(toRoles(request.getRoles()))
                 .build();
     }
@@ -27,6 +34,13 @@ public final class UserApiMapper {
                 .username(request.getUsername())
                 .password(request.getPassword())
                 .email(request.getEmail())
+                .fullName(request.getFullName())
+                .phone(request.getPhone())
+                .address(request.getAddress())
+                .city(request.getCity())
+                .district(request.getDistrict())
+                .ward(request.getWard())
+                .avatarUrl(request.getAvatarUrl())
                 .roles(toRoles(request.getRoles()))
                 .build();
     }
@@ -39,6 +53,13 @@ public final class UserApiMapper {
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .fullName(user.getFullName())
+                .phone(user.getPhone())
+                .address(user.getAddress())
+                .city(user.getCity())
+                .district(user.getDistrict())
+                .ward(user.getWard())
+                .avatarUrl(user.getAvatarUrl())
                 .roles(roles)
                 .build();
     }
