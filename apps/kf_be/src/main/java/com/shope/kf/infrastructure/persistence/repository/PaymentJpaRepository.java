@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface PaymentJpaRepository extends JpaRepository<PaymentJpaEntity, String>, JpaSpecificationExecutor<PaymentJpaEntity> {
     @Query("""
             select p
@@ -17,4 +19,6 @@ public interface PaymentJpaRepository extends JpaRepository<PaymentJpaEntity, St
             )
             """)
     Page<PaymentJpaEntity> findByCustomerId(@Param("userId") Long userId, Pageable pageable);
+
+    Optional<PaymentJpaEntity> findFirstByOrderIdOrderByUpdatedAtDescIdDesc(Long orderId);
 }

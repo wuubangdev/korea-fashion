@@ -5,7 +5,16 @@ type StatusBadgeProps = {
 };
 
 export function StatusBadge({ value }: StatusBadgeProps) {
-  const label = value || "N/A";
+  const normalized = String(value || "N/A").toUpperCase();
+  const label = normalized.replace(/_/g, " ");
+  const variant =
+    ["DELIVERED", "PAID", "COMPLETED", "SUCCESS", "CONFIRMED"].includes(normalized)
+      ? "success"
+      : ["NEW", "PENDING", "PROCESSING", "SHIPPED", "UNPAID", "UNFULFILLED"].includes(normalized)
+        ? "warning"
+        : ["CANCELLED", "FAILED", "RETURNED", "REFUNDED"].includes(normalized)
+          ? "danger"
+          : "secondary";
 
-  return <Badge>{label}</Badge>;
+  return <Badge variant={variant}>{label}</Badge>;
 }

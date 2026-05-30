@@ -21,6 +21,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
+import { AdminNotificationBell } from "@/components/AdminNotificationBell";
 import { adminResourceGroupLabels, adminResources } from "@/config/adminResources";
 import { getAdminGroupLabel, getAdminResourceLabel } from "@/config/adminResourceDisplay";
 
@@ -286,6 +287,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="truncate text-lg font-semibold tracking-tight">
                 Quản lý cửa hàng Korea Fashion
               </div>
+            </div>
+            <div className="ml-auto">
+              <AdminNotificationBell />
             </div>
           </div>
         </header>

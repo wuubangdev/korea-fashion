@@ -4,17 +4,20 @@ import { ChevronDown, Heart, LogOut, Menu, Search, ShoppingBag, UserRound, X } f
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { SafeImage } from "@/components/SafeImage";
+import { useToast } from "@/components/ToastProvider";
+import { UserOrderBell } from "@/components/UserOrderBell";
 import { Button } from "@/components/ui/button";
 import { useApiResource } from "@/hooks/useApiResource";
 import { useCart } from "@/hooks/useCart";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { AUTH_TOKEN_KEY, AUTH_USER_KEY, clearAuthSession } from "@/lib/auth";
+import { AUTH_AVATAR_KEY, AUTH_TOKEN_KEY, AUTH_USER_KEY, clearAuthSession } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
 import type { Category, PageResult, Product } from "@/types/api";
 
 type Collection<T> = PageResult<T> | T[] | null;
 
 type SessionState = {
+  avatarUrl: string;
   token: string | null;
   username: string;
 };
@@ -47,9 +50,10 @@ function getInitials(username: string) {
 
 export function StoreHeader() {
   const cart = useCart();
+  const { notify } = useToast();
   const { settings } = useSiteSettings();
   const [isOpen, setIsOpen] = useState(false);
-  const [session, setSession] = useState<SessionState>({ token: null, username: "" });
+  const [session, setSession] = useState<SessionState>({ avatarUrl: "", token: null, username: "" });
 
   const categoriesResource = useApiResource<Collection<Category>>({
     path: "/api/storefront/categories",
@@ -80,6 +84,7 @@ export function StoreHeader() {
   useEffect(() => {
     function syncSession() {
       setSession({
+        avatarUrl: window.localStorage.getItem(AUTH_AVATAR_KEY) || "",
         token: window.localStorage.getItem(AUTH_TOKEN_KEY),
         username: window.localStorage.getItem(AUTH_USER_KEY) || "",
       });
@@ -96,9 +101,14 @@ export function StoreHeader() {
 
   function handleLogout() {
     clearAuthSession();
-    setSession({ token: null, username: "" });
+    setSession({ avatarUrl: "", token: null, username: "" });
     setIsOpen(false);
     window.dispatchEvent(new Event("auth:update"));
+    notify({
+      message: "Phien dang nhap da duoc ket thuc.",
+      title: "Da dang xuat",
+      type: "success",
+    });
   }
 
   return (
@@ -171,12 +181,18 @@ export function StoreHeader() {
             <Search aria-hidden className="h-4 w-4" />
           </Button>
 
+          <UserOrderBell token={session.token} />
+
           {isLoggedIn ? (
             <div className="group relative">
               <Button variant="ghost" size="icon" aria-label={`Tài khoản ${accountName}`}>
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-stone-900 text-[11px] font-semibold text-white">
-                  {getInitials(accountName)}
-                </span>
+                {session.avatarUrl ? (
+                  <SafeImage alt={accountName} className="h-7 w-7 rounded-full border border-stone-200" sizes="28px" src={session.avatarUrl} />
+                ) : (
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-stone-900 text-[11px] font-semibold text-white">
+                    {getInitials(accountName)}
+                  </span>
+                )}
               </Button>
               <div className="dropdown-panel invisible absolute right-0 top-full w-56 translate-y-3 scale-[0.96] rounded-md border border-stone-200 bg-white/95 p-2 opacity-0 shadow-xl shadow-stone-950/10 backdrop-blur transition group-hover:visible group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-100">
                 <div className="border-b border-stone-100 px-3 py-2">

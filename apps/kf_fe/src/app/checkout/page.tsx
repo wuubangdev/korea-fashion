@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, CreditCard, MapPin, Phone, UserRound } from "lucide-react";
+import { CheckCircle2, CreditCard, MapPin, PackageCheck, Phone, ShieldCheck, ShoppingBag, Truck, UserRound, type LucideIcon } from "lucide-react";
+import { SafeImage } from "@/components/SafeImage";
 import { StoreFooter } from "@/components/StoreFooter";
 import { StoreHeader } from "@/components/StoreHeader";
 import { useToast } from "@/components/ToastProvider";
@@ -10,63 +11,189 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { useApiMutation } from "@/hooks/useApiMutation";
 import { useCart } from "@/hooks/useCart";
+import { accountApi, ordersApi, storefrontApi } from "@/lib/api";
+import { AUTH_TOKEN_KEY } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
-import type { CreateOrderPayload, Order } from "@/types/api";
+import type { CreateOrderPayload, Order, User } from "@/types/api";
+
+type CheckoutForm = {
+  address: string;
+  city: string;
+  customerEmail: string;
+  customerName: string;
+  customerPhone: string;
+  district: string;
+  note: string;
+  paymentMethodId: string;
+  shippingMethodId: string;
+  ward: string;
+};
+
+type CheckoutOption = {
+  active?: boolean;
+  description?: string;
+  fee?: number | string;
+  id?: string;
+  name?: string;
+  type?: string;
+};
+
+const defaultForm: CheckoutForm = {
+  address: "",
+  city: "",
+  customerEmail: "",
+  customerName: "",
+  customerPhone: "",
+  district: "",
+  note: "",
+  paymentMethodId: "COD",
+  shippingMethodId: "standard",
+  ward: "",
+};
+
+const fallbackShippingMethods: CheckoutOption[] = [
+  { description: "Giao trong 2-5 ngay lam viec.", fee: 30000, id: "standard", name: "Giao hang tieu chuan" },
+];
+
+const fallbackPaymentMethods: CheckoutOption[] = [
+  { description: "Thanh toan cho don vi van chuyen khi nhan hang.", id: "COD", name: "Thanh toan khi nhan hang", type: "COD" },
+  { description: "Shop se lien he de xac nhan thong tin chuyen khoan.", id: "BANK_TRANSFER", name: "Chuyen khoan ngan hang", type: "BANK_TRANSFER" },
+];
+
+function profileToForm(profile: User): Partial<CheckoutForm> {
+  return {
+    address: profile.address ?? "",
+    city: profile.city ?? "",
+    customerEmail: profile.email ?? "",
+    customerName: profile.fullName || profile.username || "",
+    customerPhone: profile.phone ?? "",
+    district: profile.district ?? "",
+    ward: profile.ward ?? "",
+  };
+}
+
+function optionId(option: CheckoutOption | undefined) {
+  return option?.id || option?.type || "";
+}
 
 export default function CheckoutPage() {
   const cart = useCart();
-  const order = useApiMutation<Order, CreateOrderPayload>();
   const { notify } = useToast();
-  const [customerName, setCustomerName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [note, setNote] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("COD");
-  const [createdOrderId, setCreatedOrderId] = useState<number | null>(null);
-  const shippingFee = cart.total >= 1000000 || cart.items.length === 0 ? 0 : 30000;
+  const [form, setForm] = useState<CheckoutForm>(defaultForm);
+  const [profile, setProfile] = useState<User | null>(null);
+  const [shippingMethods, setShippingMethods] = useState<CheckoutOption[]>(fallbackShippingMethods);
+  const [paymentMethods, setPaymentMethods] = useState<CheckoutOption[]>(fallbackPaymentMethods);
+  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
+  useEffect(() => {
+    const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+
+    Promise.allSettled([
+      storefrontApi.shippingMethods(),
+      storefrontApi.paymentMethods(),
+      token ? accountApi.getProfile({ token }) : Promise.resolve(null),
+    ]).then(([shippingResult, paymentResult, profileResult]) => {
+      if (shippingResult.status === "fulfilled" && Array.isArray(shippingResult.value) && shippingResult.value.length) {
+        const activeShipping = (shippingResult.value as CheckoutOption[]).filter((item) => item.active !== false);
+        setShippingMethods(activeShipping.length ? activeShipping : fallbackShippingMethods);
+      }
+      if (paymentResult.status === "fulfilled" && Array.isArray(paymentResult.value) && paymentResult.value.length) {
+        const activePayments = (paymentResult.value as CheckoutOption[]).filter((item) => item.active !== false);
+        setPaymentMethods(activePayments.length ? activePayments : fallbackPaymentMethods);
+      }
+      if (profileResult.status === "fulfilled" && profileResult.value) {
+        setProfile(profileResult.value);
+        setForm((current) => ({ ...current, ...profileToForm(profileResult.value as User) }));
+      }
+      setIsLoadingProfile(false);
+    });
+  }, []);
+
+  const selectedShipping = shippingMethods.find((item) => optionId(item) === form.shippingMethodId) ?? shippingMethods[0];
+  const selectedPayment = paymentMethods.find((item) => optionId(item) === form.paymentMethodId) ?? paymentMethods[0];
+  const baseShippingFee = Number(selectedShipping?.fee ?? 30000);
+  const shippingFee = cart.total >= 1000000 || cart.items.length === 0 ? 0 : baseShippingFee;
   const grandTotal = cart.total + shippingFee;
+  const deliveryAddress = useMemo(
+    () => [form.address, form.ward, form.district, form.city].map((item) => item.trim()).filter(Boolean).join(", "),
+    [form.address, form.city, form.district, form.ward],
+  );
+  const canSubmit = Boolean(cart.items.length > 0 && form.customerName.trim() && form.customerPhone.trim() && deliveryAddress);
+
+  function updateField(key: keyof CheckoutForm, value: string) {
+    setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function validateCheckout() {
+    if (!cart.items.length) {
+      return "Gio hang dang trong.";
+    }
+    if (!form.customerName.trim()) {
+      return "Vui long nhap ten nguoi nhan.";
+    }
+    if (!form.customerPhone.trim() || form.customerPhone.trim().length < 9) {
+      return "So dien thoai can toi thieu 9 ky tu.";
+    }
+    if (!deliveryAddress) {
+      return "Vui long nhap dia chi giao hang.";
+    }
+    return null;
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const validationError = validateCheckout();
+    if (validationError) {
+      notify({ message: validationError, title: "Thong tin chua day du", type: "error" });
+      return;
+    }
 
+    const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+    const payload: CreateOrderPayload = {
+      customerEmail: form.customerEmail.trim() || undefined,
+      customerId: profile?.id,
+      customerName: form.customerName.trim(),
+      customerPhone: form.customerPhone.trim(),
+      deliveryAddress,
+      discountTotal: 0,
+      items: cart.items.map((item) => ({
+        discount: 0,
+        price: Number(item.product.price ?? 0),
+        productId: item.product.id,
+        productImageUrl: item.product.imageUrl,
+        productName: item.product.name,
+        quantity: item.quantity,
+        sku: item.product.sku,
+        unitPrice: Number(item.product.price ?? 0),
+      })),
+      note: form.note.trim() || undefined,
+      paymentMethodId: optionId(selectedPayment),
+      shippingFee,
+      shippingMethodId: optionId(selectedShipping),
+      taxTotal: 0,
+    };
+
+    setIsSubmitting(true);
     try {
-      const checkoutNote = [
-        `Khách hàng: ${customerName}`,
-        `Số điện thoại: ${phone}`,
-        `Thanh toán: ${paymentMethod}`,
-        note ? `Ghi chú: ${note}` : "",
-      ]
-        .filter(Boolean)
-        .join(" | ");
-
-      const result = await order.mutate({
-        path: "/api/orders",
-        body: {
-          deliveryAddress: address,
-          note: checkoutNote || undefined,
-          items: cart.items.map((item) => ({
-            productId: item.product.id,
-            quantity: item.quantity,
-            unitPrice: Number(item.product.price ?? 0),
-          })),
-        },
-      });
-
-      setCreatedOrderId(result.id);
+      const result = await ordersApi.create(payload, { token });
+      setCreatedOrder(result);
       cart.clear();
       notify({
-        message: `Đơn hàng #${result.id} đã được tạo thành công.`,
-        title: "Đặt hàng thành công",
+        message: `Don hang ${result.orderCode || `#${result.id}`} da duoc tao thanh cong.`,
+        title: "Dat hang thanh cong",
         type: "success",
       });
-    } catch (err) {
+    } catch (error) {
       notify({
-        message: err instanceof Error ? err.message : "Không thể tạo đơn hàng.",
-        title: "Đặt hàng thất bại",
+        message: error instanceof Error ? error.message : "Khong the tao don hang.",
+        title: "Dat hang that bai",
         type: "error",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -74,156 +201,218 @@ export default function CheckoutPage() {
     <main className="min-h-screen bg-stone-50 text-stone-950">
       <StoreHeader />
       <section className="border-b border-stone-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <p className="text-sm font-medium uppercase text-rose-700">Checkout</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal">Thanh toán</h1>
-          <p className="mt-2 text-sm text-stone-600">
-            Điền thông tin giao hàng và kiểm tra lại đơn trước khi xác nhận.
-          </p>
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 sm:px-6 lg:flex-row lg:items-end lg:justify-between lg:px-8">
+          <div>
+            <p className="text-sm font-medium uppercase text-rose-700">Checkout</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-normal">Thanh toan</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600">
+              Kiem tra thong tin nhan hang, phuong thuc giao hang va tom tat don truoc khi xac nhan.
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-xs text-stone-600 sm:w-[420px]">
+            <Step active icon={UserRound} label="Thong tin" />
+            <Step active={Boolean(deliveryAddress)} icon={Truck} label="Giao hang" />
+            <Step active={Boolean(createdOrder)} icon={CheckCircle2} label="Hoan tat" />
+          </div>
         </div>
       </section>
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_360px] lg:px-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Thông tin nhận hàng</CardTitle>
-            <CardDescription>
-              Đơn hàng sẽ được tạo qua API `/api/orders`.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {createdOrderId ? (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-6 text-emerald-800">
-                <CheckCircle2 className="h-10 w-10" />
-                <h2 className="mt-4 text-lg font-semibold">Đặt hàng thành công</h2>
-                <p className="mt-2 text-sm leading-6">
-                  Mã đơn hàng của bạn là #{createdOrderId}. Shop sẽ kiểm tra và liên hệ
-                  xác nhận thông tin giao hàng.
-                </p>
-                <Link href="/products">
-                  <Button className="mt-5">Tiếp tục mua sắm</Button>
-                </Link>
-              </div>
-            ) : (
-              <form className="space-y-4" onSubmit={handleSubmit}>
-                <label className="block text-sm font-medium text-stone-700">
-                  Họ tên người nhận
-                  <div className="relative mt-1">
-                    <UserRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-                    <Input
-                      className="pl-9"
-                      onChange={(event) => setCustomerName(event.target.value)}
-                      required
-                      value={customerName}
-                    />
-                  </div>
-                </label>
-                <label className="block text-sm font-medium text-stone-700">
-                  Số điện thoại
-                  <div className="relative mt-1">
-                    <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-                    <Input
-                      className="pl-9"
-                      inputMode="tel"
-                      minLength={9}
-                      onChange={(event) => setPhone(event.target.value)}
-                      required
-                      value={phone}
-                    />
-                  </div>
-                </label>
-                <label className="block text-sm font-medium text-stone-700">
-                  Địa chỉ giao hàng
-                  <div className="relative mt-1">
-                    <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-                    <Input
-                      className="pl-9"
-                      onChange={(event) => setAddress(event.target.value)}
-                      required
-                      value={address}
-                    />
-                  </div>
-                </label>
-                <label className="block text-sm font-medium text-stone-700">
-                  Phương thức thanh toán
-                  <div className="relative mt-1">
-                    <CreditCard className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-                    <Select
-                      className="pl-9"
-                      onChange={(event) => setPaymentMethod(event.target.value)}
-                      value={paymentMethod}
-                    >
-                      <option value="COD">Thanh toán khi nhận hàng</option>
-                      <option value="BANK_TRANSFER">Chuyển khoản ngân hàng</option>
-                      <option value="STORE_WALLET">Ví cửa hàng</option>
-                    </Select>
-                  </div>
-                </label>
-                <label className="block text-sm font-medium text-stone-700">
-                  Ghi chú
-                  <Input
-                    className="mt-1"
-                    onChange={(event) => setNote(event.target.value)}
-                    placeholder="Ví dụ: giao sau 18h"
-                    value={note}
-                  />
-                </label>
-                {order.error ? (
-                  <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                    {order.error}
-                  </div>
-                ) : null}
-                <Button className="w-full" disabled={cart.items.length === 0 || order.isLoading} type="submit">
-                  {order.isLoading ? "Đang tạo đơn..." : "Xác nhận đặt hàng"}
-                </Button>
-              </form>
-            )}
-          </CardContent>
-        </Card>
 
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>Tóm tắt</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {cart.items.length === 0 ? (
-              <div className="text-sm text-stone-600">
-                Giỏ hàng trống.{" "}
-                <Link href="/products" className="font-medium text-stone-950">
-                  Chọn sản phẩm
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {cart.items.map((item) => (
-                  <div key={item.product.id} className="flex justify-between gap-3 text-sm">
-                    <span className="text-stone-600">
-                      {item.product.name} x {item.quantity}
-                    </span>
-                    <span className="font-medium">
-                      {formatMoney(Number(item.product.price ?? 0) * item.quantity)}
-                    </span>
-                  </div>
-                ))}
-                <div className="border-t border-stone-200 pt-3">
-                  <div className="flex justify-between gap-3 text-sm text-stone-600">
-                    <span>Tạm tính</span>
-                    <span>{formatMoney(cart.total)}</span>
-                  </div>
-                  <div className="mt-2 flex justify-between gap-3 text-sm text-stone-600">
-                    <span>Phí vận chuyển</span>
-                    <span>{shippingFee === 0 ? "Miễn phí" : formatMoney(shippingFee)}</span>
-                  </div>
-                  <div className="mt-3 flex justify-between gap-3 text-lg font-semibold">
-                    <span>Tổng cộng</span>
-                    <span>{formatMoney(grandTotal)}</span>
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_390px] lg:px-8">
+        <div className="space-y-6">
+          {createdOrder ? (
+            <Card className="border-emerald-200 bg-emerald-50 shadow-sm">
+              <CardContent className="p-6 text-emerald-900">
+                <CheckCircle2 className="h-11 w-11" />
+                <h2 className="mt-4 text-xl font-semibold">Dat hang thanh cong</h2>
+                <p className="mt-2 text-sm leading-6">
+                  Ma don hang: <span className="font-semibold">{createdOrder.orderCode || `#${createdOrder.id}`}</span>. Shop se xac nhan va cap nhat trang thai giao hang som.
+                </p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <Button asChild>
+                    <Link href={`/payment-status/${createdOrder.id}`}>Theo doi thanh toan</Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/orders">Xem don hang</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          <Card>
+            <CardHeader className="border-b border-stone-100">
+              <CardTitle>Thong tin nhan hang</CardTitle>
+              <CardDescription>
+                {isLoadingProfile ? "Dang kiem tra ho so tai khoan." : profile ? "Da tu dong dien tu ho so cua ban." : "Dang nhap de tu dong dien thong tin giao hang lan sau."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-5">
+              <form className="grid gap-5" onSubmit={handleSubmit}>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <CheckoutField icon={UserRound} label="Ho ten nguoi nhan">
+                    <Input value={form.customerName} onChange={(event) => updateField("customerName", event.target.value)} placeholder="Nguyen Van A" required />
+                  </CheckoutField>
+                  <CheckoutField icon={Phone} label="So dien thoai">
+                    <Input inputMode="tel" value={form.customerPhone} onChange={(event) => updateField("customerPhone", event.target.value)} placeholder="0900 000 000" required />
+                  </CheckoutField>
+                  <CheckoutField icon={UserRound} label="Email">
+                    <Input type="email" value={form.customerEmail} onChange={(event) => updateField("customerEmail", event.target.value)} placeholder="you@example.com" />
+                  </CheckoutField>
+                  <CheckoutField icon={MapPin} label="Tinh / Thanh pho">
+                    <Input value={form.city} onChange={(event) => updateField("city", event.target.value)} placeholder="TP. Ho Chi Minh" />
+                  </CheckoutField>
+                  <CheckoutField icon={MapPin} label="Quan / Huyen">
+                    <Input value={form.district} onChange={(event) => updateField("district", event.target.value)} placeholder="Quan 1" />
+                  </CheckoutField>
+                  <CheckoutField icon={MapPin} label="Phuong / Xa">
+                    <Input value={form.ward} onChange={(event) => updateField("ward", event.target.value)} placeholder="Ben Nghe" />
+                  </CheckoutField>
+                  <div className="md:col-span-2">
+                    <CheckoutField icon={MapPin} label="Dia chi chi tiet">
+                      <Input value={form.address} onChange={(event) => updateField("address", event.target.value)} placeholder="So nha, ten duong" required />
+                    </CheckoutField>
                   </div>
                 </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <CheckoutField icon={Truck} label="Phuong thuc giao hang">
+                    <Select value={form.shippingMethodId} onChange={(event) => updateField("shippingMethodId", event.target.value)}>
+                      {shippingMethods.map((item) => (
+                        <option key={optionId(item)} value={optionId(item)}>
+                          {item.name || optionId(item)} {Number(item.fee ?? 0) > 0 ? `- ${formatMoney(item.fee)}` : ""}
+                        </option>
+                      ))}
+                    </Select>
+                  </CheckoutField>
+                  <CheckoutField icon={CreditCard} label="Phuong thuc thanh toan">
+                    <Select value={form.paymentMethodId} onChange={(event) => updateField("paymentMethodId", event.target.value)}>
+                      {paymentMethods.map((item) => (
+                        <option key={optionId(item)} value={optionId(item)}>
+                          {item.name || optionId(item)}
+                        </option>
+                      ))}
+                    </Select>
+                  </CheckoutField>
+                </div>
+
+                <label className="block text-sm font-semibold text-stone-800">
+                  Ghi chu don hang
+                  <textarea
+                    className="mt-2 min-h-24 w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-sm shadow-sm outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
+                    value={form.note}
+                    onChange={(event) => updateField("note", event.target.value)}
+                    placeholder="Vi du: giao sau 18h, goi truoc khi giao"
+                  />
+                </label>
+
+                <div className="rounded-md border border-stone-200 bg-stone-50 p-4 text-sm text-stone-600">
+                  <div className="flex gap-2">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
+                    <span>Thong tin cua ban chi dung de xu ly don hang va giao hang.</span>
+                  </div>
+                </div>
+
+                <Button className="w-full" disabled={!canSubmit || isSubmitting || Boolean(createdOrder)} type="submit">
+                  {isSubmitting ? "Dang tao don..." : "Xac nhan dat hang"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+
+        <aside className="space-y-6">
+          <Card className="h-fit">
+            <CardHeader className="border-b border-stone-100">
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingBag className="h-5 w-5" />
+                Tom tat don hang
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5">
+              {cart.items.length === 0 && !createdOrder ? (
+                <div className="text-sm text-stone-600">
+                  Gio hang trong.{" "}
+                  <Link href="/products" className="font-medium text-stone-950 hover:underline">
+                    Chon san pham
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {cart.items.map((item) => (
+                    <div key={item.product.id} className="grid grid-cols-[64px_1fr] gap-3">
+                      <SafeImage alt={item.product.name} className="h-16 rounded-md border border-stone-200" sizes="64px" src={item.product.imageUrl} />
+                      <div className="min-w-0">
+                        <p className="line-clamp-2 text-sm font-semibold text-stone-950">{item.product.name}</p>
+                        <p className="mt-1 text-xs text-stone-500">x{item.quantity}</p>
+                        <p className="mt-1 text-sm font-semibold">{formatMoney(Number(item.product.price ?? 0) * item.quantity)}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <PriceLine label="Tam tinh" value={formatMoney(cart.total)} />
+                  <PriceLine label="Phi van chuyen" value={shippingFee === 0 ? "Mien phi" : formatMoney(shippingFee)} />
+                  <div className="border-t border-stone-200 pt-3">
+                    <PriceLine strong label="Tong cong" value={formatMoney(grandTotal)} />
+                    <p className="mt-2 text-xs leading-5 text-stone-500">Mien phi van chuyen cho don tu 1.000.000 VND.</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-stone-200 bg-white shadow-sm">
+            <CardContent className="space-y-3 p-5 text-sm text-stone-600">
+              <div className="flex gap-3">
+                <PackageCheck className="mt-0.5 h-5 w-5 text-emerald-700" />
+                <div>
+                  <p className="font-semibold text-stone-950">Xu ly nhanh</p>
+                  <p className="mt-1 leading-6">Don hang moi se vao trang thai NEW de shop xac nhan ton kho va lien he giao hang.</p>
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </aside>
       </div>
       <StoreFooter />
     </main>
+  );
+}
+
+function CheckoutField({
+  children,
+  icon: Icon,
+  label,
+}: {
+  children: React.ReactNode;
+  icon: LucideIcon;
+  label: string;
+}) {
+  return (
+    <label className="block text-sm font-semibold text-stone-800">
+      <span className="mb-2 flex items-center gap-2">
+        <Icon className="h-4 w-4 text-stone-500" />
+        {label}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+function PriceLine({ label, strong, value }: { label: string; strong?: boolean; value: string }) {
+  return (
+    <div className={`flex items-center justify-between gap-4 ${strong ? "text-lg font-semibold text-stone-950" : "text-sm text-stone-600"}`}>
+      <span>{label}</span>
+      <span>{value}</span>
+    </div>
+  );
+}
+
+function Step({ active, icon: Icon, label }: { active: boolean; icon: LucideIcon; label: string }) {
+  return (
+    <div className={`rounded-md border px-3 py-2 ${active ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-stone-200 bg-stone-50 text-stone-500"}`}>
+      <div className="flex items-center gap-2">
+        <Icon className="h-4 w-4" />
+        <span className="font-medium">{label}</span>
+      </div>
+    </div>
   );
 }

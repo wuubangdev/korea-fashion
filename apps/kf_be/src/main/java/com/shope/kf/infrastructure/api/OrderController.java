@@ -9,27 +9,92 @@ import com.shope.kf.application.common.PageQuery;
 import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.OrderUseCase;
 import com.shope.kf.domain.model.Order;
+import com.shope.kf.domain.model.PaymentStatus;
 import com.shope.kf.infrastructure.api.mapper.OrderApiMapper;
+import com.shope.kf.infrastructure.persistence.jpa.PaymentJpaEntity;
+import com.shope.kf.infrastructure.persistence.repository.PaymentJpaRepository;
+import com.shope.kf.infrastructure.persistence.repository.UserJpaRepository;
 import com.shope.kf.infrastructure.security.RoleConstants;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
 
     private final OrderUseCase orderUseCase;
+    private final PaymentJpaRepository paymentRepository;
+    private final UserJpaRepository userRepository;
 
-    public OrderController(OrderUseCase orderUseCase) {
+    public OrderController(OrderUseCase orderUseCase, PaymentJpaRepository paymentRepository, UserJpaRepository userRepository) {
         this.orderUseCase = orderUseCase;
+        this.paymentRepository = paymentRepository;
+        this.userRepository = userRepository;
     }
 
     @PostMapping
-    public ResponseEntity<OrderResponse> create(@jakarta.validation.Valid @RequestBody CreateOrderRequest req) {
-        Order saved = orderUseCase.create(OrderApiMapper.toDomain(req));
+    public ResponseEntity<OrderResponse> create(Authentication authentication, @jakarta.validation.Valid @RequestBody CreateOrderRequest req) {
+        Order order = OrderApiMapper.toDomain(req);
+        attachCurrentUser(order, authentication);
+        Order saved = orderUseCase.create(order);
+        createInitialPayment(saved);
         return ResponseEntity.ok(OrderApiMapper.toResponse(saved));
+    }
+
+    private void createInitialPayment(Order order) {
+        PaymentJpaEntity payment = new PaymentJpaEntity();
+        payment.setId(generatePaymentId());
+        payment.setOrderId(order.getId());
+        payment.setAmount(firstNonNull(order.getGrandTotal(), order.getTotal(), BigDecimal.ZERO));
+        payment.setMethod(order.getPaymentMethodId());
+        payment.setStatus(PaymentStatus.PENDING.name());
+        payment.setPaidAt(null);
+        paymentRepository.save(payment);
+    }
+
+    private String generatePaymentId() {
+        String id;
+        do {
+            id = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+        } while (paymentRepository.existsById(id));
+        return id;
+    }
+
+    private BigDecimal firstNonNull(BigDecimal... values) {
+        for (BigDecimal value : values) {
+            if (value != null) {
+                return value;
+            }
+        }
+        return BigDecimal.ZERO;
+    }
+
+    private void attachCurrentUser(Order order, Authentication authentication) {
+        order.setCustomerId(null);
+        if (authentication == null || authentication.getName() == null) {
+            return;
+        }
+
+        userRepository.findByUsername(authentication.getName()).ifPresent(user -> {
+            order.setCustomerId(user.getId());
+            order.setCustomerName(firstNonBlank(order.getCustomerName(), user.getFullName(), user.getUsername()));
+            order.setCustomerPhone(firstNonBlank(order.getCustomerPhone(), user.getPhone()));
+            order.setCustomerEmail(firstNonBlank(order.getCustomerEmail(), user.getEmail()));
+        });
+    }
+
+    private String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value.trim();
+            }
+        }
+        return null;
     }
 
     @com.shope.kf.infrastructure.security.RequireAuth
