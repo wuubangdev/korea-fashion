@@ -128,7 +128,7 @@ Voi domain HTTPS, frontend nen goi API qua subdomain backend rieng:
 
 ```env
 NEXT_PUBLIC_API_URL=https://api.sieunhon.top
-APP_CORS_ALLOWED_ORIGINS=https://sieunhan.top,https://www.sieunhan.top,http://sieunhan.top,http://www.sieunhan.top
+APP_CORS_ALLOWED_ORIGINS=https://sieunhon.top,https://www.sieunhon.top,http://sieunhon.top,http://www.sieunhon.top
 BACKEND_BIND_HOST=127.0.0.1
 BACKEND_PORT=3398
 FRONTEND_BIND_HOST=127.0.0.1
