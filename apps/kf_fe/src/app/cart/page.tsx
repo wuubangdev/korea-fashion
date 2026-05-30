@@ -136,16 +136,18 @@ export default function CartPage() {
                 Miễn phí vận chuyển cho đơn hàng từ 1.000.000 VND.
               </p>
             </div>
-            <Link href="/checkout">
-              <Button className="mt-5 w-full" disabled={cart.items.length === 0}>
+            <div className="grid gap-3 pt-2">
+            <Link href="/checkout" className="block">
+              <Button className="w-full" disabled={cart.items.length === 0}>
                 Đặt hàng
               </Button>
             </Link>
-            <Link href="/products">
+            <Link href="/products" className="block">
               <Button className="w-full" variant="outline">
                 Tiếp tục mua sắm
               </Button>
             </Link>
+            </div>
           </CardContent>
         </Card>
       </div>

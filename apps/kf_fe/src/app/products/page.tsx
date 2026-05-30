@@ -51,6 +51,7 @@ function ProductsContent() {
 
   useEffect(() => {
     queueMicrotask(() => {
+      setSearch(searchParams.get("search") ?? "");
       setOrigin(searchParams.get("origin") ?? "");
       setBrand(searchParams.get("brand") ?? "");
       setCategoryId(searchParams.get("categoryId") ?? "");

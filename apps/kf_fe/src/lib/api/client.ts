@@ -134,12 +134,77 @@ export function getPage<T>(
 }
 
 async function readError(response: Response) {
+  let rawMessage = "";
   try {
     const body = await response.json();
-    return body.message ?? body.error ?? `Request failed (${response.status})`;
+    rawMessage = String(body.message ?? body.error ?? "");
   } catch {
-    return `Request failed (${response.status})`;
+    rawMessage = "";
   }
+
+  return toFriendlyErrorMessage(response.status, rawMessage);
+}
+
+function toFriendlyErrorMessage(status: number, rawMessage: string) {
+  const normalized = rawMessage.toLowerCase();
+
+  if (status === 401 || normalized.includes("unauthorized") || normalized.includes("login required")) {
+    return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+  }
+
+  if (status === 403 || normalized.includes("forbidden") || normalized.includes("insufficient role")) {
+    return "Bạn không có quyền thực hiện thao tác này.";
+  }
+
+  if (status === 404) {
+    return "Không tìm thấy dữ liệu cần xử lý.";
+  }
+
+  if (status === 413 || normalized.includes("payload too large") || normalized.includes("maximum upload size")) {
+    return "File quá lớn so với giới hạn upload hiện tại. Vui lòng chọn file nhỏ hơn hoặc liên hệ quản trị viên.";
+  }
+
+  if (
+    normalized.includes("could not commit jpa transaction") ||
+    normalized.includes("data too long") ||
+    normalized.includes("constraint") ||
+    normalized.includes("sql") ||
+    normalized.includes("duplicate")
+  ) {
+    if (normalized.includes("email") || normalized.includes("duplicate")) {
+      return "Email này đã được sử dụng hoặc chưa hợp lệ. Vui lòng kiểm tra lại.";
+    }
+
+    return "Không thể lưu thay đổi lúc này. Vui lòng kiểm tra thông tin và thử lại.";
+  }
+
+  if (status >= 500) {
+    return "Hệ thống đang gặp sự cố. Vui lòng thử lại sau ít phút.";
+  }
+
+  if (status === 400 || status === 422) {
+    return rawMessage && !looksTechnical(rawMessage)
+      ? rawMessage
+      : "Thông tin chưa hợp lệ. Vui lòng kiểm tra lại.";
+  }
+
+  return rawMessage && !looksTechnical(rawMessage)
+    ? rawMessage
+    : "Không thể hoàn tất thao tác. Vui lòng thử lại.";
+}
+
+function looksTechnical(message: string) {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes("request failed") ||
+    normalized.includes("exception") ||
+    normalized.includes("transaction") ||
+    normalized.includes("hibernate") ||
+    normalized.includes("jpa") ||
+    normalized.includes("sql") ||
+    normalized.includes("constraint") ||
+    normalized.includes("stack")
+  );
 }
 
 async function readResponseBody(response: Response) {

@@ -2,8 +2,10 @@ package com.shope.kf.infrastructure.exception;
 
 import com.shope.kf.domain.exception.DomainException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -38,6 +40,11 @@ public class GlobalExceptionHandler {
         return build(ErrorCode.BAD_REQUEST, ex.getMessage(), request);
     }
 
+    @ExceptionHandler({DataIntegrityViolationException.class, TransactionSystemException.class})
+    public ResponseEntity<ErrorResponse> handleDatabaseWrite(RuntimeException ex, HttpServletRequest request) {
+        return build(ErrorCode.BAD_REQUEST, rootMessage(ex), request);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntime(RuntimeException ex, HttpServletRequest request) {
         return build(ErrorCode.BAD_REQUEST, ex.getMessage(), request);
@@ -50,7 +57,15 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<ErrorResponse> build(ErrorCode errorCode, String message, HttpServletRequest request) {
         return ResponseEntity
-                .status(errorCode.status())
-                .body(ErrorResponse.of(errorCode, message, request.getRequestURI()));
+            .status(errorCode.status())
+            .body(ErrorResponse.of(errorCode, message, request.getRequestURI()));
+    }
+
+    private String rootMessage(Throwable throwable) {
+        Throwable current = throwable;
+        while (current.getCause() != null) {
+            current = current.getCause();
+        }
+        return current.getMessage() == null ? throwable.getMessage() : current.getMessage();
     }
 }

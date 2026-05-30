@@ -134,8 +134,8 @@ export function ProductReviews({ product }: { product: Product }) {
     const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
     if (!token) {
       notify({
-        message: "Vui long dang nhap truoc khi tra loi binh luan.",
-        title: "Can dang nhap",
+        message: "Vui lòng đăng nhập trước khi trả lời bình luận.",
+        title: "Cần đăng nhập",
         type: "info",
       });
       return;
@@ -144,8 +144,8 @@ export function ProductReviews({ product }: { product: Product }) {
     const trimmedContent = replyContent.trim();
     if (!trimmedContent) {
       notify({
-        message: "Noi dung tra loi khong duoc de trong.",
-        title: "Thieu noi dung",
+        message: "Nội dung trả lời không được để trống.",
+        title: "Thiếu nội dung",
         type: "error",
       });
       return;
@@ -157,15 +157,15 @@ export function ProductReviews({ product }: { product: Product }) {
       setReplyContent("");
       setReplyReviewId(null);
       notify({
-        message: "Da gui tra loi cua ban.",
-        title: "Da tra loi",
+        message: "Trả lời của bạn đã được gửi.",
+        title: "Đã gửi trả lời",
         type: "success",
       });
       reviews.revalidate();
     } catch (error) {
       notify({
-        message: error instanceof Error ? error.message : "Khong the gui tra loi.",
-        title: "Tra loi that bai",
+        message: error instanceof Error ? error.message : "Không thể gửi trả lời.",
+        title: "Gửi trả lời thất bại",
         type: "error",
       });
     } finally {

@@ -2,14 +2,15 @@
 
 import { Clock3, Mail, MapPin, MessageCircle, Phone, Send, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { StoreFooter } from "@/components/StoreFooter";
 import { StoreHeader } from "@/components/StoreHeader";
 import { useToast } from "@/components/ToastProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { contactMessagesApi } from "@/lib/api";
+import { accountApi, contactMessagesApi } from "@/lib/api";
+import { AUTH_TOKEN_KEY } from "@/lib/auth";
 
 type ContactFormState = {
   email: string;
@@ -57,8 +58,31 @@ const supportSteps = [
 export default function ContactPage() {
   const [form, setForm] = useState<ContactFormState>(initialForm);
   const [formError, setFormError] = useState<string | null>(null);
+  const [profileStatus, setProfileStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { notify } = useToast();
+
+  useEffect(() => {
+    const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!token) {
+      return;
+    }
+
+    setProfileStatus("Đang lấy thông tin tài khoản...");
+    accountApi.getProfile({ token })
+      .then((user) => {
+        setForm((current) => ({
+          ...current,
+          email: current.email || user.email || "",
+          fullName: current.fullName || user.fullName || user.username || "",
+          phone: current.phone || user.phone || "",
+        }));
+        setProfileStatus("Đã tự điền thông tin từ tài khoản của bạn.");
+      })
+      .catch(() => {
+        setProfileStatus(null);
+      });
+  }, []);
 
   function updateField(key: keyof ContactFormState, value: string) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -136,6 +160,9 @@ export default function ContactPage() {
               Gửi thông tin
             </CardTitle>
             <p className="mt-2 text-sm leading-6 text-stone-600">Điền càng rõ nội dung, đội ngũ hỗ trợ càng xử lý nhanh.</p>
+            {profileStatus ? (
+              <p className="mt-2 rounded-md border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{profileStatus}</p>
+            ) : null}
           </CardHeader>
           <CardContent className="p-6">
             <form className="grid gap-4" onSubmit={handleSubmit}>

@@ -132,13 +132,13 @@ export default function CheckoutPage() {
       return "Gio hang dang trong.";
     }
     if (!form.customerName.trim()) {
-      return "Vui long nhap ten nguoi nhan.";
+      return "Vui lòng nhập tên người nhận.";
     }
     if (!form.customerPhone.trim() || form.customerPhone.trim().length < 9) {
       return "So dien thoai can toi thieu 9 ky tu.";
     }
     if (!deliveryAddress) {
-      return "Vui long nhap dia chi giao hang.";
+      return "Vui lòng nhập địa chỉ giao hàng.";
     }
     return null;
   }
@@ -147,7 +147,7 @@ export default function CheckoutPage() {
     event.preventDefault();
     const validationError = validateCheckout();
     if (validationError) {
-      notify({ message: validationError, title: "Thong tin chua day du", type: "error" });
+      notify({ message: validationError, title: "Thông tin chưa đầy đủ", type: "error" });
       return;
     }
 
@@ -182,14 +182,14 @@ export default function CheckoutPage() {
       setCreatedOrder(result);
       cart.clear();
       notify({
-        message: `Don hang ${result.orderCode || `#${result.id}`} da duoc tao thanh cong.`,
-        title: "Dat hang thanh cong",
+        message: `Đơn hàng ${result.orderCode || `#${result.id}`} đã được tạo thành công.`,
+        title: "Đặt hàng thành công",
         type: "success",
       });
     } catch (error) {
       notify({
-        message: error instanceof Error ? error.message : "Khong the tao don hang.",
-        title: "Dat hang that bai",
+        message: error instanceof Error ? error.message : "Không thể tạo đơn hàng.",
+        title: "Đặt hàng thất bại",
         type: "error",
       });
     } finally {

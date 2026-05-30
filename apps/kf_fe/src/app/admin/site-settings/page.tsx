@@ -20,11 +20,11 @@ type SiteSettingField = {
 
 const fieldGroups: Array<{ fields: SiteSettingField[]; title: string }> = [
   {
-    title: "Thong tin website",
+    title: "Thông tin website",
     fields: [
-      { key: "siteName", label: "Ten website" },
-      { key: "siteDescription", label: "Mo ta ngan", multiline: true },
-      { key: "mainLogoUrl", label: "Logo chinh" },
+      { key: "siteName", label: "Tên website" },
+      { key: "siteDescription", label: "Mô tả ngắn", multiline: true },
+      { key: "mainLogoUrl", label: "Logo chính" },
       { key: "footerLogoUrl", label: "Logo footer" },
     ],
   },
@@ -39,21 +39,21 @@ const fieldGroups: Array<{ fields: SiteSettingField[]; title: string }> = [
     ],
   },
   {
-    title: "Mau sac",
+    title: "Màu sắc",
     fields: [
-      { key: "primaryColor", label: "Mau chinh", type: "color" },
-      { key: "secondaryColor", label: "Mau phu", type: "color" },
-      { key: "accentColor", label: "Mau nhan", type: "color" },
-      { key: "backgroundColor", label: "Mau nen", type: "color" },
-      { key: "textColor", label: "Mau chu", type: "color" },
+      { key: "primaryColor", label: "Màu chính", type: "color" },
+      { key: "secondaryColor", label: "Màu phụ", type: "color" },
+      { key: "accentColor", label: "Màu nhấn", type: "color" },
+      { key: "backgroundColor", label: "Màu nền", type: "color" },
+      { key: "textColor", label: "Màu chữ", type: "color" },
     ],
   },
   {
-    title: "Lien he va social",
+    title: "Liên hệ và mạng xã hội",
     fields: [
       { key: "hotline", label: "Hotline" },
       { key: "email", label: "Email", type: "email" },
-      { key: "address", label: "Dia chi", multiline: true },
+      { key: "address", label: "Địa chỉ", multiline: true },
       { key: "facebookUrl", label: "Facebook" },
       { key: "instagramUrl", label: "Instagram" },
       { key: "messengerUrl", label: "Messenger" },
@@ -98,7 +98,7 @@ export default function AdminSiteSettingsPage() {
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Khong the tai cau hinh website");
+          setError(err instanceof Error ? err.message : "Không thể tải cấu hình website.");
         }
       })
       .finally(() => {
@@ -149,11 +149,11 @@ export default function AdminSiteSettingsPage() {
         method: "PUT",
       });
       setSettings({ ...emptySettings, ...result });
-      notify({ title: "Da luu", message: "Cau hinh website da duoc cap nhat.", type: "success" });
+      notify({ title: "Đã lưu", message: "Cấu hình website đã được cập nhật.", type: "success" });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Khong the luu cau hinh website";
+      const message = err instanceof Error ? err.message : "Không thể lưu cấu hình website.";
       setError(message);
-      notify({ title: "Luu that bai", message, type: "error" });
+      notify({ title: "Lưu thất bại", message, type: "error" });
     } finally {
       setIsSaving(false);
     }
@@ -173,10 +173,10 @@ export default function AdminSiteSettingsPage() {
       const media = await mediaApi.upload(file, "settings", file.name);
       updateField(key, media.url);
       setMediaAssets((current) => [media, ...current.filter((item) => item.id !== media.id)]);
-      notify({ title: "Da upload", message: "Anh da duoc chon cho cau hinh website.", type: "success" });
+      notify({ title: "Đã tải ảnh", message: "Ảnh đã được chọn cho cấu hình website.", type: "success" });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Khong the upload anh";
-      notify({ title: "Upload that bai", message, type: "error" });
+      const message = err instanceof Error ? err.message : "Không thể tải ảnh lên.";
+      notify({ title: "Tải ảnh thất bại", message, type: "error" });
     } finally {
       setUploadingField(null);
     }
@@ -185,12 +185,12 @@ export default function AdminSiteSettingsPage() {
   return (
     <AppShell>
       <PageHeader
-        title="Cau hinh website"
-        description="Quan ly title, SEO, thumbnail, logo, mau sac va thong tin lien he cua shop."
+        title="Cấu hình website"
+        description="Quản lý tiêu đề, SEO, thumbnail, logo, màu sắc và thông tin liên hệ của shop."
         action={
           <Button disabled={isLoading || isSaving} onClick={saveSettings}>
             <Save className="h-4 w-4" />
-            {isSaving ? "Dang luu..." : "Luu cau hinh"}
+            {isSaving ? "Đang lưu..." : "Lưu cấu hình"}
           </Button>
         }
       />
@@ -199,7 +199,7 @@ export default function AdminSiteSettingsPage() {
 
       {isLoading ? (
         <div className="rounded-md border border-stone-200 bg-white p-6">
-          <Loader label="Dang tai cau hinh..." />
+          <Loader label="Đang tải cấu hình..." />
         </div>
       ) : (
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -207,7 +207,7 @@ export default function AdminSiteSettingsPage() {
             {fieldGroups.map((group) => (
               <section key={group.title} className="rounded-md border border-stone-200 bg-white p-4">
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{group.title}</h2>
-                {group.title === "Mau sac" ? (
+                {group.title === "Màu sắc" ? (
                   <ColorFieldRow fields={group.fields} settings={settings} onChange={updateField} />
                 ) : (
                   <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -239,7 +239,7 @@ export default function AdminSiteSettingsPage() {
                 ) : null}
                 <div className="text-base font-semibold text-slate-950">{previewTitle}</div>
                 <div className="mt-1 break-all text-xs text-emerald-700">{settings.canonicalUrl || "https://example.com"}</div>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{settings.seoDescription || settings.siteDescription || "Chua co mo ta SEO."}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{settings.seoDescription || settings.siteDescription || "Chưa có mô tả SEO."}</p>
               </div>
             </section>
 
@@ -249,7 +249,7 @@ export default function AdminSiteSettingsPage() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img alt="Main logo" className="mt-4 max-h-20 max-w-full rounded-md border border-stone-200 bg-stone-50 p-3" src={settings.mainLogoUrl} />
               ) : (
-                <p className="mt-4 text-sm text-slate-500">Chua co logo chinh.</p>
+                <p className="mt-4 text-sm text-slate-500">Chưa có logo chính.</p>
               )}
             </section>
           </aside>
@@ -294,7 +294,7 @@ function SettingFieldControl({
               }
             }}
           >
-            <option value="">{isLoadingMedia ? "Dang tai media..." : "Chon anh da upload"}</option>
+            <option value="">{isLoadingMedia ? "Đang tải media..." : "Chọn ảnh đã tải lên"}</option>
             {mediaAssets.map((item) => (
               <option key={item.id} value={item.url}>
                 {item.folder || "media"} / {item.name || item.originalFilename || item.url}
@@ -302,7 +302,7 @@ function SettingFieldControl({
             ))}
           </select>
           <label className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md border border-stone-300 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-stone-50">
-            {isUploading ? "Dang upload..." : "Upload"}
+            {isUploading ? "Đang tải lên..." : "Tải ảnh"}
             <input
               accept="image/*"
               className="sr-only"

@@ -221,6 +221,9 @@ export type UpdateProfilePayload = {
   city?: string;
   district?: string;
   ward?: string;
+};
+
+export type UpdateAvatarPayload = {
   avatarUrl?: string;
 };
 

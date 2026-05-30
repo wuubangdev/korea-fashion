@@ -27,6 +27,12 @@ const styles: Record<ToastType, string> = {
   success: "border-emerald-200 bg-emerald-50 text-emerald-800",
 };
 
+const durations: Record<ToastType, number> = {
+  error: 12000,
+  info: 7000,
+  success: 6000,
+};
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -36,8 +42,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const notify = useCallback((toast: ToastInput) => {
     const id = Date.now() + Math.floor(Math.random() * 1000);
-    setToasts((current) => [...current.slice(-3), { ...toast, id }]);
-    window.setTimeout(() => remove(id), toast.type === "error" ? 6000 : 3600);
+    setToasts((current) => [...current.slice(-3), { ...toast, message: friendlyToastMessage(toast.message), id }]);
+    window.setTimeout(() => remove(id), durations[toast.type]);
   }, [remove]);
 
   const value = useMemo(() => ({ notify }), [notify]);
@@ -71,6 +77,32 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       </div>
     </ToastContext.Provider>
   );
+}
+
+function friendlyToastMessage(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("could not commit jpa transaction")) {
+    return "Không thể lưu thay đổi lúc này. Vui lòng kiểm tra thông tin và thử lại.";
+  }
+
+  if (normalized.includes("failed to fetch") || normalized.includes("networkerror")) {
+    return "Không kết nối được máy chủ. Vui lòng kiểm tra mạng và thử lại.";
+  }
+
+  if (normalized.includes("request failed (401)")) {
+    return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+  }
+
+  if (normalized.includes("request failed (403)")) {
+    return "Bạn không có quyền thực hiện thao tác này.";
+  }
+
+  if (normalized.includes("request failed (500)") || normalized.includes("internal server error")) {
+    return "Hệ thống đang gặp sự cố. Vui lòng thử lại sau ít phút.";
+  }
+
+  return message;
 }
 
 export function useToast() {

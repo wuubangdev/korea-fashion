@@ -41,9 +41,9 @@ export default function OrdersPage() {
       setOrders(orderResult);
       setPayments(paymentResult);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Khong the tai lich su tai khoan.";
+      const message = err instanceof Error ? err.message : "Không thể tải lịch sử đơn hàng.";
       setError(message);
-      notify({ message, title: "Tai lich su that bai", type: "error" });
+      notify({ message, title: "Không tải được lịch sử", type: "error" });
     } finally {
       setIsLoading(false);
     }

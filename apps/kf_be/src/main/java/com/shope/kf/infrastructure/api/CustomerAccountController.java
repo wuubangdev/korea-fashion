@@ -108,8 +108,19 @@ public class CustomerAccountController {
         user.setCity(blankToNull(request.city()));
         user.setDistrict(blankToNull(request.district()));
         user.setWard(blankToNull(request.ward()));
+        UserJpaEntity saved = userRepository.saveAndFlush(user);
+        return ResponseEntity.ok(UserApiMapper.toResponse(com.shope.kf.infrastructure.persistence.jpa.mapper.UserMapper.toDomain(saved)));
+    }
+
+    @PostMapping("/avatar")
+    @Transactional
+    public ResponseEntity<UserResponse> updateAvatar(
+            Authentication authentication,
+            @Valid @RequestBody UpdateAvatarRequest request
+    ) {
+        UserJpaEntity user = currentUser(authentication);
         user.setAvatarUrl(blankToNull(request.avatarUrl()));
-        UserJpaEntity saved = userRepository.save(user);
+        UserJpaEntity saved = userRepository.saveAndFlush(user);
         return ResponseEntity.ok(UserApiMapper.toResponse(com.shope.kf.infrastructure.persistence.jpa.mapper.UserMapper.toDomain(saved)));
     }
 
@@ -377,8 +388,12 @@ public class CustomerAccountController {
             @jakarta.validation.constraints.Size(max = 120)
             String district,
             @jakarta.validation.constraints.Size(max = 120)
-            String ward,
-            @jakarta.validation.constraints.Size(max = 500)
+            String ward
+    ) {
+    }
+
+    public record UpdateAvatarRequest(
+            @jakarta.validation.constraints.Size(max = 1000)
             String avatarUrl
     ) {
     }

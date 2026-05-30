@@ -57,69 +57,69 @@ export default function AdminPage() {
 
   const statCards = [
     {
-      description: "Tong doanh thu tu don hang",
+      description: "Tổng doanh thu từ đơn hàng",
       title: "Doanh thu",
       value: formatMoney(stats.revenueTotal ?? 0),
     },
     {
-      description: `${pendingOrders} don gan day can xu ly`,
-      title: "Don hang",
+      description: `${pendingOrders} đơn gần đây cần xử lý`,
+      title: "Đơn hàng",
       value: formatNumber(stats.totalOrders),
     },
     {
-      description: `${formatNumber(stats.totalCategories)} danh muc dang quan ly`,
-      title: "San pham",
+      description: `${formatNumber(stats.totalCategories)} danh mục đang quản lý`,
+      title: "Sản phẩm",
       value: formatNumber(stats.totalProducts),
     },
     {
-      description: "San pham co ton kho <= 5",
-      title: "Sap het hang",
+      description: "Sản phẩm có tồn kho <= 5",
+      title: "Sắp hết hàng",
       value: formatNumber(stats.lowStockProducts),
     },
   ];
 
   const priorityTasks = [
     {
-      badge: `${pendingOrders} viec`,
-      description: "Duyet don moi, cap nhat thanh toan va trang thai giao hang.",
+      badge: `${pendingOrders} việc`,
+      description: "Duyệt đơn mới, cập nhật thanh toán và trạng thái giao hàng.",
       href: "/admin/resources/orders",
       icon: ReceiptText,
-      title: "Xu ly don hang",
+      title: "Xử lý đơn hàng",
     },
     {
       badge: `${stats.lowStockProducts} SKU`,
-      description: "Cap nhat SKU sap het, gia ban va trang thai hien thi.",
+      description: "Cập nhật SKU sắp hết, giá bán và trạng thái hiển thị.",
       href: "/admin/resources/products",
       icon: Package,
-      title: "Kiem tra ton kho",
+      title: "Kiểm tra tồn kho",
     },
     {
       badge: formatNumber(stats.totalUsers),
-      description: "Kiem tra khach hang, vai tro va quyen truy cap.",
+      description: "Kiểm tra khách hàng, vai trò và quyền truy cập.",
       href: "/admin/resources/users",
       icon: UsersRound,
-      title: "Tai khoan",
+      title: "Tài khoản",
     },
     {
       badge: formatNumber(stats.totalCategories),
-      description: "Quan ly nhom hang, menu danh muc va cau truc dieu huong.",
+      description: "Quản lý nhóm hàng, menu danh mục và cấu trúc điều hướng.",
       href: "/admin/resources/categories",
       icon: Tags,
-      title: "Danh muc",
+      title: "Danh mục",
     },
   ];
 
   return (
     <AppShell>
       <PageHeader
-        title="Tong quan"
-        description="Du lieu dashboard duoc lay truc tiep tu API admin."
+        title="Tổng quan"
+        description="Dữ liệu dashboard được lấy trực tiếp từ API admin."
         action={
           <div className="flex flex-wrap justify-end gap-2">
             <Link href="/admin/resources/orders">
               <Button>
                 <ReceiptText className="h-4 w-4" />
-                Xu ly don
+                Xử lý đơn
               </Button>
             </Link>
             <SeedDataButton />
@@ -142,8 +142,8 @@ export default function AdminPage() {
       <section className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Card>
           <CardHeader>
-            <CardTitle>Viec uu tien</CardTitle>
-            <CardDescription>Cac loi vao hay dung nhat, kem so lieu hien tai tu API.</CardDescription>
+            <CardTitle>Việc ưu tiên</CardTitle>
+            <CardDescription>Các lối vào hay dùng nhất, kèm số liệu hiện tại từ API.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
             {priorityTasks.map((task) => {
@@ -173,8 +173,8 @@ export default function AdminPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Can chu y</CardTitle>
-            <CardDescription>Mat hang ton kho thap duoc lay tu API dashboard.</CardDescription>
+            <CardTitle>Cần chú ý</CardTitle>
+            <CardDescription>Mặt hàng tồn kho thấp được lấy từ API dashboard.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -188,12 +188,12 @@ export default function AdminPage() {
                       <div className="truncate text-sm font-medium text-slate-950">{item.name}</div>
                       <div className="mt-1 text-xs text-slate-500">{item.sku ?? `ID ${item.id}`}</div>
                     </div>
-                    <Badge variant="warning">{item.stockQuantity ?? 0} con</Badge>
+                    <Badge variant="warning">{item.stockQuantity ?? 0} còn</Badge>
                   </div>
                 ))
               ) : (
                 <p className="rounded-md border border-dashed border-stone-300 p-4 text-sm text-slate-500">
-                  Chua co san pham sap het hang.
+                  Chưa có sản phẩm sắp hết hàng.
                 </p>
               )}
             </div>
@@ -204,18 +204,18 @@ export default function AdminPage() {
       <section className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Card>
           <CardHeader>
-            <CardTitle>Don hang gan day</CardTitle>
-            <CardDescription>Danh sach moi nhat tu API dashboard.</CardDescription>
+            <CardTitle>Đơn hàng gần đây</CardTitle>
+            <CardDescription>Danh sách mới nhất từ API dashboard.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-hidden rounded-md border border-stone-200">
               <table className="w-full text-left text-sm">
                 <thead className="bg-stone-50 text-xs uppercase text-slate-500">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Ma don</th>
-                    <th className="px-4 py-3 font-medium">Khach hang</th>
-                    <th className="px-4 py-3 font-medium">Tong tien</th>
-                    <th className="px-4 py-3 font-medium">Trang thai</th>
+                    <th className="px-4 py-3 font-medium">Mã đơn</th>
+                    <th className="px-4 py-3 font-medium">Khách hàng</th>
+                    <th className="px-4 py-3 font-medium">Tổng tiền</th>
+                    <th className="px-4 py-3 font-medium">Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100 bg-white">
@@ -235,7 +235,7 @@ export default function AdminPage() {
                   ) : (
                     <tr>
                       <td className="px-4 py-6 text-center text-slate-500" colSpan={4}>
-                        Chua co don hang gan day.
+                        Chưa có đơn hàng gần đây.
                       </td>
                     </tr>
                   )}
@@ -247,20 +247,20 @@ export default function AdminPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Checklist hom nay</CardTitle>
-            <CardDescription>Cac viec lap lai hang ngay dua tren du lieu hien tai.</CardDescription>
+            <CardTitle>Checklist hôm nay</CardTitle>
+            <CardDescription>Các việc lặp lại hằng ngày dựa trên dữ liệu hiện tại.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-sm text-slate-700">
-              <Task label="Xac nhan don moi" value={`${pendingOrders} viec`} tone="amber" />
-              <Task label="Cap nhat hang sap het" value={`${stats.lowStockProducts} SKU`} tone="rose" />
-              <Task label="Kiem tra tai khoan" value={formatNumber(stats.totalUsers)} tone="slate" />
-              <Task label="Doi soat doanh thu" value={formatMoney(stats.revenueTotal ?? 0)} tone="emerald" />
+              <Task label="Xác nhận đơn mới" value={`${pendingOrders} việc`} tone="amber" />
+              <Task label="Cập nhật hàng sắp hết" value={`${stats.lowStockProducts} SKU`} tone="rose" />
+              <Task label="Kiểm tra tài khoản" value={formatNumber(stats.totalUsers)} tone="slate" />
+              <Task label="Đối soát doanh thu" value={formatMoney(stats.revenueTotal ?? 0)} tone="emerald" />
             </div>
             <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
               <div className="flex items-start gap-2">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>Uu tien cac muc co so lieu bat thuong truoc khi thao tac voi du lieu phu.</span>
+                <span>Ưu tiên các mục có số liệu bất thường trước khi thao tác với dữ liệu phụ.</span>
               </div>
             </div>
           </CardContent>

@@ -1,5 +1,5 @@
 import { apiFetch, apiGet, getPage, type RequestOptions } from "../client";
-import type { ChangePasswordPayload, CreateReviewPayload, Order, PageQuery, Payment, Product, ReplyReviewPayload, Review, UpdateProfilePayload, User } from "@/types/api";
+import type { ChangePasswordPayload, CreateReviewPayload, Order, PageQuery, Payment, Product, ReplyReviewPayload, Review, UpdateAvatarPayload, UpdateProfilePayload, User } from "@/types/api";
 
 export const accountApi = {
   addWishlist: (productId: number, options?: RequestOptions) =>
@@ -19,6 +19,8 @@ export const accountApi = {
     apiFetch<void>(`/api/me/wishlist/${productId}`, undefined, { ...options, method: "DELETE" }),
   replyReview: (reviewId: string, body: ReplyReviewPayload, options?: RequestOptions) =>
     apiFetch<Review>(`/api/me/reviews/${reviewId}/replies`, undefined, { ...options, body, method: "POST" }),
+  updateAvatar: (body: UpdateAvatarPayload, options?: RequestOptions) =>
+    apiFetch<User>("/api/me/avatar", undefined, { ...options, body, method: "POST" }),
   updateProfile: (body: UpdateProfilePayload, options?: RequestOptions) =>
     apiFetch<User>("/api/me/profile", undefined, { ...options, body, method: "POST" }),
 };

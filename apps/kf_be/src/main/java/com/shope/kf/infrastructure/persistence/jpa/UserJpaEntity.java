@@ -43,7 +43,7 @@ public class UserJpaEntity extends BaseJpaEntity {
     @Column(length = 120)
     private String ward;
 
-    @Column(length = 500)
+    @Column(length = 1000)
     private String avatarUrl;
 
     @ManyToMany(fetch = FetchType.EAGER)

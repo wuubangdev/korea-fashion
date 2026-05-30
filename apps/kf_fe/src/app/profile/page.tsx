@@ -47,7 +47,11 @@ type PasswordForm = {
   newPassword: string;
 };
 
-const emptyProfile: UpdateProfilePayload = {
+type ProfileForm = UpdateProfilePayload & {
+  avatarUrl?: string;
+};
+
+const emptyProfile: ProfileForm = {
   address: "",
   avatarUrl: "",
   city: "",
@@ -76,10 +80,18 @@ function getInitials(name: string) {
 }
 
 function formatRole(role: string) {
-  return role.replace(/^ROLE_/, "").replace(/_/g, " ").toLowerCase();
+  const normalized = role.replace(/^ROLE_/, "").toUpperCase();
+  const labels: Record<string, string> = {
+    ADMIN: "Quản trị viên",
+    CUSTOMER: "Khách hàng",
+    MANAGER: "Quản lý",
+    STAFF: "Nhân viên",
+    USER: "Người dùng",
+  };
+  return labels[normalized] ?? normalized.replace(/_/g, " ").toLowerCase();
 }
 
-function toProfileForm(user: User | null): UpdateProfilePayload {
+function toProfileForm(user: User | null): ProfileForm {
   return {
     address: user?.address ?? "",
     avatarUrl: user?.avatarUrl ?? "",
@@ -97,12 +109,13 @@ export default function ProfilePage() {
   const { notify } = useToast();
   const [session, setSession] = useState<SessionState>(defaultSession);
   const [profile, setProfile] = useState<User | null>(null);
-  const [form, setForm] = useState<UpdateProfilePayload>(emptyProfile);
+  const [form, setForm] = useState<ProfileForm>(emptyProfile);
   const [passwordForm, setPasswordForm] = useState<PasswordForm>(emptyPassword);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isPasswordFormOpen, setIsPasswordFormOpen] = useState(false);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -130,8 +143,8 @@ export default function ProfilePage() {
         })
         .catch((error) => {
           notify({
-            message: error instanceof Error ? error.message : "Khong the tai thong tin tai khoan.",
-            title: "Tai ho so that bai",
+            message: error instanceof Error ? error.message : "Không thể tải thông tin tài khoản.",
+            title: "Không tải được hồ sơ",
             type: "error",
           });
         })
@@ -143,32 +156,32 @@ export default function ProfilePage() {
   const isExpired = Boolean(session.payload?.exp && session.payload.exp * 1000 <= Date.now());
   const roles = profile?.roles?.length ? profile.roles : session.payload?.roles ?? [];
   const hasAdminRole = hasAdminAccessRole(roles);
-  const displayName = form.fullName || profile?.username || session.username || session.payload?.sub || "Khach hang";
-  const accountName = profile?.username || session.username || session.payload?.sub || "Tai khoan";
+  const displayName = form.fullName || profile?.username || session.username || session.payload?.sub || "Khách hàng";
+  const accountName = profile?.username || session.username || session.payload?.sub || "Tài khoản";
   const visibleCartItems = cart.items.slice(0, 3);
 
   const profileStats = useMemo(
     () => [
       {
         icon: CheckCircle2,
-        label: "Trang thai",
-        value: isLoggedIn && !isExpired ? "Dang hoat dong" : isExpired ? "Phien het han" : "Chua dang nhap",
+        label: "Trạng thái",
+        value: isLoggedIn && !isExpired ? "Đang hoạt động" : isExpired ? "Phiên hết hạn" : "Chưa đăng nhập",
       },
       {
         icon: ShoppingBag,
-        label: "Gio hang",
-        value: `${cart.count} san pham`,
+        label: "Giỏ hàng",
+        value: `${cart.count} sản phẩm`,
       },
       {
         icon: WalletCards,
-        label: "Tam tinh",
+        label: "Tạm tính",
         value: formatMoney(cart.total),
       },
     ],
     [cart.count, cart.total, isExpired, isLoggedIn],
   );
 
-  function updateField(key: keyof UpdateProfilePayload, value: string) {
+  function updateField(key: keyof ProfileForm, value: string) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
@@ -182,19 +195,27 @@ export default function ProfilePage() {
       return;
     }
     if (!file.type.startsWith("image/")) {
-      notify({ message: "Vui long chon file hinh anh.", title: "File khong hop le", type: "error" });
+      notify({ message: "Vui lòng chọn file hình ảnh.", title: "File chưa hợp lệ", type: "error" });
       return;
     }
 
     setIsUploadingAvatar(true);
     try {
       const uploaded = await mediaApi.upload(file, "avatars", file.name, { token });
-      updateField("avatarUrl", uploaded.url);
-      notify({ message: "Anh dai dien da san sang, hay luu ho so de cap nhat.", title: "Da tai anh", type: "success" });
+      const saved = await accountApi.updateAvatar({ avatarUrl: uploaded.url }, { token });
+      setProfile(saved);
+      setForm(toProfileForm(saved));
+      if (saved.avatarUrl) {
+        window.localStorage.setItem(AUTH_AVATAR_KEY, saved.avatarUrl);
+      } else {
+        window.localStorage.removeItem(AUTH_AVATAR_KEY);
+      }
+      window.dispatchEvent(new Event("auth:update"));
+      notify({ message: "Ảnh đại diện mới đã được cập nhật.", title: "Đã đổi ảnh", type: "success" });
     } catch (error) {
       notify({
-        message: error instanceof Error ? error.message : "Khong the tai anh dai dien.",
-        title: "Tai anh that bai",
+        message: error instanceof Error ? error.message : "Không thể cập nhật ảnh đại diện.",
+        title: "Đổi ảnh thất bại",
         type: "error",
       });
     } finally {
@@ -206,13 +227,22 @@ export default function ProfilePage() {
     event.preventDefault();
     const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
     if (!token) {
-      notify({ message: "Vui long dang nhap de cap nhat ho so.", title: "Can dang nhap", type: "info" });
+      notify({ message: "Vui lòng đăng nhập để cập nhật hồ sơ.", title: "Cần đăng nhập", type: "info" });
       return;
     }
 
     setIsSavingProfile(true);
     try {
-      const saved = await accountApi.updateProfile(form, { token });
+      const profilePayload: UpdateProfilePayload = {
+        address: form.address,
+        city: form.city,
+        district: form.district,
+        email: form.email,
+        fullName: form.fullName,
+        phone: form.phone,
+        ward: form.ward,
+      };
+      const saved = await accountApi.updateProfile(profilePayload, { token });
       setProfile(saved);
       setForm(toProfileForm(saved));
       if (saved.avatarUrl) {
@@ -221,11 +251,11 @@ export default function ProfilePage() {
         window.localStorage.removeItem(AUTH_AVATAR_KEY);
       }
       window.dispatchEvent(new Event("auth:update"));
-      notify({ message: "Thong tin tai khoan da duoc cap nhat.", title: "Da luu ho so", type: "success" });
+      notify({ message: "Thông tin tài khoản đã được cập nhật.", title: "Đã lưu hồ sơ", type: "success" });
     } catch (error) {
       notify({
-        message: error instanceof Error ? error.message : "Khong the cap nhat ho so.",
-        title: "Luu ho so that bai",
+        message: error instanceof Error ? error.message : "Không thể cập nhật hồ sơ.",
+        title: "Lưu hồ sơ thất bại",
         type: "error",
       });
     } finally {
@@ -237,15 +267,15 @@ export default function ProfilePage() {
     event.preventDefault();
     const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
     if (!token) {
-      notify({ message: "Vui long dang nhap de doi mat khau.", title: "Can dang nhap", type: "info" });
+      notify({ message: "Vui lòng đăng nhập để đổi mật khẩu.", title: "Cần đăng nhập", type: "info" });
       return;
     }
     if (passwordForm.newPassword.length < 6) {
-      notify({ message: "Mat khau moi can toi thieu 6 ky tu.", title: "Mat khau qua ngan", type: "error" });
+      notify({ message: "Mật khẩu mới cần tối thiểu 6 ký tự.", title: "Mật khẩu quá ngắn", type: "error" });
       return;
     }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      notify({ message: "Xac nhan mat khau khong khop.", title: "Kiem tra lai mat khau", type: "error" });
+      notify({ message: "Xác nhận mật khẩu không khớp.", title: "Kiểm tra lại mật khẩu", type: "error" });
       return;
     }
 
@@ -259,11 +289,12 @@ export default function ProfilePage() {
         { token },
       );
       setPasswordForm(emptyPassword);
-      notify({ message: "Mat khau da duoc cap nhat.", title: "Da doi mat khau", type: "success" });
+      setIsPasswordFormOpen(false);
+      notify({ message: "Mật khẩu đã được cập nhật.", title: "Đã đổi mật khẩu", type: "success" });
     } catch (error) {
       notify({
-        message: error instanceof Error ? error.message : "Khong the doi mat khau.",
-        title: "Doi mat khau that bai",
+        message: error instanceof Error ? error.message : "Không thể đổi mật khẩu.",
+        title: "Đổi mật khẩu thất bại",
         type: "error",
       });
     } finally {
@@ -277,8 +308,8 @@ export default function ProfilePage() {
     setProfile(null);
     setForm(emptyProfile);
     notify({
-      message: "Phien dang nhap da duoc ket thuc.",
-      title: "Da dang xuat",
+      message: "Phiên đăng nhập đã được kết thúc.",
+      title: "Đã đăng xuất",
       type: "success",
     });
   };
@@ -291,14 +322,14 @@ export default function ProfilePage() {
           <Card className="w-full border-stone-200 shadow-sm">
             <CardContent className="p-8 text-center">
               <UserRound className="mx-auto h-12 w-12 text-stone-400" />
-              <h1 className="mt-4 text-2xl font-semibold text-stone-950">Can dang nhap</h1>
+              <h1 className="mt-4 text-2xl font-semibold text-stone-950">Cần đăng nhập</h1>
               <p className="mt-2 text-sm leading-6 text-stone-600">
-                Dang nhap de cap nhat thong tin ca nhan, dia chi giao hang, anh dai dien va mat khau.
+                Đăng nhập để cập nhật thông tin cá nhân, địa chỉ giao hàng, ảnh đại diện và mật khẩu.
               </p>
               <Button asChild className="mt-6">
                 <Link href="/login">
                   <LogIn className="h-4 w-4" />
-                  Dang nhap
+                  Đăng nhập
                 </Link>
               </Button>
             </CardContent>
@@ -329,7 +360,7 @@ export default function ProfilePage() {
               <div>
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <Badge variant={isExpired ? "warning" : "default"}>
-                    {isExpired ? "Phien het han" : "Tai khoan hoat dong"}
+                    {isExpired ? "Phiên hết hạn" : "Tài khoản hoạt động"}
                   </Badge>
                   {roles.map((role) => (
                     <Badge key={role} variant="secondary" className="capitalize">
@@ -339,14 +370,14 @@ export default function ProfilePage() {
                 </div>
                 <h1 className="text-3xl font-semibold tracking-normal text-stone-950 sm:text-4xl">{displayName}</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600">
-                  Cap nhat thong tin lien he, dia chi giao hang, anh dai dien va bao mat tai khoan.
+                  Cập nhật thông tin liên hệ, địa chỉ giao hàng, ảnh đại diện và bảo mật tài khoản.
                 </p>
               </div>
             </div>
 
             <Button variant="outline" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
-              Dang xuat
+              Đăng xuất
             </Button>
           </div>
         </section>
@@ -376,7 +407,7 @@ export default function ProfilePage() {
               <CardHeader className="border-b border-stone-100">
                 <CardTitle className="flex items-center gap-2 text-xl">
                   <UserRound className="h-5 w-5" />
-                  Ho so ca nhan
+                  Hồ sơ cá nhân
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-5">
@@ -395,15 +426,15 @@ export default function ProfilePage() {
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-stone-950">Anh dai dien</p>
+                        <p className="text-sm font-semibold text-stone-950">Ảnh đại diện</p>
                         <p className="mt-1 text-sm leading-6 text-stone-600">
-                          Nen dung anh vuong, ro mat. Anh se duoc luu sau khi bam luu ho so.
+                          Nên dùng ảnh vuông, rõ mặt. Ảnh sẽ được cập nhật ngay sau khi tải lên thành công.
                         </p>
                       </div>
                       <Button asChild variant="outline">
                         <label className="cursor-pointer">
                           <Camera className="h-4 w-4" />
-                          {isUploadingAvatar ? "Dang tai..." : "Doi anh"}
+                          {isUploadingAvatar ? "Đang tải..." : "Đổi ảnh"}
                           <input
                             className="sr-only"
                             type="file"
@@ -419,35 +450,35 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
-                      <ProfileField icon={UserRound} label="Ten dang nhap">
+                      <ProfileField icon={UserRound} label="Tên đăng nhập">
                         <Input value={accountName} disabled />
                       </ProfileField>
-                      <ProfileField icon={UserRound} label="Ho va ten">
-                        <Input value={form.fullName ?? ""} onChange={(event) => updateField("fullName", event.target.value)} placeholder="Nguyen Van A" />
+                      <ProfileField icon={UserRound} label="Họ và tên">
+                        <Input value={form.fullName ?? ""} onChange={(event) => updateField("fullName", event.target.value)} placeholder="Nguyễn Văn A" />
                       </ProfileField>
                       <ProfileField icon={Mail} label="Email">
                         <Input type="email" value={form.email ?? ""} onChange={(event) => updateField("email", event.target.value)} placeholder="you@example.com" />
                       </ProfileField>
-                      <ProfileField icon={Phone} label="So dien thoai">
+                      <ProfileField icon={Phone} label="Số điện thoại">
                         <Input value={form.phone ?? ""} onChange={(event) => updateField("phone", event.target.value)} placeholder="0900 000 000" />
                       </ProfileField>
-                      <ProfileField icon={MapPin} label="Tinh / Thanh pho">
+                      <ProfileField icon={MapPin} label="Tỉnh / Thành phố">
                         <Input value={form.city ?? ""} onChange={(event) => updateField("city", event.target.value)} placeholder="TP. Ho Chi Minh" />
                       </ProfileField>
-                      <ProfileField icon={MapPin} label="Quan / Huyen">
-                        <Input value={form.district ?? ""} onChange={(event) => updateField("district", event.target.value)} placeholder="Quan 1" />
+                      <ProfileField icon={MapPin} label="Quận / Huyện">
+                        <Input value={form.district ?? ""} onChange={(event) => updateField("district", event.target.value)} placeholder="Quận 1" />
                       </ProfileField>
-                      <ProfileField icon={MapPin} label="Phuong / Xa">
-                        <Input value={form.ward ?? ""} onChange={(event) => updateField("ward", event.target.value)} placeholder="Ben Nghe" />
+                      <ProfileField icon={MapPin} label="Phường / Xã">
+                        <Input value={form.ward ?? ""} onChange={(event) => updateField("ward", event.target.value)} placeholder="Bến Nghé" />
                       </ProfileField>
-                      <ProfileField icon={Home} label="Dia chi chi tiet">
-                        <Input value={form.address ?? ""} onChange={(event) => updateField("address", event.target.value)} placeholder="So nha, ten duong" />
+                      <ProfileField icon={Home} label="Địa chỉ chi tiết">
+                        <Input value={form.address ?? ""} onChange={(event) => updateField("address", event.target.value)} placeholder="Số nhà, tên đường" />
                       </ProfileField>
                     </div>
 
                     <div className="flex justify-end">
                       <Button type="submit" disabled={isSavingProfile || isUploadingAvatar}>
-                        {isSavingProfile ? "Dang luu..." : "Luu ho so"}
+                        {isSavingProfile ? "Đang lưu..." : "Lưu hồ sơ"}
                       </Button>
                     </div>
                   </form>
@@ -457,31 +488,56 @@ export default function ProfilePage() {
 
             <Card className="border-stone-200 shadow-sm">
               <CardHeader className="border-b border-stone-100">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <KeyRound className="h-5 w-5" />
-                  Doi mat khau
-                </CardTitle>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <KeyRound className="h-5 w-5" />
+                    Bảo mật tài khoản
+                  </CardTitle>
+                  {!isPasswordFormOpen ? (
+                    <Button variant="outline" type="button" onClick={() => setIsPasswordFormOpen(true)}>
+                      <KeyRound className="h-4 w-4" />
+                      Đổi mật khẩu
+                    </Button>
+                  ) : null}
+                </div>
               </CardHeader>
               <CardContent className="p-5">
-                <form className="grid gap-4 md:grid-cols-3" onSubmit={handlePasswordSubmit}>
-                  <label className="block text-sm font-semibold text-stone-800">
-                    Mat khau hien tai
-                    <Input className="mt-2" type="password" value={passwordForm.currentPassword} onChange={(event) => updatePasswordField("currentPassword", event.target.value)} />
-                  </label>
-                  <label className="block text-sm font-semibold text-stone-800">
-                    Mat khau moi
-                    <Input className="mt-2" type="password" value={passwordForm.newPassword} onChange={(event) => updatePasswordField("newPassword", event.target.value)} />
-                  </label>
-                  <label className="block text-sm font-semibold text-stone-800">
-                    Xac nhan mat khau
-                    <Input className="mt-2" type="password" value={passwordForm.confirmPassword} onChange={(event) => updatePasswordField("confirmPassword", event.target.value)} />
-                  </label>
-                  <div className="md:col-span-3 md:flex md:justify-end">
-                    <Button type="submit" disabled={isChangingPassword}>
-                      {isChangingPassword ? "Dang doi..." : "Doi mat khau"}
-                    </Button>
+                {!isPasswordFormOpen ? (
+                  <div className="rounded-md border border-dashed border-stone-300 bg-stone-50 p-5 text-sm leading-6 text-stone-600">
+                    Mật khẩu hiện được ẩn để bảo vệ tài khoản. Chỉ mở form khi bạn muốn thay đổi mật khẩu.
                   </div>
-                </form>
+                ) : (
+                  <form className="grid gap-4 md:grid-cols-3" onSubmit={handlePasswordSubmit}>
+                    <label className="block text-sm font-semibold text-stone-800">
+                      Mật khẩu hiện tại
+                      <Input className="mt-2" type="password" value={passwordForm.currentPassword} onChange={(event) => updatePasswordField("currentPassword", event.target.value)} />
+                    </label>
+                    <label className="block text-sm font-semibold text-stone-800">
+                      Mật khẩu mới
+                      <Input className="mt-2" type="password" value={passwordForm.newPassword} onChange={(event) => updatePasswordField("newPassword", event.target.value)} />
+                    </label>
+                    <label className="block text-sm font-semibold text-stone-800">
+                      Xác nhận mật khẩu
+                      <Input className="mt-2" type="password" value={passwordForm.confirmPassword} onChange={(event) => updatePasswordField("confirmPassword", event.target.value)} />
+                    </label>
+                    <div className="flex justify-end gap-2 md:col-span-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isChangingPassword}
+                        onClick={() => {
+                          setPasswordForm(emptyPassword);
+                          setIsPasswordFormOpen(false);
+                        }}
+                      >
+                        Hủy
+                      </Button>
+                      <Button type="submit" disabled={isChangingPassword}>
+                        {isChangingPassword ? "Đang đổi..." : "Lưu mật khẩu mới"}
+                      </Button>
+                    </div>
+                  </form>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -491,33 +547,33 @@ export default function ProfilePage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl">
                   <Package className="h-5 w-5" />
-                  Tac vu nhanh
+                  Tác vụ nhanh
                 </CardTitle>
               </CardHeader>
               <CardContent className="grid gap-3">
                 <Button asChild className="justify-start">
                   <Link href="/products">
                     <ShoppingBag className="h-4 w-4" />
-                    Xem san pham
+                    Xem sản phẩm
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="justify-start">
                   <Link href="/cart">
                     <WalletCards className="h-4 w-4" />
-                    Mo gio hang
+                    Mở giỏ hàng
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="justify-start">
                   <Link href="/orders">
                     <Package className="h-4 w-4" />
-                    Don hang cua toi
+                    Đơn hàng của tôi
                   </Link>
                 </Button>
                 {hasAdminRole ? (
                   <Button asChild variant="outline" className="justify-start">
                     <Link href="/admin">
                       <ShieldCheck className="h-4 w-4" />
-                      Quan tri
+                      Quản trị
                     </Link>
                   </Button>
                 ) : null}
@@ -526,22 +582,22 @@ export default function ProfilePage() {
 
             <Card className="border-stone-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-xl">Thong tin giao hang</CardTitle>
+                <CardTitle className="text-xl">Thông tin giao hàng</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-stone-700">
-                <InfoLine icon={Phone} label="Dien thoai" value={form.phone || "Chua cap nhat"} />
-                <InfoLine icon={Mail} label="Email" value={form.email || "Chua cap nhat"} />
+                <InfoLine icon={Phone} label="Điện thoại" value={form.phone || "Chưa cập nhật"} />
+                <InfoLine icon={Mail} label="Email" value={form.email || "Chưa cập nhật"} />
                 <InfoLine
                   icon={MapPin}
-                  label="Dia chi"
-                  value={[form.address, form.ward, form.district, form.city].filter(Boolean).join(", ") || "Chua cap nhat"}
+                  label="Địa chỉ"
+                  value={[form.address, form.ward, form.district, form.city].filter(Boolean).join(", ") || "Chưa cập nhật"}
                 />
               </CardContent>
             </Card>
 
             <Card className="border-stone-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-xl">Gio hang gan day</CardTitle>
+                <CardTitle className="text-xl">Giỏ hàng gần đây</CardTitle>
               </CardHeader>
               <CardContent>
                 {visibleCartItems.length ? (
@@ -550,7 +606,7 @@ export default function ProfilePage() {
                       <div key={item.product.id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
                         <div className="min-w-0">
                           <p className="truncate font-medium text-stone-950">{item.product.name}</p>
-                          <p className="mt-1 text-sm text-stone-500">So luong: {item.quantity}</p>
+                          <p className="mt-1 text-sm text-stone-500">Số lượng: {item.quantity}</p>
                         </div>
                         <p className="shrink-0 text-sm font-semibold text-stone-950">
                           {formatMoney(Number(item.product.price ?? 0) * item.quantity)}
@@ -560,7 +616,7 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div className="rounded-md border border-dashed border-stone-300 bg-stone-50 p-5 text-sm text-stone-600">
-                    Gio hang dang trong.
+                    Giỏ hàng đang trống.
                   </div>
                 )}
               </CardContent>

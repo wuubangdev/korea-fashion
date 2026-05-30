@@ -2,6 +2,8 @@
 
 import { ChevronDown, Heart, LogOut, Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { SafeImage } from "@/components/SafeImage";
 import { useToast } from "@/components/ToastProvider";
@@ -50,9 +52,11 @@ function getInitials(username: string) {
 
 export function StoreHeader() {
   const cart = useCart();
+  const router = useRouter();
   const { notify } = useToast();
   const { settings } = useSiteSettings();
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [session, setSession] = useState<SessionState>({ avatarUrl: "", token: null, username: "" });
 
   const categoriesResource = useApiResource<Collection<Category>>({
@@ -105,10 +109,17 @@ export function StoreHeader() {
     setIsOpen(false);
     window.dispatchEvent(new Event("auth:update"));
     notify({
-      message: "Phien dang nhap da duoc ket thuc.",
-      title: "Da dang xuat",
+      message: "Phiên đăng nhập đã được kết thúc.",
+      title: "Đã đăng xuất",
       type: "success",
     });
+  }
+
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const keyword = searchTerm.trim();
+    setIsOpen(false);
+    router.push(keyword ? `/products?search=${encodeURIComponent(keyword)}` : "/products");
   }
 
   return (
@@ -177,9 +188,19 @@ export function StoreHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button className="hidden sm:inline-flex" variant="ghost" size="icon" aria-label="Tìm sản phẩm" disabled>
-            <Search aria-hidden className="h-4 w-4" />
-          </Button>
+          <form className="hidden w-44 items-center rounded-md border border-stone-200 bg-white px-2 py-1.5 shadow-sm md:flex lg:w-64" onSubmit={handleSearch}>
+            <Search aria-hidden className="h-4 w-4 shrink-0 text-stone-400" />
+            <input
+              aria-label="Tìm sản phẩm"
+              className="min-w-0 flex-1 bg-transparent px-2 text-sm text-stone-800 outline-none placeholder:text-stone-400"
+              placeholder="Tìm sản phẩm"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+            <Button className="h-8 px-2" size="sm" type="submit" variant="ghost">
+              Tìm
+            </Button>
+          </form>
 
           <UserOrderBell token={session.token} />
 
@@ -253,7 +274,20 @@ export function StoreHeader() {
 
       {isOpen ? (
         <div className="animate-in border-t border-stone-200 bg-white px-4 py-3 shadow-lg shadow-stone-950/5 md:hidden">
-          <nav className="mx-auto grid max-w-7xl gap-1 text-sm font-medium text-stone-700">
+          <nav className="mx-auto grid max-w-7xl gap-2 text-sm font-medium text-stone-700">
+            <form className="mb-1 flex items-center rounded-md border border-stone-200 bg-stone-50 px-2 py-1.5" onSubmit={handleSearch}>
+              <Search aria-hidden className="h-4 w-4 shrink-0 text-stone-400" />
+              <input
+                aria-label="Tìm sản phẩm"
+                className="min-w-0 flex-1 bg-transparent px-2 text-sm text-stone-800 outline-none placeholder:text-stone-400"
+                placeholder="Tìm sản phẩm"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+              <Button className="h-8 px-2" size="sm" type="submit" variant="ghost">
+                Tìm
+              </Button>
+            </form>
             <Link href="/products" className="rounded-md px-3 py-2 hover:bg-stone-100" onClick={() => setIsOpen(false)}>
               Tất cả sản phẩm
             </Link>
