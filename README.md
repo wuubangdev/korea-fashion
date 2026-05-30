@@ -34,7 +34,7 @@ SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/kf?useSSL=false&allowPublicKey
 SPRING_DATASOURCE_USERNAME=kf
 SPRING_DATASOURCE_PASSWORD=kf_password
 APP_JWT_SECRET=replace-with-long-random-secret
-APP_CORS_ALLOWED_ORIGINS=*
+APP_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
 
 LOCAL_MYSQL_DATABASE=kf
 LOCAL_MYSQL_USER=kf
@@ -122,6 +122,18 @@ Production dung `docker-compose.prod.yml` va file `.env.production` dat truc tie
 
 ```bash
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build --remove-orphans
+```
+
+Voi domain HTTPS, frontend nen goi API qua subdomain backend rieng:
+
+```env
+NEXT_PUBLIC_API_URL=https://api.sieunhon.top
+APP_CORS_ALLOWED_ORIGINS=https://sieunhan.top,https://www.sieunhan.top,http://sieunhan.top,http://www.sieunhan.top
+BACKEND_BIND_HOST=127.0.0.1
+BACKEND_PORT=3398
+FRONTEND_BIND_HOST=127.0.0.1
+FRONTEND_PORT=3397
+SERVER_FORWARD_HEADERS_STRATEGY=framework
 ```
 
 Kiem tra container va log:

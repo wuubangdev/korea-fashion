@@ -3,7 +3,7 @@ import { invalidateApiCache } from "@/lib/api/cache";
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-  "http://103.173.66.91:3398";
+  "https://api.sieunhon.top";
 
 export type RequestOptions = {
   body?: unknown;
