@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { API_BASE_URL } from "@/lib/api/client";
 import { storefrontApi } from "@/lib/api/domains/storefront";
 import type { SiteSetting } from "@/types/api";
 
@@ -39,12 +40,17 @@ export function getPublicSiteUrl(settings?: SiteSetting) {
 }
 
 export function toAbsoluteUrl(value: string | undefined, baseUrl: URL) {
-  if (!value) {
+  const trimmed = value?.trim();
+  if (!trimmed) {
     return undefined;
   }
 
   try {
-    return new URL(value, baseUrl).toString();
+    if (trimmed.startsWith("/uploads/")) {
+      return new URL(trimmed, API_BASE_URL).toString();
+    }
+
+    return new URL(trimmed, baseUrl).toString();
   } catch {
     return undefined;
   }
@@ -61,7 +67,7 @@ function parseKeywords(value: string | string[] | undefined) {
 export async function getSeoSettings() {
   try {
     const settings = await storefrontApi.siteSettings({
-      next: { revalidate: 300, tags: ["site-settings"] },
+      next: { revalidate: 60, tags: ["site-settings"] },
     });
 
     return { ...fallbackSeoSettings, ...settings };

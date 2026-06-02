@@ -121,11 +121,13 @@ public class CustomerAccountController {
         if (authentication == null || authentication.getName() == null) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Login required");
         }
-        int updated = userRepository.updateAvatarByUsername(authentication.getName(), blankToNull(request.avatarUrl()));
+        String avatarUrl = blankToNull(request.avatarUrl());
+        int updated = userRepository.updateAvatarByUsername(authentication.getName(), avatarUrl);
         if (updated == 0) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Login required");
         }
         UserJpaEntity saved = currentUser(authentication);
+        reviewRepository.updateReviewerAvatarByUserId(saved.getId(), avatarUrl);
         return ResponseEntity.ok(UserApiMapper.toResponse(com.shope.kf.infrastructure.persistence.jpa.mapper.UserMapper.toDomain(saved)));
     }
 

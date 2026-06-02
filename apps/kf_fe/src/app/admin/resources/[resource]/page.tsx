@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { Copy, Edit3, ExternalLink, MoreHorizontal, Plus, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
+import { Copy, CreditCard, Edit3, ExternalLink, MoreHorizontal, PackageCheck, Plus, RefreshCw, RotateCcw, Trash2, Truck, Undo2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { DataTable, type Column } from "@/components/DataTable";
 import { DataToolbar } from "@/components/DataToolbar";
@@ -75,12 +76,15 @@ const createFieldHints: Record<string, string[]> = {
 const editFieldHints: Record<string, string[]> = {
   ...createFieldHints,
   "contact-messages": ["status", "adminNote"],
-  orders: ["status", "paymentStatus", "fulfillmentStatus", "shippingStatus", "shipperId", "note"],
+  orders: ["paymentStatus", "shipperId", "shippingStatus", "status"],
   payments: ["status", "method", "paidAt"],
   products: ["name", "sku", "brand", "categoryId", "price", "stockQuantity", "status", "description", "imageUrl"],
   reviews: ["status", "adminReply"],
   users: ["username", "email", "fullName", "phone", "address", "city", "district", "ward", "avatarUrl", "roles"],
 };
+
+const paymentFlowOptions = ["UNPAID", "PENDING", "PAID", "FAILED", "CANCELLED"];
+const returnPaymentOptions = ["REFUNDED"];
 
 export default function AdminResourcePage() {
   const params = useParams<{ resource: string }>();
@@ -363,6 +367,15 @@ function ResourceTable({
       return;
     }
 
+    if (editor.resourceSlug === "orders" && editor.mode === "edit" && editor.id !== undefined) {
+      await mutate({
+        action: () => saveOrderStatusFlow(editor, body),
+        errorMessage: "KhÃ´ng thá»ƒ cáº­p nháº­t tráº¡ng thÃ¡i Ä‘Æ¡n hÃ ng",
+        successMessage: "ÄÃ£ cáº­p nháº­t flow tráº¡ng thÃ¡i Ä‘Æ¡n hÃ ng.",
+      });
+      return;
+    }
+
     await mutate({
       action: () =>
         editor.mode === "create"
@@ -549,13 +562,26 @@ function ResourceTable({
         </div>
       ) : null}
 
-      <DataTable
-        columns={columns.length ? columns : emptyColumns}
-        data={data.data.content}
-        emptyText={isTrashMode ? "Thùng rác đang trống" : "Chưa có dữ liệu từ endpoint này"}
-        getRowKey={(item, index) => getRowKey(item, index)}
-        isLoading={data.isLoading}
-      />
+      {resource.slug === "orders" && !isTrashMode ? (
+        <OrderStageBoard
+          isLoading={data.isLoading}
+          orders={data.data.content}
+          onEdit={(item) => {
+            const id = getId(item);
+            if (id !== null) {
+              openEdit(item, id);
+            }
+          }}
+        />
+      ) : (
+        <DataTable
+          columns={columns.length ? columns : emptyColumns}
+          data={data.data.content}
+          emptyText={isTrashMode ? "Thùng rác đang trống" : "Chưa có dữ liệu từ endpoint này"}
+          getRowKey={(item, index) => getRowKey(item, index)}
+          isLoading={data.isLoading}
+        />
+      )}
 
       <Pagination
         page={data.data.page}
@@ -627,6 +653,324 @@ function ResourceTable({
   );
 }
 
+type OrderStageKey = "payment" | "shipping" | "refund" | "complete" | "other";
+type BadgeVariant = "default" | "secondary" | "success" | "warning" | "danger";
+
+const orderStageDefinitions: Array<{
+  key: OrderStageKey;
+  title: string;
+  description: string;
+  icon: ReactNode;
+}> = [
+  {
+    key: "payment",
+    title: "Bảng thanh toán",
+    description: "Đơn mới, đang chờ thanh toán hoặc thanh toán lỗi.",
+    icon: <CreditCard className="h-4 w-4" />,
+  },
+  {
+    key: "shipping",
+    title: "Bảng vận chuyển",
+    description: "Chỉ chứa đơn đã thanh toán và đang cần giao hàng.",
+    icon: <Truck className="h-4 w-4" />,
+  },
+  {
+    key: "refund",
+    title: "Bảng hoàn/trả",
+    description: "Đơn đã mở nhánh trả hàng hoặc hoàn tiền.",
+    icon: <Undo2 className="h-4 w-4" />,
+  },
+  {
+    key: "complete",
+    title: "Bảng hoàn tất",
+    description: "Đơn đã giao thành công và không có yêu cầu hoàn/trả.",
+    icon: <PackageCheck className="h-4 w-4" />,
+  },
+  {
+    key: "other",
+    title: "Bảng khác / hủy",
+    description: "Đơn hủy, thất bại hoặc dữ liệu chưa đủ để xếp bước.",
+    icon: <MoreHorizontal className="h-4 w-4" />,
+  },
+];
+
+function OrderStageBoard({
+  isLoading,
+  onEdit,
+  orders,
+}: {
+  isLoading: boolean;
+  onEdit: (item: AdminRow) => void;
+  orders: AdminRow[];
+}) {
+  const grouped = orderStageDefinitions.reduce<Record<OrderStageKey, AdminRow[]>>(
+    (accumulator, stage) => ({ ...accumulator, [stage.key]: [] }),
+    { payment: [], shipping: [], refund: [], complete: [], other: [] },
+  );
+
+  orders.forEach((order) => {
+    grouped[getOrderStage(order)].push(order);
+  });
+
+  if (isLoading) {
+    return (
+      <div className="rounded-md border border-stone-200 bg-white p-6">
+        <Loader label="Đang tải đơn hàng..." />
+      </div>
+    );
+  }
+
+  if (!orders.length) {
+    return (
+      <div className="rounded-md border border-stone-200 bg-white p-6 text-center text-sm text-slate-500">
+        Chưa có đơn hàng trong trang này.
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-4">
+      {orderStageDefinitions.map((stage) => (
+        <OrderStageSection
+          key={stage.key}
+          description={stage.description}
+          icon={stage.icon}
+          orders={grouped[stage.key]}
+          title={stage.title}
+          onEdit={onEdit}
+        />
+      ))}
+    </div>
+  );
+}
+
+function OrderStageSection({
+  description,
+  icon,
+  onEdit,
+  orders,
+  title,
+}: {
+  description: string;
+  icon: ReactNode;
+  onEdit: (item: AdminRow) => void;
+  orders: AdminRow[];
+  title: string;
+}) {
+  return (
+    <section className="overflow-hidden rounded-md border border-stone-200 bg-white">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-200 bg-stone-50 px-4 py-3">
+        <div className="flex items-start gap-3">
+          <div className="grid h-9 w-9 place-items-center rounded-md border border-stone-200 bg-white text-slate-700">
+            {icon}
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="font-semibold text-slate-950">{title}</h2>
+              <Badge variant="secondary">{orders.length}</Badge>
+            </div>
+            <p className="mt-1 text-sm text-slate-500">{description}</p>
+          </div>
+        </div>
+      </div>
+
+      {orders.length ? (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-stone-200 text-sm">
+            <thead className="bg-white text-xs uppercase text-slate-500">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold">Đơn</th>
+                <th className="px-4 py-3 text-left font-semibold">Khách hàng</th>
+                <th className="px-4 py-3 text-left font-semibold">Tổng tiền</th>
+                <th className="px-4 py-3 text-left font-semibold">Thanh toán</th>
+                <th className="px-4 py-3 text-left font-semibold">Vận chuyển</th>
+                <th className="px-4 py-3 text-left font-semibold">Đơn hàng</th>
+                <th className="px-4 py-3 text-left font-semibold">Cập nhật</th>
+                <th className="px-4 py-3 text-right font-semibold">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-stone-100">
+              {orders.map((order, index) => (
+                <OrderStageRow key={getRowKey(order, index)} order={order} onEdit={onEdit} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="px-4 py-6 text-sm text-slate-500">Không có đơn ở bước này.</div>
+      )}
+    </section>
+  );
+}
+
+function OrderStageRow({ onEdit, order }: { onEdit: (item: AdminRow) => void; order: AdminRow }) {
+  const paymentStatus = orderText(order, ["paymentStatus"]) || "UNPAID";
+  const shippingStatus = orderText(order, ["shippingStatus"]) || "PENDING";
+  const status = orderText(order, ["status"]) || "NEW";
+  const total = orderValue(order, ["total", "totalAmount", "grandTotal", "amount", "subtotal"]);
+  const updatedAt = orderText(order, ["updatedAt", "createdAt"]);
+
+  return (
+    <tr className="align-top hover:bg-stone-50">
+      <td className="px-4 py-3">
+        <div className="font-medium text-slate-950">{orderCode(order)}</div>
+        <div className="mt-1 text-xs text-slate-500">ID: {String(getId(order) ?? "-")}</div>
+      </td>
+      <td className="px-4 py-3 text-slate-700">{orderCustomer(order)}</td>
+      <td className="px-4 py-3 font-medium text-slate-900">
+        {total === undefined || total === null || total === "" ? "-" : formatMoney(String(total))}
+      </td>
+      <td className="px-4 py-3">
+        <Badge variant={orderStatusVariant(paymentStatus)}>{paymentStatus}</Badge>
+      </td>
+      <td className="px-4 py-3">
+        <Badge variant={orderStatusVariant(shippingStatus)}>{shippingStatus}</Badge>
+      </td>
+      <td className="px-4 py-3">
+        <Badge variant={orderStatusVariant(status)}>{status}</Badge>
+      </td>
+      <td className="px-4 py-3 text-slate-600">{updatedAt ? formatDate(updatedAt) : "-"}</td>
+      <td className="px-4 py-3 text-right">
+        <Button size="sm" variant="outline" onClick={() => onEdit(order)}>
+          <Edit3 className="h-4 w-4" />
+          Xử lý
+        </Button>
+      </td>
+    </tr>
+  );
+}
+
+async function saveOrderStatusFlow(editor: EditorState, body: Record<string, unknown>) {
+  const orderId = Number(editor.id);
+  if (!Number.isFinite(orderId)) {
+    throw new Error("ID Ä‘Æ¡n hÃ ng khÃ´ng há»£p lá»‡.");
+  }
+
+  const initial = editor.initialValues;
+  const paymentStatus = stringValue(body.paymentStatus);
+  const shipperId = stringValue(body.shipperId);
+  const shippingStatus = stringValue(body.shippingStatus);
+  const requestedOrderStatus = stringValue(body.status);
+  const effectivePaymentStatus = paymentStatus || initial.paymentStatus;
+  const effectiveShipperId = shipperId || initial.shipperId;
+  const initialShippingStatus = initial.shippingStatus || "PENDING";
+  const effectiveShippingStatus = shippingStatus || initialShippingStatus;
+  const orderStatus = deriveOrderStatus({
+    effectivePaymentStatus,
+    effectiveShippingStatus,
+    initialStatus: initial.status || "NEW",
+    requestedOrderStatus,
+  });
+
+  validateOrderStatusFlow({
+    effectivePaymentStatus,
+    effectiveShipperId,
+    initialShippingStatus,
+    orderStatus,
+    shippingStatus,
+  });
+
+  if (paymentStatus && paymentStatus !== initial.paymentStatus) {
+    await apiFetch(`/api/orders/${orderId}/payment-status`, undefined, {
+      body: { paymentStatus },
+      method: "PUT",
+    });
+  }
+
+  if (shipperId && shipperId !== initial.shipperId) {
+    await apiFetch(`/api/orders/${orderId}/shipper`, undefined, {
+      body: { shipperId },
+      method: "PUT",
+    });
+  }
+
+  if (shippingStatus && shippingStatus !== initial.shippingStatus) {
+    await apiFetch(`/api/orders/${orderId}/shipping-status`, undefined, {
+      body: { shippingStatus },
+      method: "PUT",
+    });
+  }
+
+  if (orderStatus && orderStatus !== initial.status) {
+    await apiFetch(`/api/orders/${orderId}/status`, { status: orderStatus }, {
+      method: "PUT",
+    });
+  }
+}
+
+function deriveOrderStatus({
+  effectivePaymentStatus,
+  effectiveShippingStatus,
+  initialStatus,
+  requestedOrderStatus,
+}: {
+  effectivePaymentStatus: string;
+  effectiveShippingStatus: string;
+  initialStatus: string;
+  requestedOrderStatus: string;
+}) {
+  if (effectivePaymentStatus === "REFUNDED" || requestedOrderStatus === "RETURNED") {
+    return "RETURNED";
+  }
+
+  if (effectivePaymentStatus === "FAILED" || effectiveShippingStatus === "FAILED") {
+    return "FAILED";
+  }
+
+  if (effectivePaymentStatus === "CANCELLED" || effectiveShippingStatus === "CANCELLED") {
+    return "CANCELLED";
+  }
+
+  if (effectiveShippingStatus === "DELIVERED") {
+    return "COMPLETED";
+  }
+
+  if (effectiveShippingStatus === "SHIPPING") {
+    return "SHIPPING";
+  }
+
+  if (effectivePaymentStatus === "PAID" && ["NEW", "PENDING", "UNPAID"].includes(initialStatus)) {
+    return "PROCESSING";
+  }
+
+  return requestedOrderStatus || initialStatus;
+}
+
+function validateOrderStatusFlow({
+  effectivePaymentStatus,
+  effectiveShipperId,
+  initialShippingStatus,
+  orderStatus,
+  shippingStatus,
+}: {
+  effectivePaymentStatus: string;
+  effectiveShipperId: string;
+  initialShippingStatus: string;
+  orderStatus: string;
+  shippingStatus: string;
+}) {
+  if (shippingStatus && shippingStatus !== initialShippingStatus) {
+    if (effectivePaymentStatus !== "PAID" && effectivePaymentStatus !== "REFUNDED") {
+      throw new Error("Phải hoàn tất bước thanh toán trước khi cập nhật vận chuyển.");
+    }
+
+    if (shippingStatus !== "PENDING" && !effectiveShipperId) {
+      throw new Error("Phải nhập Shipper ID trước khi chuyển trạng thái vận chuyển.");
+    }
+
+    const allowed = nextShippingStatuses(initialShippingStatus);
+    if (!allowed.includes(shippingStatus)) {
+      throw new Error(`Trạng thái vận chuyển kế tiếp hợp lệ: ${allowed.map(humanize).join(", ")}.`);
+    }
+  }
+
+  if (effectivePaymentStatus === "REFUNDED" || orderStatus === "RETURNED") {
+    if (initialShippingStatus !== "DELIVERED" && shippingStatus !== "DELIVERED") {
+      throw new Error("Chỉ mở bước trả hàng sau khi đơn đã giao xong.");
+    }
+  }
+}
+
 function EditorForm({
   editor,
   onChange,
@@ -634,6 +978,22 @@ function EditorForm({
   editor: EditorState;
   onChange: (updater: (current: EditorState | null) => EditorState | null) => void;
 }) {
+  const updateField = (key: string, value: string) =>
+    onChange((current) =>
+      current
+        ? {
+            ...current,
+            fields: current.fields.map((item) =>
+              item.key === key ? { ...item, value } : item,
+            ),
+          }
+        : current,
+    );
+
+  if (editor.resourceSlug === "orders" && editor.mode === "edit" && editor.fieldScope === "basic") {
+    return <OrderStatusFlowEditor editor={editor} onFieldChange={updateField} />;
+  }
+
   const steps = chunk(editor.fields, fieldsPerStep);
   const currentFields = steps[editor.currentStep] ?? [];
 
@@ -705,6 +1065,187 @@ function EditorForm({
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function OrderStatusFlowEditor({
+  editor,
+  onFieldChange,
+}: {
+  editor: EditorState;
+  onFieldChange: (key: string, value: string) => void;
+}) {
+  const paymentStatus = getEditorFieldValue(editor, "paymentStatus") || "UNPAID";
+  const shippingStatus = getEditorFieldValue(editor, "shippingStatus") || "PENDING";
+  const shipperId = getEditorFieldValue(editor, "shipperId");
+  const orderStatus = getEditorFieldValue(editor, "status") || "NEW";
+  const initialShippingStatus = editor.initialValues.shippingStatus || "PENDING";
+  const initialReturnOpen = paymentStatus === "REFUNDED" || orderStatus === "RETURNED";
+  const [returnOpen, setReturnOpen] = useState(initialReturnOpen);
+  const paymentDone = paymentStatus === "PAID";
+  const shippingDone = shippingStatus === "DELIVERED";
+  const canEditShipping = paymentDone;
+  const showReturnStep = returnOpen || paymentStatus === "REFUNDED" || orderStatus === "RETURNED";
+  const shippingOptions = nextShippingStatuses(initialShippingStatus);
+  const requiresShipper = shippingStatus !== "PENDING";
+
+  function openReturnStep() {
+    setReturnOpen(true);
+    onFieldChange("paymentStatus", "REFUNDED");
+    onFieldChange("status", "RETURNED");
+  }
+
+  return (
+    <div className="grid gap-3">
+      <div className="rounded-md border border-stone-200 bg-stone-50 p-3">
+        <div className="flex flex-wrap gap-2">
+          <StatusBadgeLike label="Đơn" value={orderStatus} />
+          <StatusBadgeLike label="Thanh toán" value={paymentStatus} />
+          <StatusBadgeLike label="Vận chuyển" value={shippingStatus} />
+          {shipperId ? <StatusBadgeLike label="Shipper" value={shipperId} /> : null}
+        </div>
+      </div>
+
+      <OrderFlowStep
+        icon={<CreditCard className="h-4 w-4" />}
+        index={1}
+        title="Thanh toán"
+        state={paymentDone || paymentStatus === "REFUNDED" ? "done" : "active"}
+        summary={paymentDone ? "Đã thanh toán, có thể xử lý vận chuyển." : "Chọn kết quả thanh toán trước khi chuyển bước giao hàng."}
+      >
+        <label className="block text-sm font-medium text-slate-700">
+          Trạng thái thanh toán
+          <Select className="mt-2" value={paymentStatus} onChange={(event) => onFieldChange("paymentStatus", event.target.value)}>
+            {options(paymentStatus === "REFUNDED" ? returnPaymentOptions : paymentFlowOptions).map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </label>
+      </OrderFlowStep>
+
+      <OrderFlowStep
+        icon={<Truck className="h-4 w-4" />}
+        index={2}
+        title="Vận chuyển"
+        state={!canEditShipping ? "locked" : shippingDone ? "done" : "active"}
+        summary={!canEditShipping ? "Bước này chỉ mở sau khi thanh toán là PAID." : shippingDone ? "Đơn đã giao xong." : `Trạng thái kế tiếp hợp lệ: ${shippingOptions.map(humanize).join(", ")}.`}
+      >
+        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_260px]">
+          <label className="block text-sm font-medium text-slate-700">
+            Shipper ID
+            <Input
+              className="mt-2"
+              disabled={!canEditShipping}
+              value={shipperId}
+              onChange={(event) => onFieldChange("shipperId", event.target.value)}
+            />
+          </label>
+          <label className="block text-sm font-medium text-slate-700">
+            Trạng thái vận chuyển
+            <Select
+              className="mt-2"
+              disabled={!canEditShipping || shippingOptions.length === 1 && shippingOptions[0] === shippingStatus}
+              value={shippingStatus}
+              onChange={(event) => onFieldChange("shippingStatus", event.target.value)}
+            >
+              {options(shippingOptions).map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </label>
+        </div>
+        {requiresShipper && !shipperId ? (
+          <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            Nhập Shipper ID trước khi lưu bước vận chuyển.
+          </p>
+        ) : null}
+      </OrderFlowStep>
+
+      {showReturnStep ? (
+        <OrderFlowStep
+          icon={<Undo2 className="h-4 w-4" />}
+          index={3}
+          title="Trả hàng"
+          state={paymentStatus === "REFUNDED" || orderStatus === "RETURNED" ? "active" : "locked"}
+          summary="Nhánh này chỉ dùng khi đơn đã giao xong và phát sinh hoàn/trả."
+        >
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="rounded-md border border-stone-200 bg-stone-50 p-3">
+              <p className="text-xs font-semibold uppercase text-slate-500">Thanh toán</p>
+              <p className="mt-1 font-medium text-slate-950">REFUNDED</p>
+            </div>
+            <div className="rounded-md border border-stone-200 bg-stone-50 p-3">
+              <p className="text-xs font-semibold uppercase text-slate-500">Đơn hàng</p>
+              <p className="mt-1 font-medium text-slate-950">RETURNED</p>
+            </div>
+          </div>
+        </OrderFlowStep>
+      ) : (
+        <div className="rounded-md border border-dashed border-stone-300 bg-stone-50 p-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="grid h-8 w-8 place-items-center rounded-md bg-white text-slate-500">
+                <PackageCheck className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="font-medium text-slate-900">Bước 3: Trả hàng</div>
+                <p className="mt-1 text-sm text-slate-500">Ẩn mặc định. Chỉ mở khi đơn có yêu cầu trả hàng hoặc hoàn tiền.</p>
+              </div>
+            </div>
+            <Button disabled={!shippingDone} size="sm" variant="outline" onClick={openReturnStep}>
+              Mở trả hàng
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OrderFlowStep({
+  children,
+  icon,
+  index,
+  state,
+  summary,
+  title,
+}: {
+  children: ReactNode;
+  icon: ReactNode;
+  index: number;
+  state: "active" | "done" | "locked";
+  summary: string;
+  title: string;
+}) {
+  const badgeVariant = state === "done" ? "success" : state === "locked" ? "secondary" : "default";
+
+  return (
+    <section className="rounded-md border border-stone-200 bg-white p-4">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="grid h-9 w-9 place-items-center rounded-md bg-stone-100 text-slate-700">{icon}</div>
+          <div>
+            <h3 className="font-semibold text-slate-950">Bước {index}: {title}</h3>
+            <p className="mt-1 text-sm text-slate-500">{summary}</p>
+          </div>
+        </div>
+        <Badge variant={badgeVariant}>{state === "done" ? "Done" : state === "locked" ? "Locked" : "Active"}</Badge>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function StatusBadgeLike({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-stone-200 bg-white px-3 py-2">
+      <span className="text-xs font-semibold uppercase text-slate-500">{label}</span>
+      <span className="ml-2 text-sm font-medium text-slate-950">{value || "-"}</span>
     </div>
   );
 }
@@ -1071,6 +1612,33 @@ function buildRequestBody(editor: EditorState) {
   }, {});
 }
 
+function getEditorFieldValue(editor: EditorState, key: string) {
+  return editor.fields.find((field) => field.key === key)?.value ?? "";
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function nextShippingStatuses(currentStatus: string) {
+  const current = currentStatus || "PENDING";
+
+  switch (current) {
+    case "PENDING":
+      return ["PENDING", "ASSIGNED", "CANCELLED"];
+    case "ASSIGNED":
+      return ["ASSIGNED", "SHIPPING", "FAILED", "CANCELLED"];
+    case "SHIPPING":
+      return ["SHIPPING", "DELIVERED", "FAILED", "CANCELLED"];
+    case "DELIVERED":
+    case "FAILED":
+    case "CANCELLED":
+      return [current];
+    default:
+      return ["PENDING"];
+  }
+}
+
 function validateEditor(editor: EditorState) {
   const firstError = editor.fields
     .map((field) => validateField(field, editor.resourceSlug))
@@ -1220,6 +1788,91 @@ function getRowKey(item: AdminRow, index: number) {
 function getId(item: AdminRow) {
   const id = item.id;
   return typeof id === "string" || typeof id === "number" ? id : null;
+}
+
+function getOrderStage(order: AdminRow): OrderStageKey {
+  const paymentStatus = orderText(order, ["paymentStatus"]).toUpperCase();
+  const shippingStatus = orderText(order, ["shippingStatus"]).toUpperCase();
+  const status = orderText(order, ["status"]).toUpperCase();
+
+  if (paymentStatus === "REFUNDED" || status === "RETURNED") {
+    return "refund";
+  }
+
+  if (status === "COMPLETED" || shippingStatus === "DELIVERED") {
+    return "complete";
+  }
+
+  if (["CANCELLED", "FAILED"].includes(status) || ["CANCELLED", "FAILED"].includes(paymentStatus)) {
+    return "other";
+  }
+
+  if (paymentStatus === "PAID") {
+    return "shipping";
+  }
+
+  if (!paymentStatus || ["UNPAID", "PENDING", "NEW"].includes(paymentStatus)) {
+    return "payment";
+  }
+
+  return "other";
+}
+
+function orderCode(order: AdminRow) {
+  const code = orderText(order, ["code", "orderCode", "orderNo", "trackingCode"]);
+  return code || `#${String(getId(order) ?? "-")}`;
+}
+
+function orderCustomer(order: AdminRow) {
+  const direct = orderText(order, ["customerName", "fullName", "username", "email", "phone"]);
+  if (direct) {
+    return direct;
+  }
+
+  const user = order.user ?? order.customer;
+  if (user && typeof user === "object") {
+    const record = user as AdminRow;
+    return orderText(record, ["fullName", "name", "username", "email", "phone"]) || compact(record);
+  }
+
+  return "-";
+}
+
+function orderText(order: AdminRow, keys: string[]) {
+  const value = orderValue(order, keys);
+  if (value === undefined || value === null) {
+    return "";
+  }
+
+  return typeof value === "string" ? value.trim() : String(value);
+}
+
+function orderValue(order: AdminRow, keys: string[]) {
+  for (const key of keys) {
+    if (order[key] !== undefined && order[key] !== null && order[key] !== "") {
+      return order[key];
+    }
+  }
+
+  return undefined;
+}
+
+function orderStatusVariant(value: string): BadgeVariant {
+  const normalized = value.toUpperCase();
+
+  if (["PAID", "DELIVERED", "COMPLETED"].includes(normalized)) {
+    return "success";
+  }
+
+  if (["PENDING", "UNPAID", "NEW", "PROCESSING", "ASSIGNED", "SHIPPING"].includes(normalized)) {
+    return "warning";
+  }
+
+  if (["FAILED", "CANCELLED", "RETURNED", "REFUNDED"].includes(normalized)) {
+    return "danger";
+  }
+
+  return "secondary";
 }
 
 function toggleSelected(

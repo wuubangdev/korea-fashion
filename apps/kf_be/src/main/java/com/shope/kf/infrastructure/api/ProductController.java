@@ -14,12 +14,16 @@ import com.shope.kf.infrastructure.persistence.jpa.ReviewJpaEntity;
 import com.shope.kf.infrastructure.persistence.jpa.mapper.PageMapper;
 import com.shope.kf.infrastructure.persistence.repository.ReviewImageJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.ReviewJpaRepository;
+import com.shope.kf.infrastructure.persistence.repository.UserJpaRepository;
 import com.shope.kf.infrastructure.security.RoleConstants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/products")
@@ -28,11 +32,18 @@ public class ProductController {
     private final ProductUseCase productUseCase;
     private final ReviewJpaRepository reviewRepository;
     private final ReviewImageJpaRepository reviewImageRepository;
+    private final UserJpaRepository userRepository;
 
-    public ProductController(ProductUseCase productUseCase, ReviewJpaRepository reviewRepository, ReviewImageJpaRepository reviewImageRepository) {
+    public ProductController(
+            ProductUseCase productUseCase,
+            ReviewJpaRepository reviewRepository,
+            ReviewImageJpaRepository reviewImageRepository,
+            UserJpaRepository userRepository
+    ) {
         this.productUseCase = productUseCase;
         this.reviewRepository = reviewRepository;
         this.reviewImageRepository = reviewImageRepository;
+        this.userRepository = userRepository;
     }
 
     @com.shope.kf.infrastructure.security.RequireAuth
@@ -99,14 +110,28 @@ public class ProductController {
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "reviewedAt,desc") String sort
     ) {
-        return ResponseEntity.ok(PageMapper.toResult(
-                reviewRepository.findByProductIdAndStatusIgnoreCase(id, "APPROVED", PageMapper.toPageable(PageQuery.of(page, size, sort))),
-                this::withImages
-        ));
+        var result = reviewRepository.findByProductIdAndStatusIgnoreCase(id, "APPROVED", PageMapper.toPageable(PageQuery.of(page, size, sort)));
+        Map<Long, String> avatarsByUserId = new HashMap<>();
+        userRepository.findAllById(
+                result.getContent().stream()
+                        .map(ReviewJpaEntity::getUserId)
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .toList()
+        ).forEach(user -> avatarsByUserId.put(user.getId(), user.getAvatarUrl()));
+
+        return ResponseEntity.ok(PageMapper.toResult(result, review -> withCurrentAvatar(withImages(review), avatarsByUserId)));
     }
 
     private ReviewJpaEntity withImages(ReviewJpaEntity review) {
         review.setImages(reviewImageRepository.findByReviewIdAndActiveTrueOrderByDisplayOrderAscIdAsc(review.getId()));
+        return review;
+    }
+
+    private ReviewJpaEntity withCurrentAvatar(ReviewJpaEntity review, Map<Long, String> avatarsByUserId) {
+        if (review.getUserId() != null && avatarsByUserId.containsKey(review.getUserId())) {
+            review.setReviewerAvatarUrl(avatarsByUserId.get(review.getUserId()));
+        }
         return review;
     }
 

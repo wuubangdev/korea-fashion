@@ -149,6 +149,7 @@ export default function AdminSiteSettingsPage() {
         method: "PUT",
       });
       setSettings({ ...emptySettings, ...result });
+      await revalidateSeoSettings();
       notify({ title: "Đã lưu", message: "Cấu hình website đã được cập nhật.", type: "success" });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Không thể lưu cấu hình website.";
@@ -257,6 +258,18 @@ export default function AdminSiteSettingsPage() {
       )}
     </AppShell>
   );
+}
+
+async function revalidateSeoSettings() {
+  try {
+    await fetch("/api/revalidate", {
+      body: JSON.stringify({ tag: "site-settings" }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    });
+  } catch {
+    // Metadata will still refresh on the next scheduled revalidation.
+  }
 }
 
 function SettingFieldControl({
