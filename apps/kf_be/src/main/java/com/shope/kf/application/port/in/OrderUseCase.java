@@ -10,6 +10,7 @@ public interface OrderUseCase {
     Order create(Order order);
     Order copy(Long id);
     Order updateStatus(Long id, String status);
+    Order updatePaymentStatus(Long id, String paymentStatus);
     Order assignShipper(Long id, String shipperId);
     Order updateShippingStatus(Long id, String shippingStatus);
     void delete(Long id);

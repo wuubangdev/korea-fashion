@@ -87,6 +87,28 @@ public class Order {
         status = OrderStatus.parse(nextStatus).name();
     }
 
+    public void changePaymentStatus(String nextStatus, OffsetDateTime now) {
+        PaymentStatus normalizedStatus = PaymentStatus.parse(nextStatus);
+        paymentStatus = normalizedStatus.name();
+
+        if (normalizedStatus == PaymentStatus.PAID && isActiveOrderStatus()) {
+            status = OrderStatus.PROCESSING.name();
+            if (confirmedAt == null) {
+                confirmedAt = now;
+            }
+            if (fulfillmentStatus == null || FulfillmentStatus.UNFULFILLED.name().equals(fulfillmentStatus)) {
+                fulfillmentStatus = FulfillmentStatus.PROCESSING.name();
+            }
+            return;
+        }
+
+        if (normalizedStatus == PaymentStatus.REFUNDED) {
+            status = OrderStatus.RETURNED.name();
+            fulfillmentStatus = FulfillmentStatus.RETURNED.name();
+            returnedAt = now;
+        }
+    }
+
     public void assignShipper(String shipperId, OffsetDateTime assignedAt) {
         if (shipperId == null || shipperId.isBlank()) {
             throw new InvalidDomainStateException("Shipper id is required");
@@ -126,6 +148,16 @@ public class Order {
             return previousStatus != null && previousStatus.isTerminalFailure() ? ShippingInventoryEffect.NONE : ShippingInventoryEffect.RELEASE;
         }
         return ShippingInventoryEffect.NONE;
+    }
+
+    private boolean isActiveOrderStatus() {
+        if (status == null || status.isBlank()) {
+            return true;
+        }
+        OrderStatus currentStatus = OrderStatus.parse(status);
+        return currentStatus == OrderStatus.NEW
+                || currentStatus == OrderStatus.PENDING
+                || currentStatus == OrderStatus.PROCESSING;
     }
 
     public enum ShippingInventoryEffect {

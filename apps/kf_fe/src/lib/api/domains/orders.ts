@@ -10,6 +10,10 @@ export type UpdateShippingStatusPayload = {
   shippingStatus: string;
 };
 
+export type UpdatePaymentStatusPayload = {
+  paymentStatus: string;
+};
+
 export type OrderItemResource = Record<string, unknown>;
 
 export const ordersApi = {
@@ -26,6 +30,8 @@ export const ordersApi = {
     getPage<Order>(`/api/orders/shipper/${shipperId}`, { page: 0, size: 10, sort: "id,desc", ...query }, options),
   updateShippingStatus: (id: number, body: UpdateShippingStatusPayload, options?: RequestOptions) =>
     putAction<Order, UpdateShippingStatusPayload>(`/api/orders/${id}/shipping-status`, body, options),
+  updatePaymentStatus: (id: number, body: UpdatePaymentStatusPayload, options?: RequestOptions) =>
+    putAction<Order, UpdatePaymentStatusPayload>(`/api/orders/${id}/payment-status`, body, options),
   updateStatus: (id: number, status: string, options?: RequestOptions) =>
     apiFetch<Order>(`/api/orders/${id}/status`, { status }, { ...options, method: "PUT" }),
 };

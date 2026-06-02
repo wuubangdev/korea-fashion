@@ -2,6 +2,7 @@ package com.shope.kf.infrastructure.api;
 
 import com.shope.kf.infrastructure.api.dto.request.CreateOrderRequest;
 import com.shope.kf.infrastructure.api.dto.request.AssignShipperRequest;
+import com.shope.kf.infrastructure.api.dto.request.UpdatePaymentStatusRequest;
 import com.shope.kf.infrastructure.api.dto.request.UpdateShippingStatusRequest;
 import com.shope.kf.infrastructure.api.dto.response.ApiResponse;
 import com.shope.kf.infrastructure.api.dto.response.OrderResponse;
@@ -148,6 +149,13 @@ public class OrderController {
     @PutMapping("/{id}/status")
     public ResponseEntity<OrderResponse> updateStatus(@PathVariable Long id, @RequestParam String status) {
         Order updated = orderUseCase.updateStatus(id, status);
+        return ResponseEntity.ok(OrderApiMapper.toResponse(updated));
+    }
+
+    @com.shope.kf.infrastructure.security.RequireAuth
+    @PutMapping("/{id}/payment-status")
+    public ResponseEntity<OrderResponse> updatePaymentStatus(@PathVariable Long id, @jakarta.validation.Valid @RequestBody UpdatePaymentStatusRequest req) {
+        Order updated = orderUseCase.updatePaymentStatus(id, req.getPaymentStatus());
         return ResponseEntity.ok(OrderApiMapper.toResponse(updated));
     }
 

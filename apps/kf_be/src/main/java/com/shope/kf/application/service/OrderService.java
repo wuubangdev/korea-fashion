@@ -56,6 +56,17 @@ public class OrderService implements OrderUseCase {
     }
 
     @Override
+    public Order updatePaymentStatus(Long id, String paymentStatus) {
+        Order existing = findById(id);
+        try {
+            existing.changePaymentStatus(paymentStatus, OffsetDateTime.now());
+        } catch (DomainException ex) {
+            throw new AppException(ErrorCode.BAD_REQUEST, ex.getMessage());
+        }
+        return port.save(existing);
+    }
+
+    @Override
     public Order assignShipper(Long id, String shipperId) {
         if (!shipperPort.existsById(shipperId)) {
             throw new AppException(ErrorCode.NOT_FOUND, "Shipper not found");

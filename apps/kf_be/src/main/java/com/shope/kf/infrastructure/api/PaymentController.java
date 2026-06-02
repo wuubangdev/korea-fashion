@@ -4,8 +4,8 @@ import com.shope.kf.application.port.in.GenericCrudUseCase;
 import com.shope.kf.domain.model.PaymentStatus;
 import com.shope.kf.infrastructure.exception.AppException;
 import com.shope.kf.infrastructure.exception.ErrorCode;
+import com.shope.kf.application.port.in.OrderUseCase;
 import com.shope.kf.infrastructure.persistence.jpa.PaymentJpaEntity;
-import com.shope.kf.infrastructure.persistence.repository.OrderJpaRepository;
 import com.shope.kf.infrastructure.security.RequireAuth;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,15 +23,15 @@ import java.time.OffsetDateTime;
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentController extends CrudController<PaymentJpaEntity, String> {
-    private final OrderJpaRepository orderRepository;
+    private final OrderUseCase orderUseCase;
     private final GenericCrudUseCase<PaymentJpaEntity, String> useCase;
 
     public PaymentController(
             @Qualifier("paymentCrudUseCase") GenericCrudUseCase<PaymentJpaEntity, String> useCase,
-            OrderJpaRepository orderRepository
+            OrderUseCase orderUseCase
     ) {
         super(useCase);
-        this.orderRepository = orderRepository;
+        this.orderUseCase = orderUseCase;
         this.useCase = useCase;
     }
 
@@ -54,10 +54,7 @@ public class PaymentController extends CrudController<PaymentJpaEntity, String> 
         }
 
         String normalizedStatus = PaymentStatus.parse(payment.getStatus()).name();
-        orderRepository.findById(payment.getOrderId()).ifPresent(order -> {
-            order.setPaymentStatus(normalizedStatus);
-            orderRepository.save(order);
-        });
+        orderUseCase.updatePaymentStatus(payment.getOrderId(), normalizedStatus);
     }
 
     @Override
