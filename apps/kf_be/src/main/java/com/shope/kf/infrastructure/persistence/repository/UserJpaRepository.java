@@ -15,6 +15,10 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
     Optional<UserJpaEntity> findByUsername(String username);
     Page<UserJpaEntity> findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(String username, String email, Pageable pageable);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update UserJpaEntity u set u.avatarUrl = :avatarUrl where u.username = :username")
+    int updateAvatarByUsername(@Param("username") String username, @Param("avatarUrl") String avatarUrl);
+
     @Modifying
     @Query(value = "delete from users where id = :id", nativeQuery = true)
     int hardDeleteById(@Param("id") Long id);

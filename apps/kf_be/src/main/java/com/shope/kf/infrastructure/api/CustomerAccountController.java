@@ -118,9 +118,14 @@ public class CustomerAccountController {
             Authentication authentication,
             @Valid @RequestBody UpdateAvatarRequest request
     ) {
-        UserJpaEntity user = currentUser(authentication);
-        user.setAvatarUrl(blankToNull(request.avatarUrl()));
-        UserJpaEntity saved = userRepository.saveAndFlush(user);
+        if (authentication == null || authentication.getName() == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Login required");
+        }
+        int updated = userRepository.updateAvatarByUsername(authentication.getName(), blankToNull(request.avatarUrl()));
+        if (updated == 0) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Login required");
+        }
+        UserJpaEntity saved = currentUser(authentication);
         return ResponseEntity.ok(UserApiMapper.toResponse(com.shope.kf.infrastructure.persistence.jpa.mapper.UserMapper.toDomain(saved)));
     }
 

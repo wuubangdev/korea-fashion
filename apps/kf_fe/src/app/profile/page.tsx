@@ -189,6 +189,15 @@ export default function ProfilePage() {
     setPasswordForm((current) => ({ ...current, [key]: value }));
   }
 
+  function persistAvatarUrl(avatarUrl?: string | null) {
+    if (avatarUrl) {
+      window.localStorage.setItem(AUTH_AVATAR_KEY, avatarUrl);
+    } else {
+      window.localStorage.removeItem(AUTH_AVATAR_KEY);
+    }
+    window.dispatchEvent(new Event("auth:update"));
+  }
+
   async function handleAvatarUpload(file: File | undefined) {
     const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
     if (!file || !token) {
@@ -202,15 +211,15 @@ export default function ProfilePage() {
     setIsUploadingAvatar(true);
     try {
       const uploaded = await mediaApi.upload(file, "avatars", file.name, { token });
-      const saved = await accountApi.updateAvatar({ avatarUrl: uploaded.url }, { token });
-      setProfile(saved);
-      setForm(toProfileForm(saved));
-      if (saved.avatarUrl) {
-        window.localStorage.setItem(AUTH_AVATAR_KEY, saved.avatarUrl);
-      } else {
-        window.localStorage.removeItem(AUTH_AVATAR_KEY);
+      if (!uploaded.url) {
+        throw new Error("Upload thành công nhưng backend không trả về URL ảnh.");
       }
-      window.dispatchEvent(new Event("auth:update"));
+      const saved = await accountApi.updateAvatar({ avatarUrl: uploaded.url }, { token });
+      const nextAvatarUrl = saved.avatarUrl || uploaded.url;
+      const nextProfile = { ...saved, avatarUrl: nextAvatarUrl };
+      setProfile(nextProfile);
+      setForm(toProfileForm(nextProfile));
+      persistAvatarUrl(nextAvatarUrl);
       notify({ message: "Ảnh đại diện mới đã được cập nhật.", title: "Đã đổi ảnh", type: "success" });
     } catch (error) {
       notify({
@@ -245,12 +254,7 @@ export default function ProfilePage() {
       const saved = await accountApi.updateProfile(profilePayload, { token });
       setProfile(saved);
       setForm(toProfileForm(saved));
-      if (saved.avatarUrl) {
-        window.localStorage.setItem(AUTH_AVATAR_KEY, saved.avatarUrl);
-      } else {
-        window.localStorage.removeItem(AUTH_AVATAR_KEY);
-      }
-      window.dispatchEvent(new Event("auth:update"));
+      persistAvatarUrl(saved.avatarUrl);
       notify({ message: "Thông tin tài khoản đã được cập nhật.", title: "Đã lưu hồ sơ", type: "success" });
     } catch (error) {
       notify({
