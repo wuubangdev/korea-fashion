@@ -60,12 +60,14 @@ export default function PaymentStatusPage() {
 
   useEffect(() => {
     if (!Number.isFinite(orderId)) {
-      setError("Ma don hang khong hop le.");
-      setLoading(false);
+      queueMicrotask(() => {
+        setError("Ma don hang khong hop le.");
+        setLoading(false);
+      });
       return;
     }
 
-    loadStatus();
+    queueMicrotask(() => void loadStatus());
     const intervalId = window.setInterval(loadStatus, 5000);
     return () => window.clearInterval(intervalId);
   }, [loadStatus, orderId]);

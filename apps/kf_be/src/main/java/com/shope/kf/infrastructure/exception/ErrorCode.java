@@ -9,6 +9,7 @@ public enum ErrorCode {
     FORBIDDEN("FORBIDDEN", HttpStatus.FORBIDDEN, "Access is denied"),
     NOT_FOUND("NOT_FOUND", HttpStatus.NOT_FOUND, "Resource not found"),
     CONFLICT("CONFLICT", HttpStatus.CONFLICT, "Resource conflict"),
+    RATE_LIMIT("RATE_LIMIT", HttpStatus.TOO_MANY_REQUESTS, "Too many requests"),
     INTERNAL_ERROR("INTERNAL_ERROR", HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
 
     private final String code;

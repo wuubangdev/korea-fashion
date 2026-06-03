@@ -343,6 +343,7 @@ export default function AdminMediaPage() {
                       {file.type.startsWith("video/") ? (
                         <video className="h-full w-full object-cover" src={url} muted controls />
                       ) : file.type.startsWith("image/") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img className="h-full w-full object-cover" src={url} alt={file.name} />
                       ) : (
                         <Upload className="h-6 w-6 text-stone-400" />

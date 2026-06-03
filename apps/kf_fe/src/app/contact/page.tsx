@@ -68,7 +68,7 @@ export default function ContactPage() {
       return;
     }
 
-    setProfileStatus("Đang lấy thông tin tài khoản...");
+    queueMicrotask(() => setProfileStatus("Đang lấy thông tin tài khoản..."));
     accountApi.getProfile({ token })
       .then((user) => {
         setForm((current) => ({

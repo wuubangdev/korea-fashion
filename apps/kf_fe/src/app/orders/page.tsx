@@ -3,7 +3,7 @@
 import { CreditCard, LogIn, Package, RefreshCw, ReceiptText, Truck, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SafeImage } from "@/components/SafeImage";
 import { StoreFooter } from "@/components/StoreFooter";
 import { StoreHeader } from "@/components/StoreHeader";
@@ -30,7 +30,7 @@ export default function OrdersPage() {
   const [error, setError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null | undefined>(undefined);
 
-  async function loadHistory(storedToken: string) {
+  const loadHistory = useCallback(async (storedToken: string) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -47,7 +47,7 @@ export default function OrdersPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [notify]);
 
   useEffect(() => {
     const storedToken = window.localStorage.getItem(AUTH_TOKEN_KEY);
@@ -59,9 +59,11 @@ export default function OrdersPage() {
       return;
     }
 
-    setToken(storedToken);
-    void loadHistory(storedToken);
-  }, []);
+    queueMicrotask(() => {
+      setToken(storedToken);
+      void loadHistory(storedToken);
+    });
+  }, [loadHistory]);
 
   const filteredOrders = useMemo(
     () =>

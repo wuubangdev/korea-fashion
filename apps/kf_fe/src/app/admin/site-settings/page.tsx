@@ -88,7 +88,6 @@ export default function AdminSiteSettingsPage() {
   useEffect(() => {
     let cancelled = false;
 
-    setIsLoading(true);
     apiFetch<SiteSetting>("/api/site-settings/current", undefined, { method: "GET" })
       .then((result) => {
         if (!cancelled) {
@@ -115,7 +114,6 @@ export default function AdminSiteSettingsPage() {
   useEffect(() => {
     let cancelled = false;
 
-    setIsLoadingMedia(true);
     mediaApi.list({ page: 0, size: 100, sort: "id,desc" })
       .then((result) => {
         if (!cancelled) {

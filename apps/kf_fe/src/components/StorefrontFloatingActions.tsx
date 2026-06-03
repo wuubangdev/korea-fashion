@@ -2,6 +2,7 @@
 
 import { ArrowUp, Phone } from "lucide-react";
 import { useEffect, useState, type ComponentType } from "react";
+import { ChatbotWidget } from "@/components/ChatbotWidget";
 import { Button } from "@/components/ui/button";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
@@ -37,6 +38,8 @@ export function StorefrontFloatingActions() {
 
   return (
     <div className="fixed bottom-5 right-4 z-50 flex flex-col items-end gap-2">
+      <ChatbotWidget />
+
       {actions.slice(0, 5).map((action, index) => {
         const Icon = action.icon;
         return (

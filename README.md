@@ -45,6 +45,10 @@ LOCAL_MYSQL_PORT=3306
 BACKEND_PORT=8080
 FRONTEND_PORT=3000
 NEXT_PUBLIC_API_URL=http://localhost:8080
+GEMINI_API_KEY=replace-with-gemini-api-key
+GEMINI_MODEL=gemini-3.5-flash
+CHATBOT_RATE_LIMIT_HOURLY=20
+CHATBOT_RATE_LIMIT_DAILY=80
 ```
 
 Khong commit `.env` hoac secret that len Git.
@@ -92,7 +96,7 @@ mvn -B -ntp package
 
 ## Chay frontend
 
-Yeu cau Node.js va Yarn hoac npm.
+Yeu cau Node.js va Yarn.
 
 ```bash
 cd apps/kf_fe
@@ -106,14 +110,6 @@ Lint va build:
 cd apps/kf_fe
 yarn lint
 yarn build
-```
-
-Neu dung npm:
-
-```bash
-cd apps/kf_fe
-npm install
-npm run dev
 ```
 
 ## Deploy production
@@ -147,6 +143,7 @@ docker compose --env-file .env.production -f docker-compose.prod.yml logs -f
 
 - Khong commit thu muc sinh tu dong nhu `node_modules`, `.next`, `target`.
 - File seed du lieu nen chuyen sang script backend/frontend chinh thuc neu con can dung lau dai.
+- Chatbot tu van san pham dung Gemini qua backend. Dat `GEMINI_API_KEY` tren server, khong hardcode token vao source. Lich su chat duoc luu theo user dang nhap hoac client session cua khach; co the chinh `CHATBOT_RATE_LIMIT_HOURLY` va `CHATBOT_RATE_LIMIT_DAILY` de han che lam dung.
 - Tai lieu du an duoc gom ve file README nay de repo gon hon.
 
 ## Thanh vien

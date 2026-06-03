@@ -116,9 +116,11 @@ export default function ProfilePage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isPasswordFormOpen, setIsPasswordFormOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
 
   useEffect(() => {
     queueMicrotask(() => {
+      setCurrentTime(Date.now());
       const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
       const username = window.localStorage.getItem(AUTH_USER_KEY) || "";
       setSession({ payload: parseJwtPayload(token), token, username });
@@ -153,7 +155,7 @@ export default function ProfilePage() {
   }, [notify]);
 
   const isLoggedIn = Boolean(session.token);
-  const isExpired = Boolean(session.payload?.exp && session.payload.exp * 1000 <= Date.now());
+  const isExpired = Boolean(currentTime && session.payload?.exp && session.payload.exp * 1000 <= currentTime);
   const roles = profile?.roles?.length ? profile.roles : session.payload?.roles ?? [];
   const hasAdminRole = hasAdminAccessRole(roles);
   const displayName = form.fullName || profile?.username || session.username || session.payload?.sub || "Khách hàng";

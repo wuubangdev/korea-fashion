@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ClipboardList, Package, ReceiptText, Tags, UsersRound } from "lucide-react";
+import { AlertTriangle, Package, ReceiptText, Tags, UsersRound } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { SeedDataButton } from "@/components/SeedDataButton";

@@ -5,6 +5,7 @@ export * from "./domains/admin";
 export * from "./domains/account";
 export * from "./domains/auth";
 export * from "./domains/catalog";
+export * from "./domains/chatbot";
 export * from "./domains/commerce";
 export * from "./domains/content";
 export * from "./domains/media";

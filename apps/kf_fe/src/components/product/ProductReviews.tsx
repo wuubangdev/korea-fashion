@@ -305,6 +305,7 @@ export function ProductReviews({ product }: { product: Product }) {
                   <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
                     {selectedImagePreviews.map((item, index) => (
                       <div key={`${item.file.name}-${index}`} className="group relative overflow-hidden rounded-md border border-stone-200 bg-white">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img alt={item.file.name} className="aspect-square w-full object-cover" src={item.url} />
                         <button
                           aria-label="Xoa anh"

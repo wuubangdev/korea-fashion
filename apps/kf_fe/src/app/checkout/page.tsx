@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, CreditCard, MapPin, PackageCheck, Phone, ShieldCheck, ShoppingBag, Truck, UserRound, type LucideIcon } from "lucide-react";
+import { CheckCircle2, CreditCard, MapPin, PackageCheck, Phone, ShieldCheck, ShoppingBag, TicketPercent, Truck, UserRound, X, type LucideIcon } from "lucide-react";
 import { SafeImage } from "@/components/SafeImage";
 import { StoreFooter } from "@/components/StoreFooter";
 import { StoreHeader } from "@/components/StoreHeader";
@@ -37,6 +37,15 @@ type CheckoutOption = {
   id?: string;
   name?: string;
   type?: string;
+};
+
+type CouponState = {
+  code?: string;
+  discountAmount?: number | string;
+  freeShipping?: boolean;
+  message?: string;
+  totalAfterDiscount?: number | string;
+  valid?: boolean;
 };
 
 const defaultForm: CheckoutForm = {
@@ -85,6 +94,9 @@ export default function CheckoutPage() {
   const [shippingMethods, setShippingMethods] = useState<CheckoutOption[]>(fallbackShippingMethods);
   const [paymentMethods, setPaymentMethods] = useState<CheckoutOption[]>(fallbackPaymentMethods);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [coupon, setCoupon] = useState<CouponState | null>(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
@@ -115,8 +127,10 @@ export default function CheckoutPage() {
   const selectedShipping = shippingMethods.find((item) => optionId(item) === form.shippingMethodId) ?? shippingMethods[0];
   const selectedPayment = paymentMethods.find((item) => optionId(item) === form.paymentMethodId) ?? paymentMethods[0];
   const baseShippingFee = Number(selectedShipping?.fee ?? 30000);
-  const shippingFee = cart.total >= 1000000 || cart.items.length === 0 ? 0 : baseShippingFee;
-  const grandTotal = cart.total + shippingFee;
+  const discountAmount = coupon?.valid ? Math.min(Number(coupon.discountAmount ?? 0), cart.total) : 0;
+  const hasFreeShipping = Boolean(coupon?.valid && coupon.freeShipping);
+  const shippingFee = hasFreeShipping || cart.total >= 1000000 || cart.items.length === 0 ? 0 : baseShippingFee;
+  const grandTotal = Math.max(cart.total - discountAmount, 0) + shippingFee;
   const deliveryAddress = useMemo(
     () => [form.address, form.ward, form.district, form.city].map((item) => item.trim()).filter(Boolean).join(", "),
     [form.address, form.city, form.district, form.ward],
@@ -125,6 +139,46 @@ export default function CheckoutPage() {
 
   function updateField(key: keyof CheckoutForm, value: string) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  async function applyCoupon() {
+    const code = couponCode.trim();
+    if (!code) {
+      setCoupon(null);
+      notify({ message: "Nhap ma giam gia truoc khi ap dung.", title: "Thieu ma giam gia", type: "info" });
+      return;
+    }
+    if (!cart.items.length) {
+      notify({ message: "Gio hang dang trong nen chua the ap dung ma.", title: "Chua co san pham", type: "error" });
+      return;
+    }
+
+    setIsApplyingCoupon(true);
+    try {
+      const result = await storefrontApi.validateCoupon({
+        code,
+        customerId: profile?.id,
+        subtotal: cart.total,
+      }) as CouponState;
+      setCoupon(result);
+      if (result.valid) {
+        setCouponCode(result.code || code);
+        notify({ message: `Da ap dung ${result.code || code}.`, title: "Ma giam gia hop le", type: "success" });
+      } else {
+        notify({ message: result.message || "Ma giam gia khong hop le.", title: "Khong the ap dung ma", type: "error" });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Khong the kiem tra ma giam gia.";
+      setCoupon(null);
+      notify({ message, title: "Kiem tra ma that bai", type: "error" });
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  }
+
+  function removeCoupon() {
+    setCoupon(null);
+    setCouponCode("");
   }
 
   function validateCheckout() {
@@ -158,7 +212,8 @@ export default function CheckoutPage() {
       customerName: form.customerName.trim(),
       customerPhone: form.customerPhone.trim(),
       deliveryAddress,
-      discountTotal: 0,
+      couponCode: coupon?.valid ? coupon.code || couponCode.trim() : undefined,
+      discountTotal: discountAmount,
       items: cart.items.map((item) => ({
         discount: 0,
         price: Number(item.product.price ?? 0),
@@ -170,7 +225,7 @@ export default function CheckoutPage() {
         unitPrice: Number(item.product.price ?? 0),
       })),
       note: form.note.trim() || undefined,
-      paymentMethodId: optionId(selectedPayment),
+        paymentMethodId: optionId(selectedPayment),
       shippingFee,
       shippingMethodId: optionId(selectedShipping),
       taxTotal: 0,
@@ -348,7 +403,44 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                   ))}
+                  <div className="rounded-md border border-stone-200 bg-stone-50 p-3">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-stone-950">
+                      <TicketPercent className="h-4 w-4 text-emerald-700" />
+                      Ma giam gia
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <Input
+                        className="uppercase"
+                        disabled={isApplyingCoupon || Boolean(createdOrder)}
+                        placeholder="Nhap coupon"
+                        value={couponCode}
+                        onChange={(event) => {
+                          setCouponCode(event.target.value);
+                          if (coupon) {
+                            setCoupon(null);
+                          }
+                        }}
+                      />
+                      {coupon?.valid ? (
+                        <Button aria-label="Bo ma giam gia" size="icon" type="button" variant="outline" onClick={removeCoupon}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button disabled={isApplyingCoupon || Boolean(createdOrder)} type="button" variant="outline" onClick={applyCoupon}>
+                          {isApplyingCoupon ? "Dang kiem..." : "Ap dung"}
+                        </Button>
+                      )}
+                    </div>
+                    {coupon ? (
+                      <p className={`mt-2 text-xs leading-5 ${coupon.valid ? "text-emerald-700" : "text-rose-700"}`}>
+                        {coupon.valid
+                          ? `Da giam ${formatMoney(discountAmount)}${coupon.freeShipping ? " va mien phi van chuyen" : ""}.`
+                          : coupon.message || "Ma giam gia khong hop le."}
+                      </p>
+                    ) : null}
+                  </div>
                   <PriceLine label="Tam tinh" value={formatMoney(cart.total)} />
+                  {discountAmount > 0 ? <PriceLine label="Giam gia" value={`-${formatMoney(discountAmount)}`} /> : null}
                   <PriceLine label="Phi van chuyen" value={shippingFee === 0 ? "Mien phi" : formatMoney(shippingFee)} />
                   <div className="border-t border-stone-200 pt-3">
                     <PriceLine strong label="Tong cong" value={formatMoney(grandTotal)} />

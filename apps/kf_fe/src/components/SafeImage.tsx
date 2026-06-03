@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 
 type SafeImageProps = {
@@ -38,11 +38,8 @@ export function SafeImage({
   src,
 }: SafeImageProps) {
   const safeSrc = useMemo(() => normalizeImageSrc(src), [src]);
-  const [currentSrc, setCurrentSrc] = useState(safeSrc);
-
-  useEffect(() => {
-    setCurrentSrc(safeSrc);
-  }, [safeSrc]);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const currentSrc = failedSrc === safeSrc ? fallbackImage : safeSrc;
 
   return (
     <div className={cn("relative overflow-hidden bg-stone-100", className)}>
@@ -54,7 +51,7 @@ export function SafeImage({
         priority={priority}
         sizes={sizes}
         src={currentSrc}
-        onError={() => setCurrentSrc(fallbackImage)}
+        onError={() => setFailedSrc(safeSrc)}
       />
     </div>
   );

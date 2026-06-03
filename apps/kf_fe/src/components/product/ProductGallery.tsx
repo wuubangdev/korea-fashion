@@ -11,12 +11,9 @@ type GalleryImage = {
 
 export function ProductGallery({ product }: { product: Product }) {
   const images = useMemo(() => getGalleryImages(product), [product]);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [selection, setSelection] = useState({ index: 0, productId: product.id });
+  const activeIndex = selection.productId === product.id ? selection.index : 0;
   const activeImage = images[activeIndex] ?? images[0];
-
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [product.id]);
 
   useEffect(() => {
     if (images.length <= 1) {
@@ -24,11 +21,14 @@ export function ProductGallery({ product }: { product: Product }) {
     }
 
     const timer = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % images.length);
+      setSelection((current) => ({
+        index: current.productId === product.id ? (current.index + 1) % images.length : 0,
+        productId: product.id,
+      }));
     }, 3500);
 
     return () => window.clearInterval(timer);
-  }, [images.length]);
+  }, [images.length, product.id]);
 
   return (
     <div className="flex flex-col gap-3 lg:sticky lg:top-24">
@@ -47,7 +47,7 @@ export function ProductGallery({ product }: { product: Product }) {
               index === activeIndex ? "border-stone-950 shadow-sm" : "border-stone-200"
             }`}
             type="button"
-            onClick={() => setActiveIndex(index)}
+            onClick={() => setSelection({ index, productId: product.id })}
           >
             <SafeImage
               alt={product.name}

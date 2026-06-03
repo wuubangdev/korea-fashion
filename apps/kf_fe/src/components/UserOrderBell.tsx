@@ -27,8 +27,10 @@ export function UserOrderBell({ token }: UserOrderBellProps) {
 
   useEffect(() => {
     if (!token) {
-      setOrders([]);
-      setPayments([]);
+      queueMicrotask(() => {
+        setOrders([]);
+        setPayments([]);
+      });
       return;
     }
 
