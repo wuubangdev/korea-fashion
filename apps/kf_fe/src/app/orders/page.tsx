@@ -20,6 +20,7 @@ import type { Order, PageResult, Payment } from "@/types/api";
 const emptyOrders: PageResult<Order> = { content: [], page: 0, size: 10, totalElements: 0, totalPages: 0 };
 const emptyPayments: PageResult<Payment> = { content: [], page: 0, size: 10, totalElements: 0, totalPages: 0 };
 const statusFilters = ["ALL", "NEW", "PENDING", "PROCESSING", "SHIPPING", "COMPLETED", "CANCELLED"];
+const paidStatuses = new Set(["PAID", "SUCCESS", "COMPLETED"]);
 
 export default function OrdersPage() {
   const { notify } = useToast();
@@ -285,9 +286,15 @@ function OrderList({ orders }: { orders: Order[] }) {
             <SummaryLine label="Thanh toan" value={order.paymentMethodId || "-"} />
           </div>
           <div className="mt-4">
-            <Button asChild size="sm" variant="outline">
-              <Link href={`/payment-status/${order.id}`}>Theo doi thanh toan</Link>
-            </Button>
+            {paidStatuses.has(String(order.paymentStatus || "").toUpperCase()) ? (
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/order-tracking/${order.id}`}>Theo doi don hang</Link>
+              </Button>
+            ) : (
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/payment-status/${order.id}`}>Theo doi thanh toan</Link>
+              </Button>
+            )}
           </div>
         </article>
       ))}
@@ -323,7 +330,9 @@ function PaymentList({ payments }: { payments: Payment[] }) {
             <p className="mt-1 text-lg font-semibold text-stone-950">{formatMoney(payment.amount)}</p>
             {payment.orderId ? (
               <Button asChild className="mt-2" size="sm" variant="outline">
-                <Link href={`/payment-status/${payment.orderId}`}>Theo doi</Link>
+                <Link href={paidStatuses.has(String(payment.status || "").toUpperCase()) ? `/order-tracking/${payment.orderId}` : `/payment-status/${payment.orderId}`}>
+                  Theo doi
+                </Link>
               </Button>
             ) : null}
           </div>

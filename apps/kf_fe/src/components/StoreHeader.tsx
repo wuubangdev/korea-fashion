@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Heart, LogOut, Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
+import { ChevronDown, Heart, LogOut, Menu, Package, Search, ShoppingBag, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
@@ -353,6 +353,10 @@ export function StoreHeader() {
                 <Link href="/wishlist" className="dropdown-item flex items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 hover:text-stone-950">
                   <Heart aria-hidden className="h-4 w-4" />
                   Danh sách yêu thích
+                </Link>
+                <Link href="/orders" className="dropdown-item flex items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 hover:text-stone-950">
+                  <Package aria-hidden className="h-4 w-4" />
+                  Đơn hàng của tôi
                 </Link>
                 <button
                   className="dropdown-item flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-100 hover:text-stone-950"

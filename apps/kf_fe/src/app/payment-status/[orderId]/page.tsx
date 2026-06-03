@@ -113,6 +113,11 @@ export default function PaymentStatusPage() {
                     <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                     Kiem tra ngay
                   </Button>
+                  {paymentState === "success" ? (
+                    <Button asChild variant="outline">
+                      <Link href={`/order-tracking/${orderId}`}>Theo doi don hang</Link>
+                    </Button>
+                  ) : null}
                   <Button asChild variant="outline">
                     <Link href="/orders">Xem don hang</Link>
                   </Button>
