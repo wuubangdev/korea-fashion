@@ -16,7 +16,7 @@ const CLIENT_SESSION_KEY = "kf_chat_client_session";
 
 const starterPrompts = [
   "Tư vấn váy đi chơi dưới 500k",
-  "Có sản phẩm brand Hàn nào đẹp?",
+  "Có brand Hàn nào đẹp?",
   "Gợi ý đồ basic dễ phối",
 ];
 
@@ -170,26 +170,26 @@ export function ChatbotWidget() {
   return (
     <>
       {isOpen ? (
-        <section className="fixed bottom-20 right-4 z-50 flex h-[min(660px,calc(100vh-7rem))] w-[min(410px,calc(100vw-2rem))] flex-col overflow-hidden rounded-lg border border-stone-200 bg-white shadow-2xl shadow-stone-950/20">
-          <header className="flex items-center justify-between gap-3 border-b border-stone-200 bg-stone-950 px-4 py-3 text-white">
+        <section className="fixed bottom-20 right-4 z-50 flex h-[min(640px,calc(100vh-7rem))] w-[min(400px,calc(100vw-2rem))] animate-in flex-col overflow-hidden rounded-lg border border-stone-200/80 bg-white shadow-xl shadow-stone-950/15">
+          <header className="flex items-center justify-between gap-3 border-b border-stone-100 bg-white px-4 py-3 text-stone-950">
             <div className="flex min-w-0 items-center gap-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-white/10">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-emerald-50 text-emerald-700">
                 <Bot className="h-5 w-5" />
               </span>
               <div className="min-w-0">
                 <h2 className="truncate text-sm font-semibold">Tư vấn Korea Fashion</h2>
-                <p className="truncate text-xs text-white/65">Chỉ tư vấn sản phẩm, danh mục, nhãn hiệu và giá</p>
+                <p className="truncate text-xs text-stone-500">Sản phẩm, phối đồ, danh mục và giá</p>
               </div>
             </div>
-            <Button aria-label="Đóng chatbot" className="shrink-0 text-white hover:bg-white/10" size="icon" type="button" variant="ghost" onClick={() => setIsOpen(false)}>
+            <Button aria-label="Đóng chatbot" className="shrink-0 text-stone-500 hover:bg-stone-100 hover:text-stone-900" size="icon" type="button" variant="ghost" onClick={() => setIsOpen(false)}>
               <X className="h-4 w-4" />
             </Button>
           </header>
 
-          <div className="flex items-center gap-2 border-b border-stone-200 bg-white p-2">
+          <div className="flex items-center gap-2 border-b border-stone-100 bg-stone-50/80 p-2">
             <select
               aria-label="Chọn cuộc chat"
-              className="min-w-0 flex-1 rounded-md border border-stone-300 bg-white px-2.5 py-2 text-xs font-medium text-stone-700 outline-none focus:border-emerald-700"
+              className="min-w-0 flex-1 rounded-md border border-stone-200 bg-white px-2.5 py-2 text-xs font-medium text-stone-700 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
               value={activeSessionId ?? ""}
               onChange={(event) => setActiveSessionId(event.target.value ? Number(event.target.value) : undefined)}
             >
@@ -200,25 +200,25 @@ export function ChatbotWidget() {
                 </option>
               ))}
             </select>
-            <Button aria-label="Tạo chat mới" disabled={isLoading || isSending} size="icon" type="button" variant="outline" onClick={() => void createNewChat()}>
+            <Button aria-label="Tạo chat mới" className="border-stone-200 bg-white" disabled={isLoading || isSending} size="icon" type="button" variant="outline" onClick={() => void createNewChat()}>
               <Plus className="h-4 w-4" />
             </Button>
-            <Button aria-label="Xóa chat hiện tại" disabled={!activeSessionId || isDeleting} size="icon" type="button" variant="outline" onClick={() => void deleteCurrentChat()}>
+            <Button aria-label="Xóa chat hiện tại" className="border-stone-200 bg-white" disabled={!activeSessionId || isDeleting} size="icon" type="button" variant="outline" onClick={() => void deleteCurrentChat()}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
 
-          <div className="flex-1 space-y-3 overflow-y-auto bg-stone-50 p-3">
+          <div className="flex-1 space-y-3 overflow-y-auto bg-stone-50/70 p-3">
             {isLoading && !messages.length ? (
               <div className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-500 shadow-sm">Đang tải lịch sử chat...</div>
             ) : null}
             {messages.map((message, index) => (
               <article key={`${message.role}-${index}-${message.content.slice(0, 16)}`} className={message.role === "user" ? "ml-auto max-w-[82%]" : "mr-auto max-w-[88%]"}>
                 <div
-                  className={`whitespace-pre-line rounded-lg px-3 py-2 text-sm leading-6 shadow-sm ${
+                  className={`whitespace-pre-line rounded-lg px-3 py-2 text-sm leading-6 shadow-sm transition ${
                     message.role === "user"
-                      ? "bg-stone-950 text-white"
-                      : "border border-stone-200 bg-white text-stone-800"
+                      ? "rounded-br-sm bg-stone-950 text-white"
+                      : "rounded-bl-sm border border-stone-200 bg-white text-stone-800"
                   }`}
                 >
                   {message.content}
@@ -226,15 +226,11 @@ export function ChatbotWidget() {
                 {message.suggestions?.length ? <ProductSuggestions suggestions={message.suggestions} onNavigate={() => setIsOpen(false)} /> : null}
               </article>
             ))}
-            {isSending ? (
-              <div className="mr-auto max-w-[88%] rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-500 shadow-sm">
-                Bạn đợi chút nhé, bot đang suy nghĩ và soạn câu trả lời...
-              </div>
-            ) : null}
+            {isSending ? <TypingIndicator /> : null}
             <div ref={scrollRef} />
           </div>
 
-          <div className="border-t border-stone-200 bg-white p-3">
+          <div className="border-t border-stone-100 bg-white p-3">
             {activeSession?.title ? <p className="mb-2 line-clamp-1 text-xs text-stone-500">{activeSession.title}</p> : null}
             {remainingDailyMessages !== undefined && remainingDailyMessages <= 10 ? (
               <p className="mb-2 text-xs font-medium text-amber-700">Còn {remainingDailyMessages} lượt chat hôm nay.</p>
@@ -243,7 +239,7 @@ export function ChatbotWidget() {
               {starterPrompts.map((prompt) => (
                 <button
                   key={prompt}
-                  className="shrink-0 rounded-md border border-stone-200 bg-stone-50 px-2.5 py-1.5 text-xs font-medium text-stone-600 transition hover:bg-stone-100"
+                  className="shrink-0 rounded-md border border-stone-200 bg-stone-50 px-2.5 py-1.5 text-xs font-medium text-stone-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800"
                   type="button"
                   onClick={() => void sendMessage(prompt)}
                 >
@@ -253,13 +249,13 @@ export function ChatbotWidget() {
             </div>
             <form className="flex gap-2" onSubmit={handleSubmit}>
               <input
-                className="min-w-0 flex-1 rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
+                className="min-w-0 flex-1 rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                 maxLength={1000}
                 placeholder="Bạn muốn tìm sản phẩm gì?"
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
               />
-              <Button aria-label="Gửi tin nhắn" disabled={isSending || !input.trim()} size="icon" type="submit">
+              <Button aria-label="Gửi tin nhắn" className="shrink-0" disabled={isSending || !input.trim()} size="icon" type="submit">
                 <Send className="h-4 w-4" />
               </Button>
             </form>
@@ -282,6 +278,19 @@ export function ChatbotWidget() {
         </span>
       </button>
     </>
+  );
+}
+
+function TypingIndicator() {
+  return (
+    <div className="mr-auto flex max-w-[88%] items-center gap-2 rounded-lg rounded-bl-sm border border-stone-200 bg-white px-3 py-2 text-sm text-stone-500 shadow-sm">
+      <span>Bot đang soạn trả lời</span>
+      <span className="flex gap-1" aria-hidden>
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-stone-400 [animation-delay:-160ms]" />
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-stone-400 [animation-delay:-80ms]" />
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-stone-400" />
+      </span>
+    </div>
   );
 }
 

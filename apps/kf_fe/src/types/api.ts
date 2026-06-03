@@ -63,6 +63,8 @@ export type Review = {
   reviewerAvatarUrl?: string;
   verifiedPurchase?: boolean;
   helpfulCount?: number;
+  dislikeCount?: number;
+  currentUserReaction?: "LIKE" | "DISLIKE" | string | null;
   reportCount?: number;
   adminReply?: string;
   adminRepliedAt?: string;

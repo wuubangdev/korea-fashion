@@ -10,7 +10,9 @@ RUN --mount=type=cache,target=/usr/local/share/.cache/yarn yarn install --frozen
 
 FROM dependencies AS build
 ARG NEXT_PUBLIC_API_URL=https://api.sieunhon.top
+ARG NEXT_PUBLIC_SITE_URL=https://sieunhon.top
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 COPY apps/kf_fe ./
 RUN yarn build
 
@@ -19,6 +21,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
+ENV NEXT_PUBLIC_SITE_URL=https://sieunhon.top
 
 RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
 

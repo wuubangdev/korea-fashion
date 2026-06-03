@@ -2,6 +2,7 @@ package com.shope.kf.infrastructure.api;
 
 import com.shope.kf.application.common.PageQuery;
 import com.shope.kf.application.common.PageResult;
+import com.shope.kf.infrastructure.api.dto.request.ReviewReactionRequest;
 import com.shope.kf.infrastructure.api.dto.response.ApiResponse;
 import com.shope.kf.infrastructure.api.dto.response.OrderResponse;
 import com.shope.kf.infrastructure.api.dto.response.ProductResponse;
@@ -15,6 +16,7 @@ import com.shope.kf.infrastructure.persistence.jpa.PaymentJpaEntity;
 import com.shope.kf.infrastructure.persistence.jpa.ProductJpaEntity;
 import com.shope.kf.infrastructure.persistence.jpa.ReviewJpaEntity;
 import com.shope.kf.infrastructure.persistence.jpa.ReviewImageJpaEntity;
+import com.shope.kf.infrastructure.persistence.jpa.ReviewReactionJpaEntity;
 import com.shope.kf.infrastructure.persistence.jpa.UserJpaEntity;
 import com.shope.kf.infrastructure.persistence.jpa.WishlistItemJpaEntity;
 import com.shope.kf.infrastructure.persistence.jpa.mapper.OrderMapper;
@@ -25,6 +27,7 @@ import com.shope.kf.infrastructure.persistence.repository.PaymentJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.ProductJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.ReviewJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.ReviewImageJpaRepository;
+import com.shope.kf.infrastructure.persistence.repository.ReviewReactionJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.UserJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.WishlistItemJpaRepository;
 import com.shope.kf.infrastructure.security.RequireAuth;
@@ -49,8 +52,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -64,6 +69,7 @@ public class CustomerAccountController {
     private final ProductJpaRepository productRepository;
     private final ReviewJpaRepository reviewRepository;
     private final ReviewImageJpaRepository reviewImageRepository;
+    private final ReviewReactionJpaRepository reviewReactionRepository;
     private final UserJpaRepository userRepository;
     private final WishlistItemJpaRepository wishlistRepository;
     private final PasswordEncoder passwordEncoder;
@@ -74,6 +80,7 @@ public class CustomerAccountController {
             ProductJpaRepository productRepository,
             ReviewJpaRepository reviewRepository,
             ReviewImageJpaRepository reviewImageRepository,
+            ReviewReactionJpaRepository reviewReactionRepository,
             UserJpaRepository userRepository,
             WishlistItemJpaRepository wishlistRepository,
             PasswordEncoder passwordEncoder
@@ -83,6 +90,7 @@ public class CustomerAccountController {
         this.productRepository = productRepository;
         this.reviewRepository = reviewRepository;
         this.reviewImageRepository = reviewImageRepository;
+        this.reviewReactionRepository = reviewReactionRepository;
         this.userRepository = userRepository;
         this.wishlistRepository = wishlistRepository;
         this.passwordEncoder = passwordEncoder;
@@ -278,6 +286,7 @@ public class CustomerAccountController {
         review.setReviewerAvatarUrl(user.getAvatarUrl());
         review.setVerifiedPurchase(hasPurchased(user.getId(), product.getId()));
         review.setHelpfulCount(0);
+        review.setDislikeCount(0);
         review.setReportCount(0);
         review.setReviewedAt(OffsetDateTime.now());
         ReviewJpaEntity saved = reviewRepository.save(review);
@@ -312,9 +321,65 @@ public class CustomerAccountController {
         reply.setReviewerAvatarUrl(user.getAvatarUrl());
         reply.setVerifiedPurchase(false);
         reply.setHelpfulCount(0);
+        reply.setDislikeCount(0);
         reply.setReportCount(0);
         reply.setReviewedAt(OffsetDateTime.now());
         return ResponseEntity.ok(reviewRepository.save(reply));
+    }
+
+    @PostMapping("/reviews/{reviewId}/reaction")
+    @Transactional
+    public ResponseEntity<ReviewJpaEntity> reactReview(
+            Authentication authentication,
+            @PathVariable String reviewId,
+            @Valid @RequestBody ReviewReactionRequest request
+    ) {
+        UserJpaEntity user = currentUser(authentication);
+        ReviewJpaEntity review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Review not found"));
+        if (!"APPROVED".equalsIgnoreCase(review.getStatus())) {
+            throw new AppException(ErrorCode.NOT_FOUND, "Review not found");
+        }
+
+        String requestedReaction = request.reaction().trim().toUpperCase(Locale.ROOT);
+        String currentReaction = requestedReaction;
+        var existing = reviewReactionRepository.findByReviewIdAndUserId(review.getId(), user.getId());
+        if (existing.isPresent() && requestedReaction.equalsIgnoreCase(existing.get().getReaction())) {
+            reviewReactionRepository.delete(existing.get());
+            currentReaction = null;
+        } else {
+            ReviewReactionJpaEntity reaction = existing.orElseGet(ReviewReactionJpaEntity::new);
+            reaction.setReviewId(review.getId());
+            reaction.setUserId(user.getId());
+            reaction.setReaction(requestedReaction);
+            reviewReactionRepository.save(reaction);
+        }
+
+        refreshReviewReactionCounts(review);
+        review.setCurrentUserReaction(currentReaction);
+        review.setImages(reviewImageRepository.findByReviewIdAndActiveTrueOrderByDisplayOrderAscIdAsc(review.getId()));
+        return ResponseEntity.ok(review);
+    }
+
+    @DeleteMapping("/reviews/{reviewId}")
+    @Transactional
+    public ResponseEntity<ApiResponse<Void>> deleteReview(Authentication authentication, @PathVariable String reviewId) {
+        UserJpaEntity user = currentUser(authentication);
+        ReviewJpaEntity review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Review not found"));
+        if (!user.getId().equals(review.getUserId())) {
+            throw new AppException(ErrorCode.FORBIDDEN, "You can only delete your own review");
+        }
+
+        List<ReviewJpaEntity> affectedReviews = collectReviewThread(review);
+        affectedReviews.forEach(item -> item.markDeleted(user.getUsername()));
+        reviewRepository.saveAll(affectedReviews);
+        reviewReactionRepository.deleteByReviewIdIn(affectedReviews.stream().map(ReviewJpaEntity::getId).toList());
+        if (review.getParentReviewId() == null && review.getProductId() != null) {
+            refreshProductRating(review.getProductId());
+        }
+
+        return ResponseEntity.ok(ApiResponse.ok("Review deleted", null));
     }
 
     private UserJpaEntity currentUser(Authentication authentication) {
@@ -351,6 +416,20 @@ public class CustomerAccountController {
             product.setRatingAverage(BigDecimal.valueOf(average).setScale(2, RoundingMode.HALF_UP));
         }
         productRepository.save(product);
+    }
+
+    private void refreshReviewReactionCounts(ReviewJpaEntity review) {
+        review.setHelpfulCount((int) reviewReactionRepository.countByReviewIdAndReaction(review.getId(), "LIKE"));
+        review.setDislikeCount((int) reviewReactionRepository.countByReviewIdAndReaction(review.getId(), "DISLIKE"));
+        reviewRepository.save(review);
+    }
+
+    private List<ReviewJpaEntity> collectReviewThread(ReviewJpaEntity review) {
+        List<ReviewJpaEntity> reviews = new ArrayList<>();
+        reviews.add(review);
+        reviewRepository.findByParentReviewId(review.getId())
+                .forEach(reply -> reviews.addAll(collectReviewThread(reply)));
+        return reviews;
     }
 
     private void saveReviewImages(ReviewJpaEntity review, List<String> imageUrls) {

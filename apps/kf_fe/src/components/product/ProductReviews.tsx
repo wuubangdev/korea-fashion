@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, ImagePlus, LogIn, MessageSquareText, Star, X } from "lucide-react";
+import { BadgeCheck, ImagePlus, LogIn, MessageSquareText, Star, ThumbsDown, ThumbsUp, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -12,7 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useApiResource } from "@/hooks/useApiResource";
 import { accountApi, mediaApi } from "@/lib/api";
-import { AUTH_TOKEN_KEY } from "@/lib/auth";
+import { getActiveAuthToken } from "@/lib/auth";
+import { useLoginRedirectHref } from "@/lib/authRedirect";
 import type { PageResult, Product, Review } from "@/types/api";
 
 export function ProductReviews({ product }: { product: Product }) {
@@ -24,13 +25,26 @@ export function ProductReviews({ product }: { product: Product }) {
   const [replyContent, setReplyContent] = useState("");
   const [replyReviewId, setReplyReviewId] = useState<string | null>(null);
   const [isReplySubmitting, setIsReplySubmitting] = useState(false);
+  const [reactingReviewId, setReactingReviewId] = useState<string | null>(null);
+  const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const loginHref = useLoginRedirectHref();
   const { notify } = useToast();
 
   useEffect(() => {
     queueMicrotask(() => {
-      setIsLoggedIn(Boolean(window.localStorage.getItem(AUTH_TOKEN_KEY)));
+      const token = getActiveAuthToken();
+      setIsLoggedIn(Boolean(token));
+      if (!token) {
+        setCurrentUserId(null);
+        return;
+      }
+
+      accountApi.getProfile({ token })
+        .then((user) => setCurrentUserId(user.id))
+        .catch(() => setCurrentUserId(null));
     });
   }, []);
 
@@ -63,7 +77,7 @@ export function ProductReviews({ product }: { product: Product }) {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+    const token = getActiveAuthToken();
     if (!token) {
       setMessage("Bạn cần đăng nhập để gửi đánh giá.");
       notify({
@@ -131,7 +145,7 @@ export function ProductReviews({ product }: { product: Product }) {
 
   const handleReplySubmit = async (event: FormEvent<HTMLFormElement>, reviewId: string) => {
     event.preventDefault();
-    const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+    const token = getActiveAuthToken();
     if (!token) {
       notify({
         message: "Vui lòng đăng nhập trước khi trả lời bình luận.",
@@ -173,6 +187,67 @@ export function ProductReviews({ product }: { product: Product }) {
     }
   };
 
+  const handleReviewReaction = async (reviewId: string, reaction: "LIKE" | "DISLIKE") => {
+    const token = getActiveAuthToken();
+    if (!token) {
+      notify({
+        message: "Vui long dang nhap truoc khi danh dau binh luan.",
+        title: "Can dang nhap",
+        type: "info",
+      });
+      return;
+    }
+
+    setReactingReviewId(reviewId);
+    try {
+      await accountApi.reactReview(reviewId, reaction, { token });
+      reviews.revalidate();
+    } catch (error) {
+      notify({
+        message: error instanceof Error ? error.message : "Khong the cap nhat danh dau.",
+        title: "Cap nhat that bai",
+        type: "error",
+      });
+    } finally {
+      setReactingReviewId(null);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    const token = getActiveAuthToken();
+    if (!token) {
+      notify({
+        message: "Vui long dang nhap truoc khi xoa binh luan.",
+        title: "Can dang nhap",
+        type: "info",
+      });
+      return;
+    }
+
+    if (!window.confirm("Ban co chac muon xoa binh luan/danh gia nay?")) {
+      return;
+    }
+
+    setDeletingReviewId(reviewId);
+    try {
+      await accountApi.deleteReview(reviewId, { token });
+      notify({
+        message: "Binh luan/danh gia da duoc xoa.",
+        title: "Da xoa",
+        type: "success",
+      });
+      reviews.revalidate();
+    } catch (error) {
+      notify({
+        message: error instanceof Error ? error.message : "Khong the xoa binh luan.",
+        title: "Xoa that bai",
+        type: "error",
+      });
+    } finally {
+      setDeletingReviewId(null);
+    }
+  };
+
   return (
     <section className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
       <Card className="overflow-hidden border-stone-200 shadow-lg shadow-stone-950/5">
@@ -201,17 +276,23 @@ export function ProductReviews({ product }: { product: Product }) {
                 <ReviewItem
                   key={review.id}
                   canReply={Boolean(isLoggedIn)}
+                  currentUserId={currentUserId}
+                  deletingReviewId={deletingReviewId}
                   isReplySubmitting={isReplySubmitting}
+                  reactingReviewId={reactingReviewId}
                   replyContent={replyContent}
                   replyReviewId={replyReviewId}
                   repliesByParent={repliesByParent}
                   review={review}
+                  loginHref={loginHref}
                   onCancelReply={() => {
                     setReplyReviewId(null);
                     setReplyContent("");
                   }}
                   onReplyChange={setReplyContent}
                   onReplySubmit={handleReplySubmit}
+                  onReact={handleReviewReaction}
+                  onDelete={handleDeleteReview}
                   onStartReply={(reviewId) => {
                     setReplyReviewId(reviewId);
                     setReplyContent("");
@@ -241,7 +322,7 @@ export function ProductReviews({ product }: { product: Product }) {
             <div className="rounded-md border border-stone-200 bg-stone-50 p-4">
               <p className="text-sm leading-6 text-stone-600">Bạn cần đăng nhập để chấm sao và viết đánh giá sản phẩm.</p>
               <Button asChild className="mt-4 w-full">
-                <Link href="/login">
+                <Link href={loginHref}>
                   <LogIn className="h-4 w-4" />
                   Đăng nhập
                 </Link>
@@ -341,24 +422,36 @@ export function ProductReviews({ product }: { product: Product }) {
 
 function ReviewItem({
   canReply,
+  currentUserId,
+  deletingReviewId,
   depth = 0,
   isReplySubmitting,
+  loginHref,
   onCancelReply,
+  onDelete,
   onReplyChange,
   onReplySubmit,
+  onReact,
   onStartReply,
+  reactingReviewId,
   repliesByParent,
   replyContent,
   replyReviewId,
   review,
 }: {
   canReply: boolean;
+  currentUserId: number | null;
+  deletingReviewId: string | null;
   depth?: number;
   isReplySubmitting: boolean;
+  loginHref: string;
   onCancelReply: () => void;
+  onDelete: (reviewId: string) => void;
   onReplyChange: (value: string) => void;
   onReplySubmit: (event: FormEvent<HTMLFormElement>, reviewId: string) => void;
+  onReact: (reviewId: string, reaction: "LIKE" | "DISLIKE") => void;
   onStartReply: (reviewId: string) => void;
+  reactingReviewId: string | null;
   repliesByParent: Record<string, Review[]>;
   replyContent: string;
   replyReviewId: string | null;
@@ -368,6 +461,9 @@ function ReviewItem({
 
   const replies = repliesByParent[review.id] ?? [];
   const isReplying = replyReviewId === review.id;
+  const isReacting = reactingReviewId === review.id;
+  const isDeleting = deletingReviewId === review.id;
+  const canDelete = currentUserId != null && review.userId === currentUserId;
 
   return (
     <article className={depth ? "border-l-2 border-stone-200 pl-4" : "rounded-lg border border-stone-200 bg-white p-4 shadow-sm shadow-stone-950/5"}>
@@ -409,15 +505,58 @@ function ReviewItem({
             </div>
           ) : null}
           <div className="mt-3 flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              type="button"
+              className={
+                review.currentUserReaction === "LIKE"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                  : ""
+              }
+              disabled={isReacting}
+              onClick={() => onReact(review.id, "LIKE")}
+            >
+              <ThumbsUp className="h-4 w-4" />
+              {review.helpfulCount ?? 0}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              type="button"
+              className={
+                review.currentUserReaction === "DISLIKE"
+                  ? "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                  : ""
+              }
+              disabled={isReacting}
+              onClick={() => onReact(review.id, "DISLIKE")}
+            >
+              <ThumbsDown className="h-4 w-4" />
+              {review.dislikeCount ?? 0}
+            </Button>
             {canReply ? (
               <Button size="sm" variant="outline" type="button" onClick={() => onStartReply(review.id)}>
                 Tra loi
               </Button>
             ) : (
               <Button asChild size="sm" variant="outline">
-                <Link href="/login">Dang nhap de tra loi</Link>
+                <Link href={loginHref}>Dang nhap de tra loi</Link>
               </Button>
             )}
+            {canDelete ? (
+              <Button
+                size="sm"
+                variant="outline"
+                type="button"
+                className="border-red-200 text-red-700 hover:bg-red-50"
+                disabled={isDeleting}
+                onClick={() => onDelete(review.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+                {isDeleting ? "Dang xoa..." : "Xoa"}
+              </Button>
+            ) : null}
           </div>
           {isReplying ? (
             <form className="mt-3 rounded-md border border-stone-200 bg-stone-50 p-3" onSubmit={(event) => onReplySubmit(event, review.id)}>
@@ -443,15 +582,21 @@ function ReviewItem({
                 <ReviewItem
                   key={reply.id}
                   canReply={canReply}
+                  currentUserId={currentUserId}
+                  deletingReviewId={deletingReviewId}
                   depth={depth + 1}
                   isReplySubmitting={isReplySubmitting}
+                  loginHref={loginHref}
+                  reactingReviewId={reactingReviewId}
                   replyContent={replyContent}
                   replyReviewId={replyReviewId}
                   repliesByParent={repliesByParent}
                   review={reply}
                   onCancelReply={onCancelReply}
+                  onDelete={onDelete}
                   onReplyChange={onReplyChange}
                   onReplySubmit={onReplySubmit}
+                  onReact={onReact}
                   onStartReply={onStartReply}
                 />
               ))}

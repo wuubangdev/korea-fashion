@@ -11,10 +11,12 @@ import { StoreHeader } from "@/components/StoreHeader";
 import { Button } from "@/components/ui/button";
 import { accountApi } from "@/lib/api";
 import { AUTH_TOKEN_KEY } from "@/lib/auth";
+import { useLoginRedirectHref } from "@/lib/authRedirect";
 import { formatMoney } from "@/lib/format";
 import type { Product } from "@/types/api";
 
 export default function WishlistPage() {
+  const loginHref = useLoginRedirectHref("/wishlist");
   const [items, setItems] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +78,7 @@ export default function WishlistPage() {
             icon={<LogIn className="h-5 w-5" />}
             title="Bạn cần đăng nhập"
             description="Đăng nhập để xem và quản lý danh sách sản phẩm yêu thích của riêng bạn."
-            actionHref="/login"
+            actionHref={loginHref}
             actionLabel="Đăng nhập"
           />
         ) : error ? (

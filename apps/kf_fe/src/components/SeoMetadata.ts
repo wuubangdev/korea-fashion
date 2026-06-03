@@ -24,12 +24,13 @@ export type SeoMetadataInput = {
 };
 
 export function getPublicSiteUrl(settings?: SiteSetting) {
-  const rawUrl =
-    settings?.canonicalUrl ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.VERCEL_PROJECT_PRODUCTION_URL ||
-    process.env.VERCEL_URL ||
-    "http://localhost:3000";
+  const rawUrl = [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL,
+    process.env.VERCEL_URL,
+    settings?.canonicalUrl,
+    "https://sieunhon.top",
+  ].find((value): value is string => Boolean(value) && !isPlaceholderUrl(value)) ?? "https://sieunhon.top";
   const withProtocol = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
 
   try {
@@ -39,9 +40,22 @@ export function getPublicSiteUrl(settings?: SiteSetting) {
   }
 }
 
+function isPlaceholderUrl(value: string | undefined) {
+  if (!value) {
+    return false;
+  }
+
+  try {
+    const host = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`).hostname.toLowerCase();
+    return host === "example.com" || host.endsWith(".example.com");
+  } catch {
+    return value.toLowerCase().includes("example.com");
+  }
+}
+
 export function toAbsoluteUrl(value: string | undefined, baseUrl: URL) {
   const trimmed = value?.trim();
-  if (!trimmed) {
+  if (!trimmed || isPlaceholderUrl(trimmed)) {
     return undefined;
   }
 
@@ -95,7 +109,7 @@ export async function generateSeoMetadata(input: SeoMetadataInput = {}): Promise
     toAbsoluteUrl(settings.canonicalUrl, baseUrl) ||
     baseUrl.toString();
   const image = thumbnailUrl
-    ? [{ url: thumbnailUrl, width: 1200, height: 630, alt: input.imageAlt || title }]
+    ? [{ url: thumbnailUrl, secureUrl: thumbnailUrl, type: inferImageType(thumbnailUrl), width: 1200, height: 630, alt: input.imageAlt || title }]
     : undefined;
 
   return {
@@ -130,4 +144,18 @@ export async function generateSeoMetadata(input: SeoMetadataInput = {}): Promise
       title,
     },
   };
+}
+
+function inferImageType(url: string) {
+  const pathname = new URL(url).pathname.toLowerCase();
+  if (pathname.endsWith(".jpg") || pathname.endsWith(".jpeg")) {
+    return "image/jpeg";
+  }
+  if (pathname.endsWith(".webp")) {
+    return "image/webp";
+  }
+  if (pathname.endsWith(".svg")) {
+    return "image/svg+xml";
+  }
+  return "image/png";
 }

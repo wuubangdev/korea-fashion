@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Camera,
@@ -18,6 +18,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 import { SafeImage } from "@/components/SafeImage";
@@ -30,7 +31,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useCart } from "@/hooks/useCart";
 import { accountApi, mediaApi } from "@/lib/api";
-import { AUTH_AVATAR_KEY, AUTH_TOKEN_KEY, AUTH_USER_KEY, clearAuthSession } from "@/lib/auth";
+import { AUTH_AVATAR_KEY, AUTH_USER_KEY, clearAuthSession, getActiveAuthToken } from "@/lib/auth";
+import { useLoginRedirectHref } from "@/lib/authRedirect";
 import { hasAdminAccessRole, parseJwtPayload, type JwtPayload } from "@/lib/authRoles";
 import { formatMoney } from "@/lib/format";
 import type { UpdateProfilePayload, User } from "@/types/api";
@@ -78,7 +80,6 @@ function getInitials(name: string) {
   const safeName = name.trim();
   return safeName ? safeName.slice(0, 2).toUpperCase() : "KF";
 }
-
 function formatRole(role: string) {
   const normalized = role.replace(/^ROLE_/, "").toUpperCase();
   const labels: Record<string, string> = {
@@ -106,6 +107,8 @@ function toProfileForm(user: User | null): ProfileForm {
 
 export default function ProfilePage() {
   const cart = useCart();
+  const router = useRouter();
+  const loginHref = useLoginRedirectHref("/profile");
   const { notify } = useToast();
   const [session, setSession] = useState<SessionState>(defaultSession);
   const [profile, setProfile] = useState<User | null>(null);
@@ -121,7 +124,7 @@ export default function ProfilePage() {
   useEffect(() => {
     queueMicrotask(() => {
       setCurrentTime(Date.now());
-      const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+      const token = getActiveAuthToken();
       const username = window.localStorage.getItem(AUTH_USER_KEY) || "";
       setSession({ payload: parseJwtPayload(token), token, username });
 
@@ -201,7 +204,7 @@ export default function ProfilePage() {
   }
 
   async function handleAvatarUpload(file: File | undefined) {
-    const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+    const token = getActiveAuthToken();
     if (!file || !token) {
       return;
     }
@@ -236,7 +239,7 @@ export default function ProfilePage() {
 
   async function handleProfileSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+    const token = getActiveAuthToken();
     if (!token) {
       notify({ message: "Vui lòng đăng nhập để cập nhật hồ sơ.", title: "Cần đăng nhập", type: "info" });
       return;
@@ -271,7 +274,7 @@ export default function ProfilePage() {
 
   async function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+    const token = getActiveAuthToken();
     if (!token) {
       notify({ message: "Vui lòng đăng nhập để đổi mật khẩu.", title: "Cần đăng nhập", type: "info" });
       return;
@@ -318,6 +321,7 @@ export default function ProfilePage() {
       title: "Đã đăng xuất",
       type: "success",
     });
+    router.push("/");
   };
 
   if (!isLoggedIn) {
@@ -333,7 +337,7 @@ export default function ProfilePage() {
                 Đăng nhập để cập nhật thông tin cá nhân, địa chỉ giao hàng, ảnh đại diện và mật khẩu.
               </p>
               <Button asChild className="mt-6">
-                <Link href="/login">
+                <Link href={loginHref}>
                   <LogIn className="h-4 w-4" />
                   Đăng nhập
                 </Link>
@@ -635,7 +639,6 @@ export default function ProfilePage() {
     </div>
   );
 }
-
 function ProfileField({
   children,
   icon: Icon,

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { accountApi } from "@/lib/api";
 import { AUTH_TOKEN_KEY } from "@/lib/auth";
+import { useLoginRedirectHref } from "@/lib/authRedirect";
 import { formatDate, formatMoney } from "@/lib/format";
 import type { Order, PageResult, Payment } from "@/types/api";
 
@@ -22,6 +23,7 @@ const statusFilters = ["ALL", "NEW", "PENDING", "PROCESSING", "SHIPPING", "COMPL
 
 export default function OrdersPage() {
   const { notify } = useToast();
+  const loginHref = useLoginRedirectHref("/orders");
   const [activeTab, setActiveTab] = useState<"orders" | "payments">("orders");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [orders, setOrders] = useState(emptyOrders);
@@ -109,7 +111,7 @@ export default function OrdersPage() {
             icon={<LogIn className="h-5 w-5" />}
             title="Ban can dang nhap"
             description="Dang nhap de xem lich su mua hang va thanh toan cua rieng ban."
-            actionHref="/login"
+            actionHref={loginHref}
             actionLabel="Dang nhap"
           />
         ) : error ? (

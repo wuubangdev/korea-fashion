@@ -9,10 +9,14 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface ReviewJpaRepository extends JpaRepository<ReviewJpaEntity, String>, JpaSpecificationExecutor<ReviewJpaEntity> {
     Page<ReviewJpaEntity> findByProductIdAndStatusIgnoreCase(Long productId, String status, Pageable pageable);
 
     Page<ReviewJpaEntity> findByUserId(Long userId, Pageable pageable);
+
+    List<ReviewJpaEntity> findByParentReviewId(String parentReviewId);
 
     Page<ReviewJpaEntity> findByProductIdAndStatusIgnoreCaseAndParentReviewIdIsNull(Long productId, String status, Pageable pageable);
 

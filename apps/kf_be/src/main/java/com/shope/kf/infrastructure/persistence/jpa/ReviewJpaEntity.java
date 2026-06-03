@@ -53,6 +53,7 @@ public class ReviewJpaEntity extends BaseJpaEntity {
 
     private Boolean verifiedPurchase;
     private Integer helpfulCount;
+    private Integer dislikeCount;
     private Integer reportCount;
 
     @Column(length = 1000)
@@ -63,4 +64,7 @@ public class ReviewJpaEntity extends BaseJpaEntity {
 
     @Transient
     private List<ReviewImageJpaEntity> images;
+
+    @Transient
+    private String currentUserReaction;
 }

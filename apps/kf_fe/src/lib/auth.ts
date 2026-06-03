@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/api";
+import { isTokenExpired, parseJwtPayload } from "@/lib/authRoles";
 import type { AuthRequest, AuthResponse } from "@/types/api";
 
 export const AUTH_TOKEN_KEY = "kf_token";
@@ -38,4 +39,27 @@ export function clearAuthSession() {
   localStorage.removeItem(AUTH_AVATAR_KEY);
   document.cookie = `${AUTH_TOKEN_KEY}=; path=/; max-age=0; SameSite=Lax`;
   window.dispatchEvent(new Event("auth:update"));
+}
+
+export function getActiveAuthToken() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  if (!token) {
+    return null;
+  }
+
+  if (isTokenExpired(parseJwtPayload(token))) {
+    clearAuthSession();
+    return null;
+  }
+
+  return token;
+}
+
+export function getAuthTokenExpirationMs(token: string | null | undefined) {
+  const payload = parseJwtPayload(token);
+  return payload?.exp ? payload.exp * 1000 : null;
 }

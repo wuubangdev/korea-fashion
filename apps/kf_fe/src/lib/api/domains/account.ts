@@ -8,6 +8,8 @@ export const accountApi = {
     apiFetch<void>("/api/me/password", undefined, { ...options, body, method: "POST" }),
   createReview: (body: CreateReviewPayload, options?: RequestOptions) =>
     apiFetch<Review>("/api/me/reviews", undefined, { ...options, body, method: "POST" }),
+  deleteReview: (reviewId: string, options?: RequestOptions) =>
+    apiFetch<void>(`/api/me/reviews/${reviewId}`, undefined, { ...options, method: "DELETE" }),
   getOrder: (orderId: number, options?: RequestOptions) => apiGet<Order>(`/api/me/orders/${orderId}`, undefined, options),
   getOrders: (query: PageQuery, options?: RequestOptions) => getPage<Order>("/api/me/orders", query, options),
   getPaymentByOrder: (orderId: number, options?: RequestOptions) => apiGet<Payment>(`/api/me/payments/order/${orderId}`, undefined, options),
@@ -17,6 +19,8 @@ export const accountApi = {
   getWishlist: (options?: RequestOptions) => apiGet<Product[]>("/api/me/wishlist", undefined, options),
   removeWishlist: (productId: number, options?: RequestOptions) =>
     apiFetch<void>(`/api/me/wishlist/${productId}`, undefined, { ...options, method: "DELETE" }),
+  reactReview: (reviewId: string, reaction: "LIKE" | "DISLIKE", options?: RequestOptions) =>
+    apiFetch<Review>(`/api/me/reviews/${reviewId}/reaction`, undefined, { ...options, body: { reaction }, method: "POST" }),
   replyReview: (reviewId: string, body: ReplyReviewPayload, options?: RequestOptions) =>
     apiFetch<Review>(`/api/me/reviews/${reviewId}/replies`, undefined, { ...options, body, method: "POST" }),
   updateAvatar: (body: UpdateAvatarPayload, options?: RequestOptions) =>

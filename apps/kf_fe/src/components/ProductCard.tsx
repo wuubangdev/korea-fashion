@@ -11,12 +11,14 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
 import { accountApi } from "@/lib/api";
 import { AUTH_TOKEN_KEY } from "@/lib/auth";
+import { useLoginRedirectHref } from "@/lib/authRedirect";
 import { formatMoney } from "@/lib/format";
 import type { Product } from "@/types/api";
 
 export function ProductCard({ product }: { product: Product }) {
   const cart = useCart();
   const router = useRouter();
+  const loginHref = useLoginRedirectHref();
   const [isWishlistSaved, setIsWishlistSaved] = useState(false);
   const [isWishlistSaving, setIsWishlistSaving] = useState(false);
   const price = Number(product.price ?? 0);
@@ -30,7 +32,7 @@ export function ProductCard({ product }: { product: Product }) {
   const handleWishlist = async () => {
     const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
     if (!token) {
-      router.push("/login");
+      router.push(loginHref);
       return;
     }
 

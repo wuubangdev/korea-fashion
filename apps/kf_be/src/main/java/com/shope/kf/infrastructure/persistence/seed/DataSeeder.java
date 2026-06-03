@@ -80,13 +80,13 @@ public class DataSeeder implements CommandLineRunner {
             setting.setSeoDescription("Mua sam thoi trang Han Quoc voi ao khoac, dam, ao so mi, chan vay va phu kien duoc tuyen chon.");
             setting.setSeoKeywords("thoi trang han quoc,korea fashion,ao khoac han quoc,dam han quoc");
             setting.setSeoThumbnailUrl("/korea-fashion-logo.svg");
-            setting.setCanonicalUrl("https://korea-fashion.example.com");
+            setting.setCanonicalUrl("https://sieunhon.top");
             setting.setFacebookUrl("https://facebook.com/koreafashion");
             setting.setInstagramUrl("https://instagram.com/koreafashion");
             setting.setTiktokUrl("https://tiktok.com/@koreafashion");
             setting.setYoutubeUrl("https://youtube.com/@koreafashion");
             setting.setHotline("0900000000");
-            setting.setEmail("support@korea-fashion.example.com");
+            setting.setEmail("support@sieunhon.top");
             setting.setAddress("TP. Ho Chi Minh, Viet Nam");
             setting.setFooterAbout("Korea Fashion tap trung vao cac san pham de phoi, chat lieu tot va phong cach Han Quoc ung dung.");
             siteSettingRepo.save(setting);

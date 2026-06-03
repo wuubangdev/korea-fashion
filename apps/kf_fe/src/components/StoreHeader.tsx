@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useApiResource } from "@/hooks/useApiResource";
 import { useCart } from "@/hooks/useCart";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { AUTH_AVATAR_KEY, AUTH_TOKEN_KEY, AUTH_USER_KEY, clearAuthSession } from "@/lib/auth";
+import { AUTH_AVATAR_KEY, AUTH_USER_KEY, clearAuthSession, getActiveAuthToken, getAuthTokenExpirationMs } from "@/lib/auth";
+import { useLoginRedirectHref } from "@/lib/authRedirect";
 import { storefrontApi, type SearchKeyword } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
 import type { Category, PageResult, Product } from "@/types/api";
@@ -54,6 +55,7 @@ function getInitials(username: string) {
 export function StoreHeader() {
   const cart = useCart();
   const router = useRouter();
+  const loginHref = useLoginRedirectHref();
   const { notify } = useToast();
   const { settings } = useSiteSettings();
   const [isOpen, setIsOpen] = useState(false);
@@ -92,9 +94,10 @@ export function StoreHeader() {
 
   useEffect(() => {
     function syncSession() {
+      const token = getActiveAuthToken();
       setSession({
         avatarUrl: window.localStorage.getItem(AUTH_AVATAR_KEY) || "",
-        token: window.localStorage.getItem(AUTH_TOKEN_KEY),
+        token,
         username: window.localStorage.getItem(AUTH_USER_KEY) || "",
       });
     }
@@ -107,6 +110,31 @@ export function StoreHeader() {
       window.removeEventListener("auth:update", syncSession);
     };
   }, []);
+
+  useEffect(() => {
+    const expirationMs = getAuthTokenExpirationMs(session.token);
+    if (!expirationMs) {
+      return;
+    }
+
+    const remainingMs = expirationMs - Date.now();
+    if (remainingMs <= 0) {
+      clearAuthSession();
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      clearAuthSession();
+      setSession({ avatarUrl: "", token: null, username: "" });
+      notify({
+        message: "Phien dang nhap da het han. Vui long dang nhap lai.",
+        title: "Da het phien",
+        type: "info",
+      });
+    }, remainingMs);
+
+    return () => window.clearTimeout(timer);
+  }, [notify, session.token]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -172,12 +200,12 @@ export function StoreHeader() {
     clearAuthSession();
     setSession({ avatarUrl: "", token: null, username: "" });
     setIsOpen(false);
-    window.dispatchEvent(new Event("auth:update"));
     notify({
       message: "Phiên đăng nhập đã được kết thúc.",
       title: "Đã đăng xuất",
       type: "success",
     });
+    router.push("/");
   }
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
@@ -337,7 +365,7 @@ export function StoreHeader() {
               </div>
             </div>
           ) : (
-            <Link href="/login">
+            <Link href={loginHref}>
               <Button variant="ghost" size="icon" aria-label="Đăng nhập">
                 <UserRound aria-hidden className="h-4 w-4" />
               </Button>

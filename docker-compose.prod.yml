@@ -42,11 +42,13 @@ services:
       dockerfile: apps/kf_fe/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.sieunhon.top}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://sieunhon.top}
     image: kor-fashion-frontend:prod
     container_name: kf_frontend
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.sieunhon.top}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://sieunhon.top}
       REVALIDATE_SECRET: ${REVALIDATE_SECRET:-prod-change-me-revalidate-secret}
     ports:
       - "${FRONTEND_BIND_HOST:-127.0.0.1}:${FRONTEND_PORT:-3397}:3000"

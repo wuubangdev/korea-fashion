@@ -255,11 +255,15 @@ function getSafeNextPath(auth?: AuthResponse) {
   const nextPath = new URLSearchParams(window.location.search).get("next");
   const hasAdminAccess = auth ? hasAdminAccessToken(auth.token) : false;
 
-  if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//")) {
-    return hasAdminAccess ? "/admin" : "/profile";
+  if (hasAdminAccess) {
+    return "/admin";
   }
 
-  if (nextPath.startsWith("/admin") && !hasAdminAccess) {
+  if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//")) {
+    return "/profile";
+  }
+
+  if (nextPath.startsWith("/admin")) {
     return "/profile";
   }
 

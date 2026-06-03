@@ -39,7 +39,13 @@ function getStoredToken() {
     return null;
   }
 
-  return localStorage.getItem("kf_token");
+  const token = localStorage.getItem("kf_token");
+  if (isJwtExpired(token)) {
+    clearStoredAuthSession();
+    return null;
+  }
+
+  return token;
 }
 
 export function buildUrl(path: string, query?: PageQuery | Record<string, unknown>) {
@@ -83,7 +89,7 @@ export async function apiFetch<T>(
   query?: PageQuery | Record<string, unknown>,
   options?: RequestOptions,
 ) {
-  const token = options?.token ?? getStoredToken();
+  const token = options?.token === undefined ? getStoredToken() : getActiveRequestToken(options.token);
   const hasBody = options?.body !== undefined;
   const isFormData = typeof FormData !== "undefined" && options?.body instanceof FormData;
   const response = await fetch(buildUrl(path, query), {
@@ -100,6 +106,9 @@ export async function apiFetch<T>(
   } as RequestInit);
 
   if (!response.ok) {
+    if (response.status === 401 && token) {
+      clearStoredAuthSession();
+    }
     throw new ApiError(await readError(response), response.status);
   }
 
@@ -143,6 +152,15 @@ async function readError(response: Response) {
   }
 
   return toFriendlyErrorMessage(response.status, rawMessage);
+}
+
+function getActiveRequestToken(token: string | null) {
+  if (isJwtExpired(token)) {
+    clearStoredAuthSession();
+    return null;
+  }
+
+  return token;
 }
 
 function toFriendlyErrorMessage(status: number, rawMessage: string) {
@@ -232,4 +250,36 @@ function isApiResponseEnvelope<T>(body: unknown): body is ApiResponseEnvelope<T>
     "data" in body &&
     typeof (body as { success: unknown }).success === "boolean"
   );
+}
+
+function clearStoredAuthSession() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  localStorage.removeItem("kf_token");
+  localStorage.removeItem("kf_username");
+  localStorage.removeItem("kf_avatar");
+  document.cookie = "kf_token=; path=/; max-age=0; SameSite=Lax";
+  window.dispatchEvent(new Event("auth:update"));
+}
+
+function isJwtExpired(token: string | null | undefined) {
+  if (!token) {
+    return false;
+  }
+
+  const [, payload] = token.split(".");
+  if (!payload) {
+    return true;
+  }
+
+  try {
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+    const decoded = JSON.parse(globalThis.atob(padded)) as { exp?: number };
+    return Boolean(decoded.exp && decoded.exp * 1000 <= Date.now());
+  } catch {
+    return true;
+  }
 }

@@ -11,12 +11,15 @@ import com.shope.kf.domain.model.Product;
 import com.shope.kf.infrastructure.api.dto.response.ApiResponse;
 import com.shope.kf.infrastructure.api.mapper.ProductApiMapper;
 import com.shope.kf.infrastructure.persistence.jpa.ReviewJpaEntity;
+import com.shope.kf.infrastructure.persistence.jpa.ReviewReactionJpaEntity;
 import com.shope.kf.infrastructure.persistence.jpa.mapper.PageMapper;
 import com.shope.kf.infrastructure.persistence.repository.ReviewImageJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.ReviewJpaRepository;
+import com.shope.kf.infrastructure.persistence.repository.ReviewReactionJpaRepository;
 import com.shope.kf.infrastructure.persistence.repository.UserJpaRepository;
 import com.shope.kf.infrastructure.security.RoleConstants;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -24,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/products")
@@ -32,17 +36,20 @@ public class ProductController {
     private final ProductUseCase productUseCase;
     private final ReviewJpaRepository reviewRepository;
     private final ReviewImageJpaRepository reviewImageRepository;
+    private final ReviewReactionJpaRepository reviewReactionRepository;
     private final UserJpaRepository userRepository;
 
     public ProductController(
             ProductUseCase productUseCase,
             ReviewJpaRepository reviewRepository,
             ReviewImageJpaRepository reviewImageRepository,
+            ReviewReactionJpaRepository reviewReactionRepository,
             UserJpaRepository userRepository
     ) {
         this.productUseCase = productUseCase;
         this.reviewRepository = reviewRepository;
         this.reviewImageRepository = reviewImageRepository;
+        this.reviewReactionRepository = reviewReactionRepository;
         this.userRepository = userRepository;
     }
 
@@ -108,7 +115,8 @@ public class ProductController {
             @PathVariable Long id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "reviewedAt,desc") String sort
+            @RequestParam(defaultValue = "reviewedAt,desc") String sort,
+            Authentication authentication
     ) {
         var result = reviewRepository.findByProductIdAndStatusIgnoreCase(id, "APPROVED", PageMapper.toPageable(PageQuery.of(page, size, sort)));
         Map<Long, String> avatarsByUserId = new HashMap<>();
@@ -119,8 +127,9 @@ public class ProductController {
                         .distinct()
                         .toList()
         ).forEach(user -> avatarsByUserId.put(user.getId(), user.getAvatarUrl()));
+        Map<String, String> reactionsByReviewId = currentUserReactions(authentication, result.getContent());
 
-        return ResponseEntity.ok(PageMapper.toResult(result, review -> withCurrentAvatar(withImages(review), avatarsByUserId)));
+        return ResponseEntity.ok(PageMapper.toResult(result, review -> withCurrentReaction(withCurrentAvatar(withImages(review), avatarsByUserId), reactionsByReviewId)));
     }
 
     private ReviewJpaEntity withImages(ReviewJpaEntity review) {
@@ -132,6 +141,24 @@ public class ProductController {
         if (review.getUserId() != null && avatarsByUserId.containsKey(review.getUserId())) {
             review.setReviewerAvatarUrl(avatarsByUserId.get(review.getUserId()));
         }
+        return review;
+    }
+
+    private Map<String, String> currentUserReactions(Authentication authentication, List<ReviewJpaEntity> reviews) {
+        if (authentication == null || authentication.getName() == null || reviews.isEmpty()) {
+            return Map.of();
+        }
+
+        return userRepository.findByUsername(authentication.getName())
+                .map(user -> reviewReactionRepository.findByReviewIdInAndUserId(
+                        reviews.stream().map(ReviewJpaEntity::getId).toList(),
+                        user.getId()
+                ).stream().collect(Collectors.toMap(ReviewReactionJpaEntity::getReviewId, ReviewReactionJpaEntity::getReaction)))
+                .orElse(Map.of());
+    }
+
+    private ReviewJpaEntity withCurrentReaction(ReviewJpaEntity review, Map<String, String> reactionsByReviewId) {
+        review.setCurrentUserReaction(reactionsByReviewId.get(review.getId()));
         return review;
     }
 
