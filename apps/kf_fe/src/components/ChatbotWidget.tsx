@@ -21,7 +21,7 @@ const starterPrompts = [
 ];
 
 const welcomeMessage: ChatMessage = {
-  content: "Chào bạn, mình chỉ hỗ trợ tư vấn sản phẩm, nhãn hiệu, danh mục và giá tại Korea Fashion. Bạn muốn tìm item kiểu nào?",
+  content: "Chào bạn, mình có thể tư vấn sản phẩm, phối đồ, nhãn hiệu, danh mục và giá tại Korea Fashion. Bạn đang tìm item cho dịp nào?",
   role: "model",
 };
 
@@ -228,7 +228,7 @@ export function ChatbotWidget() {
             ))}
             {isSending ? (
               <div className="mr-auto max-w-[88%] rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-500 shadow-sm">
-                Đang tìm sản phẩm phù hợp...
+                Bạn đợi chút nhé, bot đang suy nghĩ và soạn câu trả lời...
               </div>
             ) : null}
             <div ref={scrollRef} />

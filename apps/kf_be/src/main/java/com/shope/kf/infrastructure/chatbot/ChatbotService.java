@@ -151,9 +151,11 @@ public class ChatbotService {
         updateTitleIfNeeded(session, messageText);
         saveMessage(session, ROLE_USER, messageText, List.of());
 
-        List<ProductContext> products = loadProducts();
-        List<ChatbotMessageResponse.ProductSuggestion> suggestions = suggestProducts(messageText, products);
-        String answer = answer(messageText, session, products, suggestions);
+        boolean inScope = isShoppingAdvice(messageText);
+        boolean suggestProducts = inScope && shouldSuggestProducts(messageText);
+        List<ProductContext> products = inScope ? loadProducts() : List.of();
+        List<ChatbotMessageResponse.ProductSuggestion> suggestions = suggestProducts ? suggestProducts(messageText, products) : List.of();
+        String answer = answer(messageText, session, products, suggestions, inScope);
         saveMessage(session, ROLE_MODEL, answer, suggestions);
 
         int remaining = Math.max(0, dailyLimit - (int) countSince(identity, Instant.now().minus(Duration.ofDays(1))));
@@ -164,10 +166,11 @@ public class ChatbotService {
             String messageText,
             ChatSessionJpaEntity session,
             List<ProductContext> products,
-            List<ChatbotMessageResponse.ProductSuggestion> suggestions
+            List<ChatbotMessageResponse.ProductSuggestion> suggestions,
+            boolean inScope
     ) {
-        if (!isShoppingAdvice(messageText)) {
-            return "M\u00ecnh ch\u1ec9 h\u1ed7 tr\u1ee3 t\u01b0 v\u1ea5n th\u1eddi trang, t\u00ecm s\u1ea3n ph\u1ea9m, nh\u00e3n hi\u1ec7u, danh m\u1ee5c v\u00e0 gi\u00e1 t\u1ea1i Korea Fashion. B\u1ea1n cho m\u00ecnh bi\u1ebft item, phong c\u00e1ch ho\u1eb7c ng\u00e2n s\u00e1ch mu\u1ed1n t\u00ecm nh\u00e9.";
+        if (!inScope) {
+            return "M\u00ecnh ch\u1ec9 h\u1ed7 tr\u1ee3 t\u01b0 v\u1ea5n th\u1eddi trang v\u00e0 mua s\u1eafm t\u1ea1i Korea Fashion. C\u00e2u n\u00e0y n\u1eb1m ngo\u00e0i ph\u1ea1m vi h\u1ed7 tr\u1ee3, n\u00ean m\u00ecnh kh\u00f4ng th\u1ec3 tr\u1ea3 l\u1eddi chi ti\u1ebft. B\u1ea1n c\u00f3 th\u1ec3 h\u1ecfi m\u00ecnh v\u1ec1 item, phong c\u00e1ch, size, gi\u00e1 ho\u1eb7c nh\u00e3n hi\u1ec7u mu\u1ed1n t\u00ecm nh\u00e9.";
         }
         if (!StringUtils.hasText(apiKey)) {
             return "Chatbot ch\u01b0a \u0111\u01b0\u1ee3c c\u1ea5u h\u00ecnh Gemini API key. B\u1ea1n v\u1eabn c\u00f3 th\u1ec3 xem c\u00e1c s\u1ea3n ph\u1ea9m g\u1ee3i \u00fd b\u00ean d\u01b0\u1edbi.";
@@ -296,7 +299,7 @@ public class ChatbotService {
                 "system_instruction", content(systemInstruction(products)),
                 "contents", contents(sessionId, messageText),
                 "generationConfig", Map.of(
-                        "temperature", 0.3,
+                        "temperature", 0.45,
                         "maxOutputTokens", 600
                 )
         );
@@ -322,7 +325,8 @@ public class ChatbotService {
                 N\u1ebfu kh\u00e1ch h\u1ecfi ngo\u00e0i ph\u1ea1m vi n\u00e0y, t\u1eeb ch\u1ed1i ng\u1eafn g\u1ecdn v\u00e0 h\u01b0\u1edbng h\u1ecd quay l\u1ea1i nhu c\u1ea7u mua s\u1eafm th\u1eddi trang.
                 Kh\u00f4ng vi\u1ebft code, kh\u00f4ng l\u00e0m b\u00e0i t\u1eadp, kh\u00f4ng t\u01b0 v\u1ea5n ph\u00e1p l\u00fd/y t\u1ebf/t\u00e0i ch\u00ednh, kh\u00f4ng t\u1ea1o n\u1ed9i dung ngo\u00e0i mua s\u1eafm.
                 Kh\u00f4ng b\u1ecba s\u1ea3n ph\u1ea9m, gi\u00e1, danh m\u1ee5c ho\u1eb7c khuy\u1ebfn m\u00e3i. Ch\u1ec9 d\u00f9ng danh s\u00e1ch s\u1ea3n ph\u1ea9m b\u00ean d\u01b0\u1edbi.
-                Tr\u1ea3 l\u1eddi b\u1eb1ng ti\u1ebfng Vi\u1ec7t th\u00e2n thi\u1ec7n, ng\u1eafn g\u1ecdn, \u01b0u ti\u00ean 2-4 g\u1ee3i \u00fd c\u1ee5 th\u1ec3.
+                H\u00e3y t\u01b0 v\u1ea5n nh\u01b0 nh\u00e2n vi\u00ean b\u00e1n h\u00e0ng tinh t\u1ebf: h\u1ecfi l\u1ea1i khi thi\u1ebfu size, ng\u00e2n s\u00e1ch, d\u1ecbp m\u1eb7c ho\u1eb7c gu m\u00e0u; n\u1ebfu \u0111\u1ee7 th\u00f4ng tin th\u00ec g\u1ee3i \u00fd 2-4 l\u1ef1a ch\u1ecdn c\u00f3 l\u00fd do ng\u1eafn.
+                Kh\u00f4ng \u00e9p li\u1ec7t k\u00ea s\u1ea3n ph\u1ea9m khi kh\u00e1ch ch\u1ec9 ch\u00e0o h\u1ecfi ho\u1eb7c h\u1ecfi chung. Tr\u1ea3 l\u1eddi t\u1ef1 nhi\u00ean, ng\u1eafn g\u1ecdn, c\u00f3 th\u1ec3 g\u1ee3i m\u1edf b\u1eb1ng m\u1ed9t c\u00e2u h\u1ecfi ph\u00f9 h\u1ee3p.
 
                 Danh s\u00e1ch s\u1ea3n ph\u1ea9m hi\u1ec7n c\u00f3:
                 %s
@@ -400,9 +404,25 @@ public class ChatbotService {
                 "gia", "tien", "re", "dat", "duoi", "tren", "mua", "hang", "san", "pham", "brand",
                 "thuong", "hieu", "danh", "muc", "thoi", "trang", "han", "korea", "basic", "dep",
                 "di", "choi", "cong", "so", "du", "lich", "sale", "khuyen", "mai", "giao", "ship",
-                "ton", "kho", "tim", "kiem", "goi", "y", "tu", "van"
+                "ton", "kho", "tim", "kiem", "goi", "y", "tu", "van", "xin", "chao", "hello", "hi",
+                "shop", "minh", "can", "muon", "hop", "voi", "style", "outfit", "form", "mau",
+                "gio", "lam", "viec", "mo", "cua", "dong", "bao", "lau", "doi", "tra", "hoan"
         );
         return tokens.isEmpty() || tokens.stream().anyMatch(allow::contains);
+    }
+
+    private boolean shouldSuggestProducts(String value) {
+        Set<String> tokens = tokenize(value);
+        if (tokens.isEmpty()) {
+            return false;
+        }
+        Set<String> intent = Set.of(
+                "ao", "quan", "vay", "dam", "chan", "set", "size", "gia", "tien", "re", "dat",
+                "duoi", "tren", "mua", "hang", "san", "pham", "brand", "thuong", "hieu", "danh",
+                "muc", "basic", "cong", "so", "du", "lich", "sale", "ton", "kho", "tim", "kiem",
+                "goi", "y", "tu", "van", "phoi", "mac", "outfit", "style", "form", "mau"
+        );
+        return tokens.stream().anyMatch(intent::contains);
     }
 
     private List<ChatbotMessageResponse.ProductSuggestion> suggestProducts(String message, List<ProductContext> products) {
