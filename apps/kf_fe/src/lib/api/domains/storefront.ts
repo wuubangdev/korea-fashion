@@ -3,7 +3,7 @@ import type { Banner, Category, PageQuery, PageResult, Product, SiteSetting } fr
 
 export type StorefrontHome = Record<string, unknown>;
 export type StorefrontProductDetail = Record<string, unknown>;
-export type StorefrontProductSummary = Record<string, unknown>;
+export type StorefrontProductSummary = Product;
 export type StorefrontFilters = Record<string, unknown>;
 export type StorefrontPolicy = Record<string, unknown>;
 export type StorefrontPage = Record<string, unknown>;
@@ -14,6 +14,10 @@ export type StorefrontShippingMethod = Record<string, unknown>;
 export type StorefrontPaymentMethod = Record<string, unknown>;
 export type CouponValidationRequest = Record<string, unknown>;
 export type CouponValidationResult = Record<string, unknown>;
+export type SearchKeyword = {
+  keyword: string;
+  searchCount: number;
+};
 
 export const storefrontApi = {
   banners: (options?: RequestOptions) =>
@@ -48,8 +52,12 @@ export const storefrontApi = {
     apiGet<Product[]>(`/api/storefront/products/${slugOrId}/related`, undefined, options),
   products: (query: Partial<PageQuery> & Record<string, unknown> = {}, options?: RequestOptions) =>
     apiGet<PageResult<StorefrontProductSummary>>("/api/storefront/products", { page: 0, size: 12, sort: "id,desc", ...query }, options),
-  searchSuggestions: (query: { q?: string; keyword?: string; limit?: number } = {}, options?: RequestOptions) =>
-    apiGet<string[]>("/api/storefront/search/suggestions", query, options),
+  popularSearchKeywords: (query: { size?: number } = {}, options?: RequestOptions) =>
+    apiGet<SearchKeyword[]>("/api/storefront/search/popular", query, options),
+  recordSearchKeyword: (keyword: string, options?: RequestOptions) =>
+    apiFetch<SearchKeyword>("/api/storefront/search/keywords", undefined, { ...options, body: { keyword }, method: "POST" }),
+  searchSuggestions: (query: { search: string; size?: number }, options?: RequestOptions) =>
+    apiGet<PageResult<StorefrontProductSummary>>("/api/storefront/search/suggestions", query, options),
   shippingMethods: (options?: RequestOptions) =>
     apiGet<StorefrontShippingMethod[]>("/api/storefront/shipping-methods", undefined, options),
   siteSettings: (options?: RequestOptions) =>

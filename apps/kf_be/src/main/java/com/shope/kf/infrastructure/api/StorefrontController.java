@@ -4,13 +4,17 @@ import com.shope.kf.application.common.PageResult;
 import com.shope.kf.application.port.in.StorefrontUseCase;
 import com.shope.kf.application.result.CouponValidationCommand;
 import com.shope.kf.application.result.CouponValidationResult;
+import com.shope.kf.infrastructure.api.dto.request.SearchKeywordRequest;
 import com.shope.kf.infrastructure.api.dto.response.ApiResponse;
+import com.shope.kf.infrastructure.api.dto.response.SearchKeywordResponse;
 import com.shope.kf.infrastructure.api.dto.response.StorefrontFiltersResponse;
 import com.shope.kf.infrastructure.api.dto.response.StorefrontHomeResponse;
 import com.shope.kf.infrastructure.api.dto.response.StorefrontProductDetailResponse;
 import com.shope.kf.infrastructure.api.dto.response.StorefrontProductSummaryResponse;
+import com.shope.kf.infrastructure.search.SearchKeywordService;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,15 +25,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/storefront")
 @Tag(name = "Storefront", description = "Public storefront API for home, catalog, product detail, content, menu, policy and coupon.")
 public class StorefrontController {
     private final StorefrontUseCase storefrontUseCase;
+    private final SearchKeywordService searchKeywordService;
 
-    public StorefrontController(StorefrontUseCase storefrontUseCase) {
+    public StorefrontController(StorefrontUseCase storefrontUseCase, SearchKeywordService searchKeywordService) {
         this.storefrontUseCase = storefrontUseCase;
+        this.searchKeywordService = searchKeywordService;
     }
 
     @GetMapping("/home")
@@ -150,6 +157,20 @@ public class StorefrontController {
             @RequestParam(defaultValue = "8") int size
     ) {
         return ok(storefrontUseCase.searchSuggestions(search, size));
+    }
+
+    @GetMapping("/search/popular")
+    public ResponseEntity<ApiResponse<List<SearchKeywordResponse>>> popularSearchKeywords(
+            @RequestParam(defaultValue = "8") int size
+    ) {
+        return ok(searchKeywordService.popular(size));
+    }
+
+    @PostMapping("/search/keywords")
+    public ResponseEntity<ApiResponse<SearchKeywordResponse>> recordSearchKeyword(
+            @Valid @RequestBody SearchKeywordRequest request
+    ) {
+        return ok(searchKeywordService.record(request.keyword()));
     }
 
     @GetMapping("/products/{slugOrId}/related")

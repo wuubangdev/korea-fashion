@@ -13,6 +13,7 @@ import { useApiResource } from "@/hooks/useApiResource";
 import { useCart } from "@/hooks/useCart";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { AUTH_AVATAR_KEY, AUTH_TOKEN_KEY, AUTH_USER_KEY, clearAuthSession } from "@/lib/auth";
+import { storefrontApi, type SearchKeyword } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
 import type { Category, PageResult, Product } from "@/types/api";
 
@@ -56,8 +57,12 @@ export function StoreHeader() {
   const { notify } = useToast();
   const { settings } = useSiteSettings();
   const [isOpen, setIsOpen] = useState(false);
+  const [isSuggestLoading, setIsSuggestLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [session, setSession] = useState<SessionState>({ avatarUrl: "", token: null, username: "" });
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [popularKeywords, setPopularKeywords] = useState<SearchKeyword[]>([]);
+  const [suggestions, setSuggestions] = useState<Product[]>([]);
 
   const categoriesResource = useApiResource<Collection<Category>>({
     path: "/api/storefront/categories",
@@ -103,6 +108,66 @@ export function StoreHeader() {
     };
   }, []);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      storefrontApi.popularSearchKeywords({ size: 8 }, { signal: controller.signal })
+        .then((keywords) => {
+          if (!controller.signal.aborted) {
+            setPopularKeywords(keywords);
+          }
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) {
+            setPopularKeywords([]);
+          }
+        });
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    const keyword = searchTerm.trim();
+    if (keyword.length < 2) {
+      const timer = window.setTimeout(() => {
+        setSuggestions([]);
+        setIsSuggestLoading(false);
+      }, 0);
+      return () => window.clearTimeout(timer);
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setIsSuggestLoading(true);
+      storefrontApi.searchSuggestions({ search: keyword, size: 6 }, { signal: controller.signal })
+        .then((result) => {
+          if (!controller.signal.aborted) {
+            setSuggestions(result.content ?? []);
+            setShowSuggestions(true);
+          }
+        })
+        .catch((error: unknown) => {
+          if (!(error instanceof DOMException && error.name === "AbortError")) {
+            setSuggestions([]);
+          }
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) {
+            setIsSuggestLoading(false);
+          }
+        });
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [searchTerm]);
+
   function handleLogout() {
     clearAuthSession();
     setSession({ avatarUrl: "", token: null, username: "" });
@@ -117,9 +182,27 @@ export function StoreHeader() {
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const keyword = searchTerm.trim();
+    openSearchResults();
+  }
+
+  function openSearchResults(keywordOverride?: string) {
+    const keyword = (keywordOverride ?? searchTerm).trim();
+    if (keyword.length >= 2) {
+      void storefrontApi.recordSearchKeyword(keyword).catch(() => undefined);
+    }
     setIsOpen(false);
+    setShowSuggestions(false);
+    if (keywordOverride !== undefined) {
+      setSearchTerm(keyword);
+    }
     router.push(keyword ? `/products?search=${encodeURIComponent(keyword)}` : "/products");
+  }
+
+  function openProductSuggestion(product: Product) {
+    setIsOpen(false);
+    setShowSuggestions(false);
+    setSearchTerm(product.name);
+    router.push(`/products/${product.slug || product.id}`);
   }
 
   return (
@@ -188,19 +271,34 @@ export function StoreHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <form className="hidden w-44 items-center rounded-md border border-stone-200 bg-white px-2 py-1.5 shadow-sm md:flex lg:w-64" onSubmit={handleSearch}>
-            <Search aria-hidden className="h-4 w-4 shrink-0 text-stone-400" />
-            <input
-              aria-label="Tìm sản phẩm"
-              className="min-w-0 flex-1 bg-transparent px-2 text-sm text-stone-800 outline-none placeholder:text-stone-400"
-              placeholder="Tìm sản phẩm"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
+          <div className="relative hidden md:block">
+            <form className="flex w-44 items-center rounded-md border border-stone-200 bg-white px-2 py-1.5 shadow-sm lg:w-64" onSubmit={handleSearch}>
+              <Search aria-hidden className="h-4 w-4 shrink-0 text-stone-400" />
+              <input
+                aria-label="Tìm sản phẩm"
+                autoComplete="off"
+                className="min-w-0 flex-1 bg-transparent px-2 text-sm text-stone-800 outline-none placeholder:text-stone-400"
+                placeholder="Tìm sản phẩm"
+                value={searchTerm}
+                onBlur={() => window.setTimeout(() => setShowSuggestions(false), 120)}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                onFocus={() => setShowSuggestions(true)}
+              />
+              <Button className="h-8 px-2" size="sm" type="submit" variant="ghost">
+                Tìm
+              </Button>
+            </form>
+            <SearchSuggestions
+              isLoading={isSuggestLoading}
+              keyword={searchTerm}
+              popularKeywords={popularKeywords}
+              products={suggestions}
+              visible={showSuggestions}
+              onSearchAll={openSearchResults}
+              onSelectKeyword={openSearchResults}
+              onSelect={openProductSuggestion}
             />
-            <Button className="h-8 px-2" size="sm" type="submit" variant="ghost">
-              Tìm
-            </Button>
-          </form>
+          </div>
 
           <UserOrderBell token={session.token} />
 
@@ -275,19 +373,34 @@ export function StoreHeader() {
       {isOpen ? (
         <div className="animate-in border-t border-stone-200 bg-white px-4 py-3 shadow-lg shadow-stone-950/5 md:hidden">
           <nav className="mx-auto grid max-w-7xl gap-2 text-sm font-medium text-stone-700">
-            <form className="mb-1 flex items-center rounded-md border border-stone-200 bg-stone-50 px-2 py-1.5" onSubmit={handleSearch}>
-              <Search aria-hidden className="h-4 w-4 shrink-0 text-stone-400" />
-              <input
-                aria-label="Tìm sản phẩm"
-                className="min-w-0 flex-1 bg-transparent px-2 text-sm text-stone-800 outline-none placeholder:text-stone-400"
-                placeholder="Tìm sản phẩm"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
+            <div className="relative mb-1">
+              <form className="flex items-center rounded-md border border-stone-200 bg-stone-50 px-2 py-1.5" onSubmit={handleSearch}>
+                <Search aria-hidden className="h-4 w-4 shrink-0 text-stone-400" />
+                <input
+                  aria-label="Tìm sản phẩm"
+                  autoComplete="off"
+                  className="min-w-0 flex-1 bg-transparent px-2 text-sm text-stone-800 outline-none placeholder:text-stone-400"
+                  placeholder="Tìm sản phẩm"
+                  value={searchTerm}
+                  onBlur={() => window.setTimeout(() => setShowSuggestions(false), 120)}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  onFocus={() => setShowSuggestions(true)}
+                />
+                <Button className="h-8 px-2" size="sm" type="submit" variant="ghost">
+                  Tìm
+                </Button>
+              </form>
+              <SearchSuggestions
+                isLoading={isSuggestLoading}
+                keyword={searchTerm}
+                popularKeywords={popularKeywords}
+                products={suggestions}
+                visible={showSuggestions}
+                onSearchAll={openSearchResults}
+                onSelectKeyword={openSearchResults}
+                onSelect={openProductSuggestion}
               />
-              <Button className="h-8 px-2" size="sm" type="submit" variant="ghost">
-                Tìm
-              </Button>
-            </form>
+            </div>
             <Link href="/products" className="rounded-md px-3 py-2 hover:bg-stone-100" onClick={() => setIsOpen(false)}>
               Tất cả sản phẩm
             </Link>
@@ -325,6 +438,112 @@ export function StoreHeader() {
         </div>
       ) : null}
     </header>
+  );
+}
+
+function SearchSuggestions({
+  isLoading,
+  keyword,
+  popularKeywords,
+  products,
+  visible,
+  onSearchAll,
+  onSelectKeyword,
+  onSelect,
+}: {
+  isLoading: boolean;
+  keyword: string;
+  onSearchAll: () => void;
+  onSelectKeyword: (keyword: string) => void;
+  onSelect: (product: Product) => void;
+  popularKeywords: SearchKeyword[];
+  products: Product[];
+  visible: boolean;
+}) {
+  const normalizedKeyword = keyword.trim();
+  if (!visible) {
+    return null;
+  }
+
+  if (normalizedKeyword.length < 2) {
+    if (!popularKeywords.length) {
+      return null;
+    }
+
+    return (
+      <div className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-50 overflow-hidden rounded-md border border-stone-200 bg-white shadow-xl shadow-stone-950/10">
+        <div className="border-b border-stone-100 px-3 py-2 text-xs font-semibold uppercase tracking-normal text-stone-500">
+          Từ khóa tìm nhiều
+        </div>
+        <div className="flex flex-wrap gap-2 p-3">
+          {popularKeywords.map((item) => (
+            <button
+              key={item.keyword}
+              className="rounded-md border border-stone-200 bg-stone-50 px-2.5 py-1.5 text-xs font-medium text-stone-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800"
+              type="button"
+              onMouseDown={(event) => {
+                event.preventDefault();
+                onSelectKeyword(item.keyword);
+              }}
+            >
+              {item.keyword}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-50 overflow-hidden rounded-md border border-stone-200 bg-white shadow-xl shadow-stone-950/10">
+      <button
+        className="flex w-full items-center gap-2 border-b border-stone-100 px-3 py-2 text-left text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+        type="button"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          onSearchAll();
+        }}
+      >
+        <Search aria-hidden className="h-4 w-4 shrink-0 text-stone-400" />
+        <span className="min-w-0 truncate">Tìm kiếm &quot;{normalizedKeyword}&quot;</span>
+      </button>
+
+      {isLoading ? (
+        <div className="px-3 py-2 text-sm text-stone-500">Đang gợi ý sản phẩm...</div>
+      ) : products.length ? (
+        <div className="max-h-80 overflow-y-auto p-1">
+          {products.map((product) => (
+            <button
+              key={product.id}
+              className="grid w-full grid-cols-[44px_1fr] gap-3 rounded-md p-2 text-left transition hover:bg-stone-50"
+              type="button"
+              onMouseDown={(event) => {
+                event.preventDefault();
+                onSelect(product);
+              }}
+            >
+              <SafeImage
+                alt={product.name}
+                className="h-11 w-11 rounded-md border border-stone-100"
+                sizes="44px"
+                src={product.imageUrl}
+              />
+              <span className="min-w-0">
+                <span className="line-clamp-1 block text-sm font-semibold text-stone-950">{product.name}</span>
+                <span className="mt-0.5 flex items-center justify-between gap-2 text-xs text-stone-500">
+                  <span className="min-w-0 truncate">{product.brand || "Korea Fashion"}</span>
+                  {product.price !== undefined && product.price !== null ? (
+                    <span className="shrink-0 font-semibold text-emerald-700">{formatMoney(Number(product.price))}</span>
+                  ) : null}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="px-3 py-2 text-sm text-stone-500">Chưa có sản phẩm phù hợp.</div>
+      )}
+    </div>
   );
 }
 
