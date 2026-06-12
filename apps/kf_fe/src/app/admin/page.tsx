@@ -225,7 +225,12 @@ function Task({
   tone: "amber" | "emerald" | "rose" | "slate";
   value: string;
 }) {
-
+const tones = {
+    amber: "bg-amber-50 text-amber-700",
+    emerald: "bg-emerald-50 text-emerald-700",
+    rose: "bg-rose-50 text-rose-700",
+    slate: "bg-slate-100 text-slate-700",
+  };
   return (
     <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 p-3">
       <span>{label}</span>
