@@ -15,6 +15,11 @@ import { useCart } from "@/hooks/useCart";
 import { accountApi, ordersApi, storefrontApi } from "@/lib/api";
 import { AUTH_TOKEN_KEY } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
+import {
+  calculateOrderTotal,
+  calculateShippingFee,
+  DEFAULT_SHIPPING_FEE,
+} from "@/lib/orderTotals";
 import type { CreateOrderPayload, Order, User } from "@/types/api";
 
 type CheckoutForm = {
@@ -62,7 +67,7 @@ const defaultForm: CheckoutForm = {
 };
 
 const fallbackShippingMethods: CheckoutOption[] = [
-  { description: "Giao trong 2-5 ngay lam viec.", fee: 30000, id: "standard", name: "Giao hang tieu chuan" },
+  { description: "Giao trong 2-5 ngay lam viec.", fee: DEFAULT_SHIPPING_FEE, id: "standard", name: "Giao hang tieu chuan" },
 ];
 
 const fallbackPaymentMethods: CheckoutOption[] = [
@@ -126,11 +131,20 @@ export default function CheckoutPage() {
 
   const selectedShipping = shippingMethods.find((item) => optionId(item) === form.shippingMethodId) ?? shippingMethods[0];
   const selectedPayment = paymentMethods.find((item) => optionId(item) === form.paymentMethodId) ?? paymentMethods[0];
-  const baseShippingFee = Number(selectedShipping?.fee ?? 30000);
+  const baseShippingFee = Number(selectedShipping?.fee ?? DEFAULT_SHIPPING_FEE);
   const discountAmount = coupon?.valid ? Math.min(Number(coupon.discountAmount ?? 0), cart.total) : 0;
   const hasFreeShipping = Boolean(coupon?.valid && coupon.freeShipping);
-  const shippingFee = hasFreeShipping || cart.total >= 1000000 || cart.items.length === 0 ? 0 : baseShippingFee;
-  const grandTotal = Math.max(cart.total - discountAmount, 0) + shippingFee;
+  const shippingFee = calculateShippingFee({
+    baseFee: baseShippingFee,
+    freeShipping: hasFreeShipping,
+    itemCount: cart.items.length,
+    subtotal: cart.total,
+  });
+  const grandTotal = calculateOrderTotal({
+    discountAmount,
+    shippingFee,
+    subtotal: cart.total,
+  });
   const deliveryAddress = useMemo(
     () => [form.address, form.ward, form.district, form.city].map((item) => item.trim()).filter(Boolean).join(", "),
     [form.address, form.city, form.district, form.ward],
@@ -225,7 +239,7 @@ export default function CheckoutPage() {
         unitPrice: Number(item.product.price ?? 0),
       })),
       note: form.note.trim() || undefined,
-        paymentMethodId: optionId(selectedPayment),
+      paymentMethodId: optionId(selectedPayment),
       shippingFee,
       shippingMethodId: optionId(selectedShipping),
       taxTotal: 0,

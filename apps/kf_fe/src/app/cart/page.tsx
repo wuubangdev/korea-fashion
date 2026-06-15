@@ -9,11 +9,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCart } from "@/hooks/useCart";
 import { formatMoney } from "@/lib/format";
+import {
+  calculateOrderTotal,
+  calculateShippingFee,
+} from "@/lib/orderTotals";
 
 export default function CartPage() {
   const cart = useCart();
-  const shippingFee = cart.total >= 1000000 || cart.items.length === 0 ? 0 : 30000;
-  const grandTotal = cart.total + shippingFee;
+  const shippingFee = calculateShippingFee({
+    itemCount: cart.items.length,
+    subtotal: cart.total,
+  });
+  const grandTotal = calculateOrderTotal({ shippingFee, subtotal: cart.total });
 
   return (
     <main className="min-h-screen bg-stone-50 text-stone-950">
@@ -137,16 +144,16 @@ export default function CartPage() {
               </p>
             </div>
             <div className="grid gap-3 pt-2">
-            <Link href="/checkout" className="block">
-              <Button className="w-full" disabled={cart.items.length === 0}>
-                Đặt hàng
-              </Button>
-            </Link>
-            <Link href="/products" className="block">
-              <Button className="w-full" variant="outline">
-                Tiếp tục mua sắm
-              </Button>
-            </Link>
+              <Link href="/checkout" className="block">
+                <Button className="w-full" disabled={cart.items.length === 0}>
+                  Đặt hàng
+                </Button>
+              </Link>
+              <Link href="/products" className="block">
+                <Button className="w-full" variant="outline">
+                  Tiếp tục mua sắm
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
