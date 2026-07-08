@@ -1,7 +1,8 @@
 "use client";
 
 import { PackageSearch, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
 import { StoreFooter } from "@/components/StoreFooter";
 import { StoreHeader } from "@/components/StoreHeader";
@@ -21,14 +22,19 @@ const sortOptions = [
 ];
 
 export default function ProductsPage() {
+  return (
+    <Suspense fallback={null}>
+      <ProductsPageContent />
+    </Suspense>
+  );
+}
+
+function ProductsPageContent() {
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
-  const [origin, setOrigin] = useState("");
+  const [origin, setOrigin] = useState(() => searchParams.get("origin") ?? "");
   const [sort, setSort] = useState("id,desc");
   const [maxPrice, setMaxPrice] = useState("");
-
-  useEffect(() => {
-    setOrigin(new URLSearchParams(window.location.search).get("origin") ?? "");
-  }, []);
 
   const query = useMemo(
     () => ({

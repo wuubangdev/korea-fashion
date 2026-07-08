@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { saveAuthSession } from "@/lib/auth";
+import { getSafeAuthRedirectPath } from "@/lib/navigation";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import type { AuthRequest, AuthResponse } from "@/types/api";
 import type { FormEvent } from "react";
@@ -34,7 +35,7 @@ export default function RegisterPage() {
       });
 
       saveAuthSession(result);
-      router.push(getSafeNextPath());
+      router.push(getSafeAuthRedirectPath(window.location.search));
     } catch {
       // Error state is handled by useApiMutation.
     }
@@ -103,14 +104,4 @@ export default function RegisterPage() {
       </Card>
     </main>
   );
-}
-
-function getSafeNextPath() {
-  const nextPath = new URLSearchParams(window.location.search).get("next");
-
-  if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//")) {
-    return "/admin";
-  }
-
-  return nextPath;
 }

@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const AUTH_TOKEN_KEY = "kf_token";
 const AUTH_ROUTES = ["/login", "/register"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const token = request.cookies.get(AUTH_TOKEN_KEY)?.value;
   const { pathname } = request.nextUrl;
   const isAuthRoute = AUTH_ROUTES.includes(pathname);
