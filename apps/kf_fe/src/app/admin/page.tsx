@@ -57,22 +57,22 @@ export default function AdminPage() {
 
   const statCards = [
     {
-      description: "Tổng doanh thu từ các đơn hàng đã hoàn tất",
+      description: "Tổng doanh thu từ các đơn hàng đã xử lý",
       title: "Doanh thu",
       value: formatMoney(stats.revenueTotal ?? 0),
     },
     {
-      description: `${pendingOrders} đơn gần đây cần xử lý`,
+      description: `${pendingOrders} đơn cần ưu tiên hôm nay`,
       title: "Đơn hàng",
       value: formatNumber(stats.totalOrders),
     },
     {
-      description: `${formatNumber(stats.totalCategories)} danh mục đang quản lý`,
+      description: `${formatNumber(stats.totalCategories)} danh mục đang được quản lý`,
       title: "Sản phẩm",
       value: formatNumber(stats.totalProducts),
     },
     {
-      description: "Sản phẩm có tồn kho thấp hơn ngưỡng cảnh báo",
+      description: "Số sản phẩm đã chạm ngưỡng tồn kho thấp",
       title: "Sắp hết hàng",
       value: formatNumber(stats.lowStockProducts),
     },
@@ -113,7 +113,7 @@ export default function AdminPage() {
     <AppShell>
       <PageHeader
         title="Tổng quan"
-        description="Dữ liệu dashboard được đồng bộ trực tiếp từ API quản trị."
+        description="Thông tin dashboard được đồng bộ trực tiếp từ API quản trị."
         action={
           <div className="flex flex-wrap justify-end gap-2">
             <Link href="/admin/resources/orders">
@@ -143,7 +143,7 @@ export default function AdminPage() {
         <Card>
           <CardHeader>
             <CardTitle>Việc ưu tiên</CardTitle>
-            <CardDescription>Các lối vào hay dùng nhất, kèm số liệu hiện tại từ API.</CardDescription>
+            <CardDescription>Các mục cần theo dõi hàng ngày cùng số liệu cập nhật từ API.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
             {priorityTasks.map((task) => {
@@ -174,7 +174,7 @@ export default function AdminPage() {
         <Card>
           <CardHeader>
           <CardTitle>Sản phẩm cần chú ý</CardTitle>
-            <CardDescription>Mặt hàng tồn kho thấp được lấy từ API dashboard.</CardDescription>
+            <CardDescription>Danh sách mặt hàng sắp hết tồn kho từ dữ liệu dashboard.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
