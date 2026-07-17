@@ -57,7 +57,7 @@ export default function AdminPage() {
 
   const statCards = [
     {
-      description: "Tổng doanh thu từ đơn hàng",
+      description: "Tổng doanh thu từ các đơn hàng đã hoàn tất",
       title: "Doanh thu",
       value: formatMoney(stats.revenueTotal ?? 0),
     },
@@ -72,7 +72,7 @@ export default function AdminPage() {
       value: formatNumber(stats.totalProducts),
     },
     {
-      description: "Sản phẩm có tồn kho <= 5",
+      description: "Sản phẩm có tồn kho thấp hơn ngưỡng cảnh báo",
       title: "Sắp hết hàng",
       value: formatNumber(stats.lowStockProducts),
     },
@@ -113,7 +113,7 @@ export default function AdminPage() {
     <AppShell>
       <PageHeader
         title="Tổng quan"
-        description="Dữ liệu dashboard được lấy trực tiếp từ API admin."
+        description="Dữ liệu dashboard được đồng bộ trực tiếp từ API quản trị."
         action={
           <div className="flex flex-wrap justify-end gap-2">
             <Link href="/admin/resources/orders">
@@ -173,7 +173,7 @@ export default function AdminPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Cần chú ý</CardTitle>
+          <CardTitle>Sản phẩm cần chú ý</CardTitle>
             <CardDescription>Mặt hàng tồn kho thấp được lấy từ API dashboard.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -193,7 +193,7 @@ export default function AdminPage() {
                 ))
               ) : (
                 <p className="rounded-md border border-dashed border-stone-300 p-4 text-sm text-slate-500">
-                  Chưa có sản phẩm sắp hết hàng.
+                  Chưa có sản phẩm nào ở ngưỡng tồn kho thấp.
                 </p>
               )}
             </div>
