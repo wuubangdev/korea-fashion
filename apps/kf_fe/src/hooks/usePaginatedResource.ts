@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getPage } from "@/lib/api";
+import { getPage, isAbortError } from "@/lib/api";
 import type { PageQuery, PageResult } from "@/types/api";
 
 type UsePaginatedResourceOptions = {
@@ -79,7 +79,7 @@ export function usePaginatedResource<T>({
     getPage<T>(path, query, { signal: controller.signal })
       .then(setData)
       .catch((err: unknown) => {
-        if (err instanceof DOMException && err.name === "AbortError") {
+        if (isAbortError(err)) {
           return;
         }
 

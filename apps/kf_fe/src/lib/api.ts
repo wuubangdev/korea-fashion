@@ -26,6 +26,15 @@ export class ApiError extends Error {
   }
 }
 
+export function isAbortError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    error.name === "AbortError"
+  );
+}
+
 function getStoredToken() {
   if (typeof window === "undefined") {
     return null;
