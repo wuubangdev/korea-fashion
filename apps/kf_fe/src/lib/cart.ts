@@ -7,13 +7,30 @@ export type CartItem = {
 
 const CART_KEY = "kf_cart";
 
+function isCartItem(value: unknown): value is CartItem {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const { product, quantity } = value as Partial<CartItem>;
+  return (
+    typeof product === "object" &&
+    product !== null &&
+    typeof product.id === "number" &&
+    typeof quantity === "number" &&
+    Number.isFinite(quantity) &&
+    quantity > 0
+  );
+}
+
 export function getCartItems(): CartItem[] {
   if (typeof window === "undefined") {
     return [];
   }
 
   try {
-    return JSON.parse(localStorage.getItem(CART_KEY) ?? "[]") as CartItem[];
+    const items: unknown = JSON.parse(localStorage.getItem(CART_KEY) ?? "[]");
+    return Array.isArray(items) && items.every(isCartItem) ? items : [];
   } catch {
     return [];
   }
