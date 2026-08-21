@@ -1,6 +1,7 @@
 package com.shope.kf.infrastructure.persistence.schema;
 
 import jakarta.annotation.PostConstruct;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +12,7 @@ import java.sql.SQLException;
 import java.util.Locale;
 
 @Component
+@ConditionalOnProperty(name = "kf.user-profile-schema-initializer.enabled", havingValue = "true", matchIfMissing = true)
 public class UserProfileSchemaInitializer {
     private final DataSource dataSource;
     private final JdbcTemplate jdbcTemplate;

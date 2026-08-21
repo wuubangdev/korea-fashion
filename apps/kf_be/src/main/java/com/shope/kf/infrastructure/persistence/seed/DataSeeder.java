@@ -16,6 +16,7 @@ import com.shope.kf.infrastructure.persistence.repository.StorePolicyJpaReposito
 import com.shope.kf.infrastructure.persistence.repository.UserJpaRepository;
 import com.shope.kf.infrastructure.security.RoleConstants;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Component
+@ConditionalOnProperty(name = "kf.data-seeder.enabled", havingValue = "true", matchIfMissing = true)
 public class DataSeeder implements CommandLineRunner {
 
     private final RoleJpaRepository roleRepo;
