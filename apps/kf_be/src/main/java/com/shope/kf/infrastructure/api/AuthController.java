@@ -6,6 +6,7 @@ import com.shope.kf.infrastructure.api.dto.response.AuthResponse;
 import com.shope.kf.infrastructure.api.mapper.AuthApiMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,6 +44,17 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Sai thông tin đăng nhập", content = @Content)
     })
     @PostMapping("/login")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            content = @Content(examples = @ExampleObject(
+                    name = "Tài khoản admin có sẵn",
+                    value = """
+                            {
+                              "username": "admin",
+                              "password": "adminpass"
+                            }
+                            """
+            ))
+    )
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
         return ResponseEntity.ok(AuthApiMapper.toResponse(authUseCase.login(AuthApiMapper.toCommand(request))));
     }
@@ -56,6 +68,18 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Dữ liệu đăng ký không hợp lệ hoặc username đã tồn tại", content = @Content)
     })
     @PostMapping("/register")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            content = @Content(examples = @ExampleObject(
+                    name = "Đăng ký khách hàng",
+                    value = """
+                            {
+                              "username": "swagger-customer",
+                              "password": "customerpass",
+                              "email": "swagger-customer@example.com"
+                            }
+                            """
+            ))
+    )
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody AuthRequest request) {
         return ResponseEntity.ok(AuthApiMapper.toResponse(authUseCase.register(AuthApiMapper.toCommand(request))));
     }

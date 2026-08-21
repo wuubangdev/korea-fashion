@@ -13,7 +13,11 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import org.springdoc.core.models.GroupedOpenApi;
-import org.springdoc.core.customizers.OperationCustomizer;
+import org.springdoc.core.customizers.GlobalOperationCustomizer;
+import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
+import org.springdoc.core.properties.SwaggerUiConfigProperties;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.HandlerMethod;
@@ -69,7 +73,7 @@ import java.util.Map;
         scheme = "bearer",
         bearerFormat = "JWT",
         in = SecuritySchemeIn.HEADER,
-        description = "JWT access token. Nhập token theo dạng: Bearer <token>."
+        description = "JWT access token. Chỉ dán accessToken; Swagger tự thêm tiền tố Bearer."
 )
 public class OpenApiConfig {
     public static final String BEARER_AUTH = "bearerAuth";
@@ -131,12 +135,79 @@ public class OpenApiConfig {
             Map.entry("AdminController", "Customer"),
             Map.entry("AuditLogController", "Audit")
     );
+    private static final Map<String, String> CONTROLLER_RESOURCES = Map.ofEntries(
+            Map.entry("AdminController", "quản trị viên"),
+            Map.entry("InventoryTransactionController", "giao dịch kho"),
+            Map.entry("ProductController", "sản phẩm"),
+            Map.entry("VariantController", "biến thể sản phẩm"),
+            Map.entry("CategoryController", "danh mục sản phẩm"),
+            Map.entry("BrandController", "thương hiệu"),
+            Map.entry("ProductCollectionController", "bộ sưu tập sản phẩm"),
+            Map.entry("ProductImageController", "hình ảnh sản phẩm"),
+            Map.entry("ProductAttributeController", "thuộc tính sản phẩm"),
+            Map.entry("ProductOptionController", "nhóm tùy chọn sản phẩm"),
+            Map.entry("ProductOptionValueController", "giá trị tùy chọn sản phẩm"),
+            Map.entry("ProductTagController", "thẻ sản phẩm"),
+            Map.entry("ProductRelationController", "liên kết giữa các sản phẩm"),
+            Map.entry("SizeController", "kích thước"),
+            Map.entry("ColorController", "màu sắc"),
+            Map.entry("SupplierController", "nhà cung cấp"),
+            Map.entry("PurchaseReceiptController", "phiếu nhập kho"),
+            Map.entry("PurchaseReceiptItemController", "chi tiết phiếu nhập kho"),
+            Map.entry("OrderController", "đơn hàng"),
+            Map.entry("OrderItemController", "sản phẩm trong đơn hàng"),
+            Map.entry("CartController", "giỏ hàng"),
+            Map.entry("CartItemController", "sản phẩm trong giỏ hàng"),
+            Map.entry("PromotionController", "chương trình khuyến mãi"),
+            Map.entry("CouponController", "mã giảm giá"),
+            Map.entry("CouponRedemptionController", "lượt sử dụng mã giảm giá"),
+            Map.entry("ReturnRequestController", "yêu cầu trả hàng"),
+            Map.entry("ReturnItemController", "sản phẩm trả lại"),
+            Map.entry("RefundController", "yêu cầu hoàn tiền"),
+            Map.entry("ExchangeOrderController", "yêu cầu đổi hàng"),
+            Map.entry("PaymentController", "thanh toán"),
+            Map.entry("PaymentMethodController", "phương thức thanh toán"),
+            Map.entry("PaymentTransactionController", "giao dịch thanh toán"),
+            Map.entry("ShippingMethodController", "phương thức giao hàng"),
+            Map.entry("ShipmentController", "vận đơn"),
+            Map.entry("ShipmentEventController", "sự kiện vận chuyển"),
+            Map.entry("ShipperController", "nhân viên giao hàng"),
+            Map.entry("BannerController", "banner"),
+            Map.entry("SiteSettingController", "cấu hình website"),
+            Map.entry("StorePolicyController", "chính sách cửa hàng"),
+            Map.entry("PageController", "trang nội dung"),
+            Map.entry("MenuController", "menu"),
+            Map.entry("MenuItemController", "mục menu"),
+            Map.entry("BlogPostController", "bài viết"),
+            Map.entry("FaqController", "câu hỏi thường gặp"),
+            Map.entry("ReviewController", "đánh giá sản phẩm"),
+            Map.entry("ReviewImageController", "hình ảnh đánh giá"),
+            Map.entry("UserController", "tài khoản người dùng"),
+            Map.entry("MemberController", "thành viên"),
+            Map.entry("GuestCustomerController", "khách hàng chưa đăng ký"),
+            Map.entry("CustomerAddressController", "địa chỉ khách hàng"),
+            Map.entry("AuditLogController", "nhật ký thao tác")
+    );
 
     @Bean
     public OpenAPI koreaFashionOpenApi() {
         return new OpenAPI()
                 .components(new Components())
                 .addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH));
+    }
+
+    @Bean
+    public GlobalOpenApiCustomizer swaggerExampleCustomizer() {
+        return new SwaggerExampleCustomizer();
+    }
+
+    @Bean
+    public InitializingBean swaggerUiUsabilityDefaults(ObjectProvider<SwaggerUiConfigProperties> provider) {
+        return () -> provider.ifAvailable(properties -> {
+            properties.setTryItOutEnabled(true);
+            properties.setDisplayRequestDuration(true);
+            properties.setPersistAuthorization(true);
+        });
     }
 
     @Bean
@@ -171,11 +242,15 @@ public class OpenApiConfig {
     }
 
     @Bean
-    public OperationCustomizer controllerTagCustomizer() {
+    public GlobalOperationCustomizer controllerTagCustomizer() {
         return (operation, handlerMethod) -> {
             String tag = resolveTag(handlerMethod);
             if (tag != null) {
                 operation.setTags(java.util.List.of(tag));
+            }
+            String resource = resolveResource(handlerMethod);
+            if (resource != null) {
+                customiseCrudDescription(operation, handlerMethod.getMethod().getName(), resource);
             }
             return operation;
         };
@@ -186,5 +261,68 @@ public class OpenApiConfig {
             return null;
         }
         return CONTROLLER_TAGS.get(handlerMethod.getBeanType().getSimpleName());
+    }
+
+    private String resolveResource(HandlerMethod handlerMethod) {
+        if (handlerMethod == null || handlerMethod.getBeanType() == null) {
+            return null;
+        }
+        return CONTROLLER_RESOURCES.get(handlerMethod.getBeanType().getSimpleName());
+    }
+
+    private void customiseCrudDescription(io.swagger.v3.oas.models.Operation operation, String method, String resource) {
+        switch (method) {
+            case "create" -> {
+                operation.setSummary("Tạo " + resource + " mới");
+                operation.setDescription("Tạo một " + resource + " mới từ JSON trong request body. Các field được đánh dấu read-only do hệ thống tự quản lý và không cần gửi.");
+            }
+            case "list" -> {
+                operation.setSummary("Danh sách " + resource);
+                operation.setDescription("Lấy danh sách " + resource + " đang hoạt động, có tìm kiếm, phân trang và sắp xếp. Kết quả không bao gồm bản ghi đã xóa mềm.");
+            }
+            case "trash" -> {
+                operation.setSummary("Thùng rác " + resource);
+                operation.setDescription("Lấy các " + resource + " đã bị xóa mềm. Có thể dùng endpoint khôi phục để đưa bản ghi trở lại.");
+            }
+            case "get" -> {
+                operation.setSummary("Chi tiết " + resource);
+                operation.setDescription("Lấy thông tin chi tiết của một " + resource + " theo ID trên URL.");
+            }
+            case "update" -> {
+                operation.setSummary("Cập nhật " + resource);
+                operation.setDescription("Cập nhật " + resource + " có ID trên URL bằng JSON trong request body. Với PUT, nên gửi đầy đủ các field nghiệp vụ cần giữ lại.");
+            }
+            case "delete" -> {
+                operation.setSummary("Xóa mềm " + resource);
+                operation.setDescription("Đánh dấu " + resource + " là đã xóa nhưng vẫn giữ dữ liệu trong database. Có thể phục hồi bằng endpoint restore.");
+            }
+            case "deleteAll" -> {
+                operation.setSummary("Xóa mềm nhiều " + resource);
+                operation.setDescription("Nhận một mảng ID trong request body và xóa mềm các " + resource + " tương ứng. Dữ liệu vẫn có thể phục hồi.");
+            }
+            case "restore" -> {
+                operation.setSummary("Khôi phục " + resource);
+                operation.setDescription("Khôi phục một " + resource + " đã xóa mềm theo ID trên URL để bản ghi hoạt động trở lại.");
+            }
+            case "restoreAll" -> {
+                operation.setSummary("Khôi phục nhiều " + resource);
+                operation.setDescription("Nhận một mảng ID trong request body và khôi phục các " + resource + " đã xóa mềm.");
+            }
+            case "hardDelete" -> {
+                operation.setSummary("Xóa vĩnh viễn " + resource);
+                operation.setDescription("Xóa hoàn toàn " + resource + " khỏi database theo ID trên URL. Thao tác này không thể phục hồi và có thể bị từ chối nếu dữ liệu đang được bản ghi khác tham chiếu. Chỉ ADMIN được phép gọi.");
+            }
+            case "hardDeleteAll" -> {
+                operation.setSummary("Xóa vĩnh viễn nhiều " + resource);
+                operation.setDescription("Nhận một mảng ID trong request body và xóa hoàn toàn các " + resource + " khỏi database. Thao tác không thể phục hồi và chỉ dành cho ADMIN.");
+            }
+            case "copy" -> {
+                operation.setSummary("Sao chép " + resource);
+                operation.setDescription("Tạo một " + resource + " mới bằng cách sao chép dữ liệu từ bản ghi có ID trên URL; bản gốc không bị thay đổi.");
+            }
+            default -> {
+                // Keep the endpoint-specific description for non-CRUD operations.
+            }
+        }
     }
 }

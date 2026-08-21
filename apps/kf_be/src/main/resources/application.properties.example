@@ -23,6 +23,8 @@ server.forward-headers-strategy=${SERVER_FORWARD_HEADERS_STRATEGY:framework}
 # Media files are stored on the VPS filesystem beside the deployed app/docker volume.
 kf.media.storage-dir=${KF_MEDIA_STORAGE_DIR:uploads}
 kf.media.schema-initializer.enabled=${KF_MEDIA_SCHEMA_INITIALIZER_ENABLED:false}
+kf.data-seeder.enabled=${KF_DATA_SEEDER_ENABLED:true}
+kf.user-profile-schema-initializer.enabled=${KF_USER_PROFILE_SCHEMA_INITIALIZER_ENABLED:true}
 spring.servlet.multipart.max-file-size=${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:100MB}
 spring.servlet.multipart.max-request-size=${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:120MB}
 
@@ -30,6 +32,9 @@ spring.servlet.multipart.max-request-size=${SPRING_SERVLET_MULTIPART_MAX_REQUEST
 springdoc.api-docs.groups.enabled=true
 springdoc.swagger-ui.disable-swagger-default-url=true
 springdoc.swagger-ui.urls-primary-name=02-admin-private
+springdoc.swagger-ui.try-it-out-enabled=true
+springdoc.swagger-ui.display-request-duration=true
+springdoc.swagger-ui.persist-authorization=true
 
 # Gemini chatbot
 gemini.api-key=${GEMINI_API_KEY:}
