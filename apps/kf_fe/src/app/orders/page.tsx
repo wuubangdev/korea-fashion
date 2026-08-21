@@ -12,17 +12,17 @@ import type { Order } from "@/types/api";
 
 const columns: Column<Order>[] = [
   { key: "id", header: "ID", render: (item) => item.id, className: "w-20" },
-  { key: "date", header: "Ngay dat", render: (item) => formatDate(item.orderDate) },
-  { key: "status", header: "Trang thai", render: (item) => <StatusBadge value={item.status} /> },
+  { key: "date", header: "Ngày đặt", render: (item) => formatDate(item.orderDate) },
+  { key: "status", header: "Trạng thái", render: (item) => <StatusBadge value={item.status} /> },
   {
     key: "shipping",
-    header: "Giao hang",
+    header: "Giao hàng",
     render: (item) => <StatusBadge value={item.shippingStatus} />,
   },
   { key: "shipper", header: "Shipper", render: (item) => item.shipperId || "-" },
   {
     key: "total",
-    header: "Tong tien",
+    header: "Tổng tiền",
     render: (item) => formatMoney(item.total),
     className: "text-right",
   },
@@ -34,13 +34,13 @@ export default function OrdersPage() {
   return (
     <AppShell>
       <PageHeader
-        title="Don hang"
-        description="Page mau theo doi don hang voi search, filter trang thai, sap xep va phan trang."
+        title="Đơn hàng"
+        description="Theo dõi đơn hàng, lọc trạng thái, sắp xếp và phân trang."
       />
       <DataToolbar
         search={resource.search}
         sort={resource.sort}
-        filterLabel="Trang thai"
+        filterLabel="Trạng thái"
         filterValue={String(resource.filters?.status ?? "")}
         filterOptions={[
           { label: "Pending", value: "PENDING" },

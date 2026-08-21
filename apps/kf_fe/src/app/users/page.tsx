@@ -19,7 +19,7 @@ const columns: Column<User>[] = [
   { key: "email", header: "Email", render: (item) => item.email || "-" },
   {
     key: "roles",
-    header: "Vai tro",
+    header: "Vai trò",
     render: (item) => (
       <div className="flex flex-wrap gap-1">
         {(item.roles?.length ? item.roles : ["N/A"]).map((role) => (
@@ -36,13 +36,13 @@ export default function UsersPage() {
   return (
     <AppShell>
       <PageHeader
-        title="Nguoi dung"
-        description="Page mau quan ly nguoi dung, co the tai su dung cho admin/member/shipper."
+        title="Người dùng"
+        description="Quản lý người dùng, vai trò và thông tin tài khoản."
       />
       <DataToolbar
         search={resource.search}
         sort={resource.sort}
-        filterLabel="Vai tro"
+        filterLabel="Vai trò"
         filterValue={String(resource.filters?.role ?? "")}
         filterOptions={[
           { label: "Admin", value: "ADMIN" },

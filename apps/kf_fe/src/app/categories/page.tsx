@@ -10,15 +10,15 @@ import type { Category } from "@/types/api";
 
 const columns: Column<Category>[] = [
   { key: "id", header: "ID", render: (item) => item.id, className: "w-20" },
-  { key: "code", header: "Ma", render: (item) => item.code || "-" },
+  { key: "code", header: "Mã", render: (item) => item.code || "-" },
   {
     key: "name",
-    header: "Ten danh muc",
+    header: "Tên danh mục",
     render: (item) => <span className="font-medium text-slate-950">{item.name}</span>,
   },
   {
     key: "description",
-    header: "Mo ta",
+    header: "Mô tả",
     render: (item) => item.description || "-",
   },
 ];
@@ -29,8 +29,8 @@ export default function CategoriesPage() {
   return (
     <AppShell>
       <PageHeader
-        title="Danh muc"
-        description="Page mau cho danh muc, dung chung hook phan trang va tim kiem."
+        title="Danh mục"
+        description="Quản lý danh mục, tìm kiếm, sắp xếp và phân trang dữ liệu."
       />
       <DataToolbar
         search={resource.search}
