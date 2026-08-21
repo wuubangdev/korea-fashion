@@ -20,7 +20,7 @@ type DataTableProps<T> = {
 export function DataTable<T>({
   columns,
   data,
-  emptyText = "Chua co du lieu",
+  emptyText = "Chưa có dữ liệu",
   getRowKey,
   isLoading = false,
 }: DataTableProps<T>) {
@@ -47,7 +47,7 @@ export function DataTable<T>({
                   colSpan={columns.length}
                   className="px-4 py-10 text-center text-sm text-slate-500"
                 >
-                  <Loader label="Dang tai du lieu..." className="justify-center" />
+                  <Loader label="Đang tải dữ liệu..." className="justify-center" />
                 </td>
               </tr>
             ) : null}
