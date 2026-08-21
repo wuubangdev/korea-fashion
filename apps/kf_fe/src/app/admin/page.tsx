@@ -15,59 +15,59 @@ import {
 
 const stats = [
   {
-    title: "Doanh thu hom nay",
+    title: "Doanh thu hôm nay",
     value: "18.4M",
-    description: "+12% so voi hom qua",
+    description: "+12% so với hôm qua",
   },
   {
-    title: "Don hang moi",
+    title: "Đơn hàng mới",
     value: "24",
-    description: "8 don dang cho xu ly",
+    description: "8 đơn đang chờ xử lý",
   },
   {
-    title: "Ty le hoan tat",
+    title: "Tỷ lệ hoàn tất",
     value: "92%",
-    description: "Don da giao thanh cong trong 7 ngay",
+    description: "Đơn đã giao thành công trong 7 ngày",
   },
   {
-    title: "San pham sap het",
+    title: "Sản phẩm sắp hết",
     value: "11",
-    description: "Can kiem tra ton kho va bien the",
+    description: "Cần kiểm tra tồn kho và biến thể",
   },
 ];
 
 const managementAreas = [
   {
     href: "/orders",
-    title: "Don hang",
-    description: "Duyet don, gan shipper, cap nhat thanh toan va trang thai giao hang.",
-    badge: "Uu tien",
+    title: "Đơn hàng",
+    description: "Duyệt đơn, gán shipper, cập nhật thanh toán và trạng thái giao hàng.",
+    badge: "Ưu tiên",
   },
   {
     href: "/products",
-    title: "San pham",
-    description: "Quan ly gia ban, mo ta, hinh anh, thuong hieu va xuat xu.",
+    title: "Sản phẩm",
+    description: "Quản lý giá bán, mô tả, hình ảnh, thương hiệu và xuất xứ.",
     badge: "Catalog",
   },
   {
     href: "/categories",
-    title: "Danh muc",
-    description: "Sap xep nhom hang, collection va cau truc hien thi tren storefront.",
+    title: "Danh mục",
+    description: "Sắp xếp nhóm hàng, bộ sưu tập và cấu trúc hiển thị trên storefront.",
     badge: "Shop",
   },
   {
     href: "/users",
-    title: "Nguoi dung",
-    description: "Kiem tra tai khoan, vai tro quan tri va thong tin khach hang.",
+    title: "Người dùng",
+    description: "Kiểm tra tài khoản, vai trò quản trị và thông tin khách hàng.",
     badge: "Access",
   },
 ];
 
 const recentOrders = [
-  { code: "KF-1028", customer: "Minh Anh", total: "1.290.000 VND", status: "Cho xu ly" },
-  { code: "KF-1027", customer: "Thanh Truc", total: "840.000 VND", status: "Dang giao" },
-  { code: "KF-1026", customer: "Ngoc Han", total: "2.150.000 VND", status: "Da thanh toan" },
-  { code: "KF-1025", customer: "Gia Bao", total: "620.000 VND", status: "Can goi lai" },
+  { code: "KF-1028", customer: "Minh Anh", total: "1.290.000 VND", status: "Chờ xử lý" },
+  { code: "KF-1027", customer: "Thanh Trúc", total: "840.000 VND", status: "Đang giao" },
+  { code: "KF-1026", customer: "Ngọc Hân", total: "2.150.000 VND", status: "Đã thanh toán" },
+  { code: "KF-1025", customer: "Gia Bảo", total: "620.000 VND", status: "Cần gọi lại" },
 ];
 
 const stockAlerts = [
@@ -81,12 +81,12 @@ export default function AdminPage() {
     <AppShell>
       <PageHeader
         title="Dashboard"
-        description="Tong quan van hanh cho nen tang thuong mai dien tu Korea Fashion."
+        description="Tổng quan vận hành cho nền tảng thương mại điện tử Korea Fashion."
         action={
           <div className="flex flex-wrap gap-3">
             <SeedDataButton />
             <Link href="/orders">
-              <Button>Xu ly don hang</Button>
+              <Button>Xử lý đơn hàng</Button>
             </Link>
           </div>
         }
@@ -101,9 +101,9 @@ export default function AdminPage() {
       <section className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Card>
           <CardHeader>
-            <CardTitle>Can quan tri</CardTitle>
+            <CardTitle>Khu vực quản trị</CardTitle>
             <CardDescription>
-              Cac khu vuc chinh de van hanh shop, xu ly don va cap nhat du lieu.
+              Các khu vực chính để vận hành shop, xử lý đơn và cập nhật dữ liệu.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
@@ -129,9 +129,9 @@ export default function AdminPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Ton kho can chu y</CardTitle>
+            <CardTitle>Tồn kho cần chú ý</CardTitle>
             <CardDescription>
-              San pham co so luong thap nen duoc nhap them hoac an khoi shop.
+              Sản phẩm có số lượng thấp nên được nhập thêm hoặc ẩn khỏi shop.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -147,7 +147,7 @@ export default function AdminPage() {
                     </div>
                     <div className="mt-1 text-xs text-slate-500">{item.sku}</div>
                   </div>
-                  <Badge variant="warning">{item.stock} con</Badge>
+                  <Badge variant="warning">{item.stock} còn</Badge>
                 </div>
               ))}
             </div>
@@ -158,9 +158,9 @@ export default function AdminPage() {
       <section className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Card>
           <CardHeader>
-            <CardTitle>Don hang gan day</CardTitle>
+            <CardTitle>Đơn hàng gần đây</CardTitle>
             <CardDescription>
-              Theo doi nhanh cac don moi nhat truoc khi vao trang xu ly chi tiet.
+              Theo dõi nhanh các đơn mới nhất trước khi vào trang xử lý chi tiết.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -168,10 +168,10 @@ export default function AdminPage() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Ma don</th>
-                    <th className="px-4 py-3 font-medium">Khach hang</th>
-                    <th className="px-4 py-3 font-medium">Tong tien</th>
-                    <th className="px-4 py-3 font-medium">Trang thai</th>
+                    <th className="px-4 py-3 font-medium">Mã đơn</th>
+                    <th className="px-4 py-3 font-medium">Khách hàng</th>
+                    <th className="px-4 py-3 font-medium">Tổng tiền</th>
+                    <th className="px-4 py-3 font-medium">Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 bg-white">
@@ -183,7 +183,7 @@ export default function AdminPage() {
                       <td className="px-4 py-3 text-slate-600">{order.customer}</td>
                       <td className="px-4 py-3 text-slate-600">{order.total}</td>
                       <td className="px-4 py-3">
-                        <Badge variant={order.status === "Can goi lai" ? "warning" : "secondary"}>
+                        <Badge variant={order.status === "Cần gọi lại" ? "warning" : "secondary"}>
                           {order.status}
                         </Badge>
                       </td>
@@ -197,17 +197,17 @@ export default function AdminPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Cong viec hom nay</CardTitle>
+            <CardTitle>Công việc hôm nay</CardTitle>
             <CardDescription>
-              Checklist van hanh de giu shop on dinh trong ngay.
+              Checklist vận hành để giữ shop ổn định trong ngày.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-sm text-slate-700">
-              <Task label="Xac nhan don moi" value="8 viec" tone="amber" />
-              <Task label="Cap nhat san pham sap het" value="11 SKU" tone="rose" />
-              <Task label="Kiem tra tai khoan moi" value="5 user" tone="slate" />
-              <Task label="Doi soat doanh thu" value="18.4M" tone="emerald" />
+              <Task label="Xác nhận đơn mới" value="8 việc" tone="amber" />
+              <Task label="Cập nhật sản phẩm sắp hết" value="11 SKU" tone="rose" />
+              <Task label="Kiểm tra tài khoản mới" value="5 user" tone="slate" />
+              <Task label="Đối soát doanh thu" value="18.4M" tone="emerald" />
             </div>
           </CardContent>
         </Card>
