@@ -3,19 +3,19 @@ import type { ReactNode } from "react";
 
 const navGroups = [
   {
-    title: "Van hanh",
+    title: "Vận hành",
     items: [
-      { href: "/admin", label: "Dashboard", meta: "Tong quan shop" },
-      { href: "/orders", label: "Don hang", meta: "Xu ly va giao hang" },
-      { href: "/products", label: "San pham", meta: "Gia, ton kho, hinh anh" },
-      { href: "/categories", label: "Danh muc", meta: "Bo suu tap va nhom hang" },
+      { href: "/admin", label: "Dashboard", meta: "Tổng quan shop" },
+      { href: "/orders", label: "Đơn hàng", meta: "Xử lý và giao hàng" },
+      { href: "/products", label: "Sản phẩm", meta: "Giá, tồn kho, hình ảnh" },
+      { href: "/categories", label: "Danh mục", meta: "Bộ sưu tập và nhóm hàng" },
     ],
   },
   {
-    title: "Khach hang",
+    title: "Khách hàng",
     items: [
-      { href: "/users", label: "Nguoi dung", meta: "Tai khoan va vai tro" },
-      { href: "/login", label: "Dang nhap", meta: "Kiem tra phien quan tri" },
+      { href: "/users", label: "Người dùng", meta: "Tài khoản và vai trò" },
+      { href: "/login", label: "Đăng nhập", meta: "Kiểm tra phiên quản trị" },
     ],
   },
 ];
@@ -44,14 +44,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <div className="mt-6 grid grid-cols-2 gap-2">
             <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3">
-              <div className="text-xs font-medium text-emerald-700">Hom nay</div>
+              <div className="text-xs font-medium text-emerald-700">Hôm nay</div>
               <div className="mt-1 text-lg font-semibold text-emerald-950">24</div>
-              <div className="text-xs text-emerald-700">don moi</div>
+              <div className="text-xs text-emerald-700">đơn mới</div>
             </div>
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
-              <div className="text-xs font-medium text-amber-700">Can xu ly</div>
+              <div className="text-xs font-medium text-amber-700">Cần xử lý</div>
               <div className="mt-1 text-lg font-semibold text-amber-950">8</div>
-              <div className="text-xs text-amber-700">viec</div>
+              <div className="text-xs text-amber-700">việc</div>
             </div>
           </div>
 
@@ -83,7 +83,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <div className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-3 lg:mt-auto">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              He thong
+              Hệ thống
             </div>
             <div className="mt-2 space-y-2 text-sm text-slate-700">
               <div className="flex items-center justify-between gap-3">
@@ -91,7 +91,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <span className="font-medium text-emerald-700">Online</span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span>Phien</span>
+                <span>Phiên</span>
                 <span className="font-medium text-slate-950">JWT</span>
               </div>
             </div>
@@ -103,10 +103,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="border-b border-slate-200 bg-white">
           <div className="flex min-h-16 flex-col justify-center gap-1 px-4 py-4 sm:px-6 lg:px-8">
             <div className="text-sm font-medium text-slate-500">
-              Bang dieu khien quan tri
+              Bảng điều khiển quản trị
             </div>
             <div className="text-lg font-semibold tracking-tight">
-              Quan ly nen tang thuong mai dien tu
+              Quản lý nền tảng thương mại điện tử
             </div>
           </div>
         </header>
