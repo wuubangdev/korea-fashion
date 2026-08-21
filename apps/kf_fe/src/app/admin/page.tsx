@@ -206,7 +206,7 @@ export default function AdminPage() {
             <div className="space-y-3 text-sm text-slate-700">
               <Task label="Xác nhận đơn mới" value="8 việc" tone="amber" />
               <Task label="Cập nhật sản phẩm sắp hết" value="11 SKU" tone="rose" />
-              <Task label="Kiểm tra tài khoản mới" value="5 user" tone="slate" />
+              <Task label="Kiểm tra tài khoản mới" value="5 tài khoản" tone="slate" />
               <Task label="Đối soát doanh thu" value="18.4M" tone="emerald" />
             </div>
           </CardContent>
