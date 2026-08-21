@@ -78,7 +78,7 @@ export function SeedDataButton() {
     const created = results.filter((result) => result.status === "fulfilled").length;
     const failed = results.length - created;
 
-    setMessage(`Da goi API tao du lieu mau: ${created} thanh cong, ${failed} bo qua/loi.`);
+    setMessage(`Đã gọi API tạo dữ liệu mẫu: ${created} thành công, ${failed} bỏ qua/lỗi.`);
     setIsLoading(false);
   }
 
@@ -86,7 +86,7 @@ export function SeedDataButton() {
     <div>
       <Button onClick={seedData} disabled={isLoading} variant="outline">
         <Database className="h-4 w-4" />
-        {isLoading ? "Dang tao du lieu..." : "Tao du lieu mau"}
+        {isLoading ? "Đang tạo dữ liệu..." : "Tạo dữ liệu mẫu"}
       </Button>
       {message ? <p className="mt-2 text-xs text-slate-500">{message}</p> : null}
     </div>
