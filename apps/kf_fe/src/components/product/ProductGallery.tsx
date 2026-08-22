@@ -31,14 +31,15 @@ export function ProductGallery({ product }: { product: Product }) {
   }, [images.length, product.id]);
 
   return (
-    <div className="flex flex-col gap-3 lg:sticky lg:top-24">
+    <div className="flex min-w-0 flex-col gap-3 lg:sticky lg:top-24">
       <SafeImage
         alt={product.name}
-        className="mx-auto aspect-square w-full max-w-[520px] rounded-lg border border-stone-200 transition"
+        className="mx-auto aspect-square w-full max-w-[520px] rounded-lg border border-stone-200 shadow-sm transition"
+        imgClassName="object-contain"
         sizes="(min-width: 1024px) 50vw, 100vw"
         src={activeImage?.imageUrl}
       />
-      <div className="flex max-w-full shrink-0 justify-center gap-2 overflow-x-auto pb-1">
+      <div className="flex w-full max-w-full shrink-0 justify-start gap-2 overflow-x-auto px-0.5 pb-1 sm:justify-center">
         {images.map((item, index) => (
           <button
             key={item.id}
@@ -52,6 +53,7 @@ export function ProductGallery({ product }: { product: Product }) {
             <SafeImage
               alt={product.name}
               className="h-full w-full rounded-[5px]"
+              imgClassName="object-contain"
               sizes="64px"
               src={item.imageUrl}
             />
@@ -77,7 +79,7 @@ function getGalleryImages(product: Product): GalleryImage[] {
     .map((item) => (typeof item === "string" ? item : item.imageUrl))
     .filter((imageUrl): imageUrl is string => Boolean(imageUrl?.trim()));
   const uniqueUrls = Array.from(new Set([product.imageUrl, ...imageUrls].filter(Boolean)));
-  const fallbackUrls = uniqueUrls.length ? uniqueUrls : [product.imageUrl];
+  const fallbackUrls = uniqueUrls.length ? uniqueUrls : [undefined];
 
   return Array.from({ length: Math.max(fallbackUrls.length, 4) }, (_, index) => ({
     id: index,

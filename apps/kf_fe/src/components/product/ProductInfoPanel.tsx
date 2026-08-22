@@ -25,8 +25,8 @@ export function ProductInfoPanel({ product }: { product: Product }) {
   const [selectedColor, setSelectedColor] = useState("Kem");
 
   return (
-    <Card className="h-full shadow-none">
-      <CardContent className="p-5 sm:p-5 lg:p-6">
+    <Card className="h-full min-w-0 shadow-none">
+      <CardContent className="p-5 sm:p-6 lg:p-7">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium uppercase text-rose-700">{product.brand || "Korea Fashion"}</p>

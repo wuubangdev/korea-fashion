@@ -14,20 +14,6 @@ type SafeImageProps = {
   src?: string | null;
 };
 
-const fallbackImage = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f5f5f4"/>
-      <stop offset="1" stop-color="#e7e5e4"/>
-    </linearGradient>
-  </defs>
-  <rect width="800" height="1000" fill="url(#bg)"/>
-  <path d="M260 330h280l42 92-62 26-28-58v330H308V390l-28 58-62-26 42-92z" fill="#d6d3d1"/>
-  <path d="M332 330c10 36 34 56 68 56s58-20 68-56" fill="none" stroke="#a8a29e" stroke-width="20" stroke-linecap="round"/>
-</svg>
-`)}`;
-
 export function SafeImage({
   alt,
   className,
@@ -39,20 +25,33 @@ export function SafeImage({
 }: SafeImageProps) {
   const safeSrc = useMemo(() => normalizeImageSrc(src), [src]);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const currentSrc = failedSrc === safeSrc ? fallbackImage : safeSrc;
+  const showFallback = !safeSrc || failedSrc === safeSrc;
 
   return (
-    <div className={cn("relative overflow-hidden bg-stone-100", className)}>
-      <Image
-        unoptimized
-        fill
-        alt={alt || fallbackLabel}
-        className={cn("object-cover", imgClassName)}
-        priority={priority}
-        sizes={sizes}
-        src={currentSrc}
-        onError={() => setFailedSrc(safeSrc)}
-      />
+    <div className={cn("relative isolate min-h-0 min-w-0 overflow-hidden bg-stone-100", className)}>
+      {showFallback ? (
+        <div
+          aria-label={alt || fallbackLabel}
+          className="absolute inset-0 flex select-none flex-col items-center justify-center gap-2 bg-gradient-to-br from-stone-100 to-stone-200 p-4 text-center text-stone-500"
+          role="img"
+        >
+          <svg aria-hidden="true" className="h-8 w-8" fill="none" viewBox="0 0 24 24">
+            <path d="m3 3 18 18M10.6 10.6 5 16h11m-9-3.5V5h10v9.5M8 8h.01" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+          </svg>
+          <span className="max-w-full truncate text-xs font-medium">{fallbackLabel}</span>
+        </div>
+      ) : (
+        <Image
+          unoptimized
+          fill
+          alt={alt || fallbackLabel}
+          className={cn("object-cover", imgClassName)}
+          priority={priority}
+          sizes={sizes}
+          src={safeSrc}
+          onError={() => setFailedSrc(safeSrc)}
+        />
+      )}
     </div>
   );
 }
@@ -60,8 +59,23 @@ export function SafeImage({
 function normalizeImageSrc(src?: string | null) {
   const value = src?.trim();
   if (!value) {
-    return fallbackImage;
+    return null;
   }
 
-  return value;
+  if (value.startsWith("/") && !value.startsWith("//")) {
+    return value;
+  }
+
+  if (value.startsWith("data:image/") || value.startsWith("blob:")) {
+    return value;
+  }
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? value : null;
+  } catch {
+    return /^[\w%+.,@~-]+(?:\/[\w%+.,@~-]+)*\.(?:avif|gif|jpe?g|png|svg|webp)(?:\?.*)?$/i.test(value)
+      ? `/${value}`
+      : null;
+  }
 }
