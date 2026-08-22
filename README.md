@@ -124,13 +124,15 @@ Voi domain HTTPS, frontend nen goi API qua subdomain backend rieng:
 
 ```env
 NEXT_PUBLIC_API_URL=https://api.sieunhon.top
-APP_CORS_ALLOWED_ORIGINS=https://sieunhon.top,https://www.sieunhon.top,http://sieunhon.top,http://www.sieunhon.top
-BACKEND_BIND_HOST=127.0.0.1
+APP_CORS_ALLOWED_ORIGINS=*
+BACKEND_BIND_HOST=0.0.0.0
 BACKEND_PORT=3398
 FRONTEND_BIND_HOST=127.0.0.1
 FRONTEND_PORT=3397
 SERVER_FORWARD_HEADERS_STRATEGY=framework
 ```
+
+`APP_CORS_ALLOWED_ORIGINS=*` cho phep trinh duyet tu moi origin goi backend. `BACKEND_BIND_HOST=0.0.0.0` cong bo cong backend tren moi network interface cua VPS; can mo `BACKEND_PORT` tren firewall/security group neu muon truy cap truc tiep bang IP.
 
 Kiem tra container va log:
 
